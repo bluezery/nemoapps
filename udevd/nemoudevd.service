@@ -1,0 +1,13 @@
+[Unit]
+Description=NEMOUX udev daemon service
+Requires=sockets.target
+After=sockets.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/tmp"
+Type=simple
+User=root
+ExecStart=/usr/bin/nemoudevd
+
+[Install]
+RequiredBy=multi-user.target

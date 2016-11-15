@@ -1,0 +1,20 @@
+#include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <linux/limits.h>
+
+#include <getopt.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <regex.h>
+#include <libgen.h>
+#include <magic.h>
+#include <pthread.h>

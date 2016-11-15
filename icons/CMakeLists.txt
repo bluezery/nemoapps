@@ -1,0 +1,4 @@
+INSTALL(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/
+    DESTINATION ${ICON_DIR}/common/
+    )

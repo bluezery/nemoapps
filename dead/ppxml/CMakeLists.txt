@@ -1,0 +1,11 @@
+ADD_EXECUTABLE(ppxml
+    ppxml.c
+	)
+
+TARGET_LINK_LIBRARIES(ppxml
+    ${NEMOAPPS_COMMON_LIBRARIES}
+	)
+
+INSTALL(TARGETS ppxml
+    DESTINATION bin
+    )

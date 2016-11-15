@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<@SUBPROJECT@>
+    <size width="7680" height="2160"/>
+    <frame rate="30"/>
+    <items icon="@WALL_IMG_DIR@/icon_bubble.png" txt="@WALL_ICON_DIR@/name_bubble.svg" exec="/usr/bin/electron;/opt/contents/skt/entertainment/melown"/>
+    <items icon="@WALL_IMG_DIR@/icon_airship.png" txt="@WALL_ICON_DIR@/name_airship.svg" exec="/usr/bin/electron;/opt/contents/skt/entertainment/genesis"/>
+    <items icon="@WALL_IMG_DIR@/icon_elephant.png" txt="@WALL_ICON_DIR@/name_elephant.svg" exec="/usr/bin/electron;/opt/contents/skt/entertainment/experience"/>
+    <items icon="" txt="" exec="/usr/bin/electron;/opt/contents/skt/entertainment/journey"/>
+    <items icon="" txt="" exec="/usr/bin/electron;/opt/contents/skt/entertainment/sports"/>
+    <items icon="" txt="" type="app" exec="/usr/bin/ste-explorer;-f;/opt/contents/skt/contents/ccei/"/>
+    <items icon="" txt="" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/skt/contents/wall/nugu.mp4"/>
+    <items icon="" txt="" type="app" exec="/usr/bin/nemoimage;-f;/opt/contents/skt/contents/wall/luna.jpg"/>
+</@SUBPROJECT@>
+

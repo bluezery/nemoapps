@@ -1,0 +1,19 @@
+SET(APPNAME "nemocard-menu")
+ADD_DEFINITIONS(-DAPPNAME="${APPNAME}")
+
+ADD_EXECUTABLE(${APPNAME}
+    menu.c
+    $<TARGET_OBJECTS:sound>
+    )
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+
+TARGET_LINK_LIBRARIES(${APPNAME}
+    nemoutil
+    nemowidget
+    ${NEMOAPPS_COMMON_LIBRARIES}
+    ${NEMOPLAY_LIBRARIES}
+	)
+
+INSTALL(TARGETS ${APPNAME}
+    DESTINATION bin
+    )

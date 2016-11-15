@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<@APPNAME@>
+    <frame rate="30"/>
+    <size width="1920" height="1080"/>
+</@APPNAME@>
+

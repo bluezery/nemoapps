@@ -1,0 +1,52 @@
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+.container-edge {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	background-color: transparent;
+}
+
+.blocker {
+	position: absolute;
+	z-index: 10;
+	background-color: #FFFFFF;
+	opacity: 0.0;
+}
+
+.logo-blocker {
+	top: 4px;
+	left: 4px;
+	width: 110px;
+	height: 27px;
+}
+
+.author-blocker {
+	top: 4px;
+	right: 10px;
+	width: 110px;
+	height: 37px;
+}
+
+.control-blocker {
+	top: 4px;
+	right: 10px;
+	width: 36px;
+	height: 150px;
+}
+
+.quit-button {
+	position: absolute;
+	top: 4px;
+	right: 10px;
+	width: 360px;;
+	height: 180px;
+	z-index: 11;
+	background-image: url('./quit.svg');
+	background-size: 100% 100%;
+	opacity: 0.0;
+}
