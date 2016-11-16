@@ -86,6 +86,7 @@ struct _ConfigApp {
     Config *config;
     double sxy;
     List *menu_items;
+    char *backline_path;
 };
 
 typedef struct _MenuView MenuView;
@@ -805,14 +806,18 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     iw *= app->sxy;
     ih *= app->sxy;
 
-    int back_line_cnt = 8;
-    char uri[PATH_MAX];
-    for (i = 0 ; i < back_line_cnt ; i++) {
-        snprintf(uri, PATH_MAX, WALL_ICON_DIR"/back_line%02d.svg", i);
-        view->orbit[i] = one = SVG_PATH_CREATE(group, width, height/1.5, uri);
-        nemoshow_item_set_fill_color(one, RGBA(WHITE));
-        nemoshow_item_set_anchor(one, 0.5, 0.5);
-        nemoshow_item_translate(one, width/2, height/2);
+    int backline_cnt = 0;
+    List *files = fileinfo_readdir(app->backline_path);
+    FileInfo *file;
+    LIST_FREE(files, file) {
+        if (fileinfo_is_svg(file)) {
+            view->orbit[backline_cnt] = one = SVG_PATH_CREATE(group, width, height/1.5, file->path);
+            nemoshow_item_set_fill_color(one, RGBA(WHITE));
+            nemoshow_item_set_anchor(one, 0.5, 0.5);
+            nemoshow_item_translate(one, width/2, height/2);
+            backline_cnt++;
+        }
+        fileinfo_destroy(file);
     }
 
     Animation *anim;
@@ -829,10 +834,9 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     animation_set_anchor(anim, 0.5, 0.5);
 
 
-    List *files = fileinfo_readdir(WALL_IMG_DIR"/planet");
+    files = fileinfo_readdir(WALL_IMG_DIR"/planet");
     int cnt = 0;
     List *l;
-    FileInfo *file;
     LIST_FOR_EACH(files, l, file) {
         if (file->is_dir) continue;
         cnt++;
@@ -842,14 +846,18 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     double gap = 1.0/cnt;
     double start = 0.0;
     LIST_FREE(files, file) {
-        if (file->is_dir) continue;
+        if (file->is_dir) {
+            fileinfo_destroy(file);
+            continue;
+        }
         Planet *planet = planet_create(view, app, file->path);
         planet->orbit_idx = ran;
         planet->position_t = start;
         view->planets = list_append(view->planets, planet);
         start += gap;
         ran++;
-        if (ran >= back_line_cnt) ran = 0;
+        if (ran >= backline_cnt) ran = 0;
+        fileinfo_destroy(file);
     }
     view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _menu_view_planet_timer, view);
 
@@ -927,12 +935,34 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         app->menu_items = list_append(app->menu_items, it);
     }
 
+    xml_unload(xml);
+
+    int id = 0;
+    struct option options[] = {
+        {"backline_id", required_argument, NULL, 'b'},
+        { NULL }
+    };
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "b", options, NULL)) != -1) {
+        switch(opt) {
+            case 'b':
+                id = atoi(optarg);
+                break;
+            default:
+                break;
+        }
+    }
+
+    app->backline_path = strdup_printf("%s/backline%d", WALL_ICON_DIR, id);
+
     return app;
 }
 
 static void _config_unload(ConfigApp *app)
 {
     config_unload(app->config);
+    if (app->backline_path) free(app->backline_path);
     free(app);
 }
 

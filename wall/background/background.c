@@ -447,29 +447,11 @@ BackgroundView *background_view_create(NemoWidget *parent, int width, int height
     background_translate(bg, (width - wh)/2, (height - wh)/2);
 
     return view;
-    /*
-    NemoWidget *widget;
-    struct showone *one;
-    view->widget_orbit = widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_enable_event_repeat(widget, true);
-    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
-
-    struct showone *canvas = nemowidget_get_canvas(widget);
-    view->orbit = one = IMAGE_CREATE(canvas, width, height/1.5, WALL_IMG_DIR"/back_line.png");
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, width/2, height/2);
-    */
-
-    return view;
 }
 
 void background_view_show(BackgroundView *view, uint32_t easetype, int duration, int delay)
 {
     background_show(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    /*
-    nemowidget_show(view->widget_orbit, 0, 0, 0);
-    nemowidget_set_alpha(view->widget_orbit, easetype, duration, delay, 1.0);
-    */
 }
 
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
@@ -515,6 +497,8 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     if (width > 0) sy = (double)app->config->height/height;
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
+
+    xml_unload(xml);
 
     return app;
 }
