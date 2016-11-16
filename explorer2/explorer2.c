@@ -998,7 +998,7 @@ static void explorer_arrange(Explorer *exp, uint32_t easetype, int duration, int
     List *l;
     ExplorerItem *it;
     LIST_FOR_EACH(exp->items, l, it) {
-        int x, y, w, h;
+        int x, y;
         row = idx/exp->cnt_inrow;
         x = exp->x_pad + exp->itw/2 + exp->itw * (idx % exp->cnt_inrow) + ((row%2) * exp->it_gap);
         y = exp->y_pad + exp->ith/2 + exp->ith * row;
@@ -1193,8 +1193,6 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     }
     if (xml) {
         char buf[PATH_MAX];
-        const char *temp;
-
         snprintf(buf, PATH_MAX, "%s/filetype", appname);
 
         List *types = xml_search_tags(xml, buf);

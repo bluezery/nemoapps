@@ -363,7 +363,6 @@ Menu *menu_create(MenuView *view)
     menu->show = view->show;
 
     struct showone *group;
-    struct showone *one;
     menu->group = group = GROUP_CREATE(view->group);
     nemoshow_item_set_alpha(group, 0.0);
 
