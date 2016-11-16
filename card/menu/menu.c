@@ -870,7 +870,7 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(card->show);
 }
 
-Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *logfile)
+Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, int item_x, int item_y, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *logfile)
 {
     Card *card = calloc(sizeof(Card), 1);
     card->show = nemowidget_get_show(parent);
@@ -903,8 +903,13 @@ Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int i
     card->cx = (card->width - card->cw)/2;
     card->cy = (card->height - card->ch)/2;
 
-    card->ix = card->cx;
-    card->iy = card->cy + card->ch/2;
+    if (item_x > 0 && item_y > 0) {
+        card->ix = item_x;
+        card->iy = item_y;
+    } else {
+        card->ix = card->cx;
+        card->iy = card->cy + card->ch/2;
+    }
 
     NemoWidget *widget;
     card->widget = widget = nemowidget_create_vector(parent, width, height);
@@ -1002,7 +1007,7 @@ struct _ConfigApp {
     int item_cnt;
     int item_area_width, item_area_height;
     int item_duration;
-    int item_width, item_height;
+    int item_x, item_y, item_width, item_height;
     int item_grab_min_time;
     int guide_duration;
     char *logfile;
@@ -1089,6 +1094,24 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     } else {
         app->item_duration = atoi(temp);
     }
+
+    temp = xml_get_value(xml, buf, "x");
+    if (!temp) {
+        app->item_x = -99;
+        ERR("%d", app->item_x);
+    } else {
+        app->item_x = atoi(temp);
+    }
+    app->item_x *= app->sxy;
+    temp = xml_get_value(xml, buf, "y");
+    if (!temp) {
+        app->item_y = -99;
+        ERR("%d", app->item_y);
+    } else {
+        app->item_y = atoi(temp);
+    }
+    ERR("%d %d", app->item_x, app->item_x);
+    app->item_y *= app->sxy;
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
         ERR("No item width in %s", appname);
@@ -1181,7 +1204,8 @@ int main(int argc, char *argv[])
 
     Card *card = card_create(win, app->config->width, app->config->height,
             app->item_cnt, app->item_area_width, app->item_area_height, app->item_duration,
-            app->item_width, app->item_height, app->item_grab_min_time,
+            app->item_x, app->item_y, app->item_width, app->item_height,
+            app->item_grab_min_time,
             app->guide_duration, app->logfile);
 
     List *l;
