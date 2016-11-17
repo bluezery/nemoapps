@@ -20,6 +20,22 @@
 #include "nemohelper.h"
 #include "sound.h"
 
+typedef struct _ConfigApp ConfigApp;
+struct _ConfigApp {
+    Config *config;
+    List *menu_items;
+    double sxy;
+    int item_cnt;
+    int item_area_width, item_area_height;
+    int item_duration;
+    double item_px, item_py;
+    int item_width, item_height;
+    double item_icon_px, item_icon_py, item_txt_px, item_txt_py;
+    int item_grab_min_time;
+    int guide_duration;
+    char *logfile;
+};
+
 typedef struct _Log Log;
 struct _Log {
     char *file;
@@ -225,6 +241,7 @@ struct _CardItem {
     char *type;
     char *bg_uri;
     char *icon_uri;
+    char *icon_anim;
     char *txt_uri;
     char *exec;
     bool resize;
@@ -239,7 +256,9 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
     CardItem *it = userdata;
     struct nemoshow *show = it->icon->show;
 
-    if (strstr(it->icon_uri, "shopguide")) {
+    RET_IF(!it->icon_anim);
+
+    if (strstr(it->icon_anim, "shopguide")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_OUT_TYPE, 2000, 0);
         nemomotion_attach(m, 0.5,
@@ -251,7 +270,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
                 NULL);
         nemomotion_run(m);
         nemotimer_set_timeout(timer, 2010);
-    } else if (strstr(it->icon_uri, "shoppingnews")) {
+    } else if (strstr(it->icon_anim, "shoppingnews")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_INOUT_TYPE, 1500, 0);
         nemomotion_attach(m, 0.5,
@@ -260,7 +279,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
                 it->icon, "alpha", 1.0, NULL);
         nemomotion_run(m);
         nemotimer_set_timeout(timer, 1510);
-    } else if (strstr(it->icon_uri, "smartshopping")) {
+    } else if (strstr(it->icon_anim, "smartshopping")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_LINEAR_TYPE, 2000, 0);
         nemomotion_attach(m, 0.5,
@@ -269,7 +288,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
                 it->icon, "ro", 45.0, NULL);
         nemomotion_run(m);
         nemotimer_set_timeout(timer, 2020);
-    } else if (strstr(it->icon_uri, "culturecenter")) {
+    } else if (strstr(it->icon_anim, "culturecenter")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_LINEAR_TYPE, 5000, 0);
         nemoshow_item_rotate(it->icon, 0.0);
@@ -277,7 +296,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
                 it->icon, "ro", 360.0, NULL);
         nemomotion_run(m);
         nemotimer_set_timeout(timer, 5010);
-    } else if (strstr(it->icon_uri, "entertainment")) {
+    } else if (strstr(it->icon_anim, "entertainment")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_INOUT_TYPE, 2500, 0);
         nemomotion_attach(m, 0.5,
@@ -302,6 +321,7 @@ CardItem *card_item_dup(CardItem *it)
     dup->type = strdup(it->type);
     dup->bg_uri = strdup(it->bg_uri);
     dup->icon_uri = strdup(it->icon_uri);
+    if (it->icon_anim) dup->icon_anim = strdup(it->icon_anim);
     if (it->txt_uri) dup->txt_uri = strdup(it->txt_uri);
     dup->exec = strdup(it->exec);
     dup->resize = it->resize;
@@ -369,7 +389,7 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
-CardItem *card_create_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, const char *txt_uri, const char *exec, bool resize, double sxy)
+CardItem *card_create_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri,  const char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
     it->card = card;
@@ -378,6 +398,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
     it->type = strdup(type);
     it->bg_uri = strdup(bg_uri);
     it->icon_uri = strdup(icon_uri);
+    if (icon_anim) it->icon_anim = strdup(icon_anim);
     if (txt_uri) it->txt_uri = strdup(txt_uri);
     it->exec = strdup(exec);
     it->resize = resize;
@@ -429,16 +450,22 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
         return NULL;
     }
 
-    // XXX: for lotte
-    if (strstr(it->icon_uri, "smartshopping")) {
-        nemoshow_item_set_anchor(one, 0.5, 0.0);
-        nemoshow_item_translate(one, it->width/2, it->height * 0.35 - h/2.0);
-    } else if (strstr(it->icon_uri, "entertainment")) {
-        nemoshow_item_set_anchor(one, 0.5, 1.0);
-        nemoshow_item_translate(one, it->width/2, it->height * 0.35);
+    nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
+    if (it->icon_anim) {
+        // XXX: for lotte
+        if (strstr(it->icon_anim, "smartshopping")) {
+            nemoshow_item_set_anchor(one, 0.5, 0.0);
+            nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * (app->item_icon_py - 0.15));
+        } else if (strstr(it->icon_anim, "entertainment")) {
+            nemoshow_item_set_anchor(one, 0.5, 1.0);
+            nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
+        } else {
+            nemoshow_item_set_anchor(one, 0.5, 0.5);
+            nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
+        }
     } else {
         nemoshow_item_set_anchor(one, 0.5, 0.5);
-        nemoshow_item_translate(one, it->width/2, it->height * 0.35);
+        nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
     }
 
     it->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, it);
@@ -450,7 +477,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
         h = hh * global_sxy;
         it->txt = one = SVG_PATH_GROUP_CREATE(group, w, h, it->txt_uri);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
-        nemoshow_item_translate(one, it->width/2, it->height * 0.7);
+        nemoshow_item_translate(one, it->width * app->item_txt_px, it->height * app->item_txt_py);
     }
 
 
@@ -463,15 +490,16 @@ void card_item_destroy(CardItem *it)
     nemoshow_one_destroy(it->group);
     free(it->bg_uri);
     free(it->icon_uri);
+    if (it->icon_anim) free(it->icon_anim);
     if (it->txt_uri) free(it->txt_uri);
     free(it->exec);
     free(it);
 }
 
-CardItem *card_append_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, const char *txt_uri, const char *exec, bool resize, double sxy)
+CardItem *card_append_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, ConfigApp *app)
 {
     CardItem *it;
-    it = card_create_item(card, global_sxy, type, bg_uri, icon_uri, txt_uri, exec, resize, sxy);
+    it = card_create_item(card, global_sxy, type, bg_uri, icon_uri, icon_anim, txt_uri, exec, resize, sxy, app);
     RET_IF(!it, NULL);
     card->items = list_append(card->items, it);
 
@@ -504,7 +532,7 @@ void card_item_show(CardItem *it, uint32_t easetype, int duration, int delay)
 {
     nemoshow_one_above(it->group, NULL);
     card_item_set_alpha(it, easetype, duration, delay, 1.0);
-    nemotimer_set_timeout(it->icon_timer, 100 + delay);
+    if (it->icon_anim) nemotimer_set_timeout(it->icon_timer, 100 + delay);
 }
 
 void card_item_hide(CardItem *it, uint32_t easetype, int duration, int delay)
@@ -870,7 +898,7 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(card->show);
 }
 
-Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, int item_x, int item_y, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *logfile)
+Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, double item_px, double item_py, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *logfile)
 {
     Card *card = calloc(sizeof(Card), 1);
     card->show = nemowidget_get_show(parent);
@@ -900,16 +928,11 @@ Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int i
     } else {
         card->ch = card->height/3;
     }
-    card->cx = (card->width - card->cw)/2;
-    card->cy = (card->height - card->ch)/2;
+    card->cx = (card->width - card->cw) * item_px;
+    card->cy = (card->height - card->ch) * item_py;
 
-    if (item_x > 0 && item_y > 0) {
-        card->ix = item_x;
-        card->iy = item_y;
-    } else {
-        card->ix = card->cx;
-        card->iy = card->cy + card->ch/2;
-    }
+    card->ix = card->cx;
+    card->iy = card->cy + card->ch/2;
 
     NemoWidget *widget;
     card->widget = widget = nemowidget_create_vector(parent, width, height);
@@ -948,6 +971,7 @@ struct _MenuItem {
     char *bg;
     char *txt;
     char *icon;
+    char *icon_anim;
     char *exec;
     bool resize;
     double sxy;
@@ -970,13 +994,17 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
             if (attr->val) {
                  item->bg = strdup(attr->val);
             }
-        } else if (!strcmp(attr->key, "txt")) {
-            if (attr->val) {
-                 item->txt = strdup(attr->val);
-            }
         } else if (!strcmp(attr->key, "icon")) {
             if (attr->val) {
                  item->icon = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "icon_anim")) {
+            if (attr->val) {
+                 item->icon_anim = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "txt")) {
+            if (attr->val) {
+                 item->txt = strdup(attr->val);
             }
         } else if (!strcmp(attr->key, "exec")) {
             if (attr->val) {
@@ -999,24 +1027,16 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
     return item;
 }
 
-typedef struct _ConfigApp ConfigApp;
-struct _ConfigApp {
-    Config *config;
-    List *menu_items;
-    double sxy;
-    int item_cnt;
-    int item_area_width, item_area_height;
-    int item_duration;
-    int item_x, item_y, item_width, item_height;
-    int item_grab_min_time;
-    int guide_duration;
-    char *logfile;
-};
-
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->config = config_load(domain, appname, filename, argc, argv);
+    app->item_px = 0.5;
+    app->item_py = 0.5;
+    app->item_icon_px = 0.5;
+    app->item_icon_py = 0.35;
+    app->item_txt_px = 0.5;
+    app->item_txt_py = 0.7;
 
     Xml *xml;
     if (app->config->path) {
@@ -1095,20 +1115,18 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         app->item_duration = atoi(temp);
     }
 
-    temp = xml_get_value(xml, buf, "x");
+    temp = xml_get_value(xml, buf, "px");
     if (!temp) {
-        app->item_x = -99;
+        ERR("No item px in %s", appname);
     } else {
-        app->item_x = atoi(temp);
+        app->item_px = atof(temp);
     }
-    app->item_x *= app->sxy;
-    temp = xml_get_value(xml, buf, "y");
+    temp = xml_get_value(xml, buf, "py");
     if (!temp) {
-        app->item_y = -99;
+        ERR("No item py in %s", appname);
     } else {
-        app->item_y = atoi(temp);
+        app->item_py = atof(temp);
     }
-    app->item_y *= app->sxy;
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
         ERR("No item width in %s", appname);
@@ -1123,6 +1141,33 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         app->item_height = atoi(temp);
     }
     app->item_height *= app->sxy;
+
+    // Position
+    temp = xml_get_value(xml, buf, "icon_px");
+    if (!temp) {
+        ERR("No item icon_px in %s", appname);
+    } else {
+        app->item_icon_px = atof(temp);
+    }
+    temp = xml_get_value(xml, buf, "icon_py");
+    if (!temp) {
+        ERR("No item icon_py in %s", appname);
+    } else {
+        app->item_icon_py = atof(temp);
+    }
+    temp = xml_get_value(xml, buf, "txt_px");
+    if (!temp) {
+        ERR("No item txt_px in %s", appname);
+    } else {
+        app->item_txt_px = atof(temp);
+    }
+    temp = xml_get_value(xml, buf, "txt_py");
+    if (!temp) {
+        ERR("No item txt_py in %s", appname);
+    } else {
+        app->item_txt_py = atof(temp);
+    }
+
     temp = xml_get_value(xml, buf, "grab_min_time");
     if (!temp) {
         ERR("No item grab_min_time in %s", appname);
@@ -1156,8 +1201,10 @@ static void _config_unload(ConfigApp *app)
     config_unload(app->config);
     MenuItem *it;
     LIST_FREE(app->menu_items, it) {
+        free(it->type);
         free(it->bg);
         if (it->icon) free(it->icon);
+        if (it->icon_anim) free(it->icon_anim);
         if (it->txt) free(it->txt);
         free(it->exec);
         free(it);
@@ -1201,7 +1248,7 @@ int main(int argc, char *argv[])
 
     Card *card = card_create(win, app->config->width, app->config->height,
             app->item_cnt, app->item_area_width, app->item_area_height, app->item_duration,
-            app->item_x, app->item_y, app->item_width, app->item_height,
+            app->item_px, app->item_py, app->item_width, app->item_height,
             app->item_grab_min_time,
             app->guide_duration, app->logfile);
 
@@ -1209,7 +1256,7 @@ int main(int argc, char *argv[])
     MenuItem *it;
     LIST_FOR_EACH(app->menu_items, l, it) {
         card_append_item(card, app->sxy,
-                it->type, it->bg, it->icon, it->txt, it->exec, it->resize, it->sxy);
+                it->type, it->bg, it->icon, it->icon_anim, it->txt, it->exec, it->resize, it->sxy, app);
     }
     card_show(card);
     nemowidget_append_callback(win, "layer", _card_win_layer, card);
