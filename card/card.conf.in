@@ -1,28 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<@SUBPROJECT@>
+<nemocard>
     <size width="3240" height="1920"/>
     <frame rate="30"/>
-    <background path="@CARD_IMG_DIR@/background" timeout="60000" duration="2000"/>
-    <sketch timeout="3000" min_distance="10.0" dot_count="60"/>
-    <icon count="12" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000"/>
-    <item count="5" area_width="1620" area_height="640" duration="10000" width="269" height="478" grab_min_time="500"/>
     <guide duration="5000"/>
+    <item count="5" area_width="1620" area_height="640" duration="10000" width="269" height="478" grab_min_time="500"/>
     <log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>
-    <items bg="@CARD_IMG_DIR@/shopguide_bg.png" icon="@CARD_ICON_DIR@/shopguide_icon.svg" txt="@CARD_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/shoppingnews_bg.png" icon="@CARD_ICON_DIR@/shoppingnews_icon.svg" txt="@CARD_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/smartshopping_bg.png" icon="@CARD_ICON_DIR@/smartshopping_icon.svg" txt="@CARD_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/culturecenter_bg.png" icon="@CARD_ICON_DIR@/culturecenter_icon.svg" txt="@CARD_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/entertainment_bg.png" icon="@CARD_ICON_DIR@/entertainment_icon.svg" txt="@CARD_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/shopguide_bg.png" icon="@CARD_ICON_DIR@/shopguide_icon.svg" txt="@CARD_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/shoppingnews_bg.png" icon="@CARD_ICON_DIR@/shoppingnews_icon.svg" txt="@CARD_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/smartshopping_bg.png" icon="@CARD_ICON_DIR@/smartshopping_icon.svg" txt="@CARD_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/culturecenter_bg.png" icon="@CARD_ICON_DIR@/culturecenter_icon.svg" txt="@CARD_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
-    <items bg="@CARD_IMG_DIR@/entertainment_bg.png" icon="@CARD_ICON_DIR@/entertainment_icon.svg" txt="@CARD_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@CARD_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
-    <icons path="@CARD_ICON_DIR@/logo.svg"/>
-    <icons path="@CARD_ICON_DIR@/shopguide_icon.svg"/>
-    <icons path="@CARD_ICON_DIR@/shoppingnews_icon.svg"/>
-    <icons path="@CARD_ICON_DIR@/smartshopping_icon.svg"/>
-    <icons path="@CARD_ICON_DIR@/culturecenter_icon.svg"/>
-    <icons path="@CARD_ICON_DIR@/entertainment_icon.svg"/>
-</@SUBPROJECT@>
+    <items bg="@IMG_DIR@/shopguide_bg.png" icon="@ICON_DIR@/shopguide_icon.svg" txt="@ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/shoppingnews_bg.png" icon="@ICON_DIR@/shoppingnews_icon.svg" txt="@ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/smartshopping_bg.png" icon="@ICON_DIR@/smartshopping_icon.svg" txt="@ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/culturecenter_bg.png" icon="@ICON_DIR@/culturecenter_icon.svg" txt="@ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/entertainment_bg.png" icon="@ICON_DIR@/entertainment_icon.svg" txt="@ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/shopguide_bg.png" icon="@ICON_DIR@/shopguide_icon.svg" txt="@ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/shoppingnews_bg.png" icon="@ICON_DIR@/shoppingnews_icon.svg" txt="@ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/smartshopping_bg.png" icon="@ICON_DIR@/smartshopping_icon.svg" txt="@ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/culturecenter_bg.png" icon="@ICON_DIR@/culturecenter_icon.svg" txt="@ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
+    <items bg="@IMG_DIR@/entertainment_bg.png" icon="@ICON_DIR@/entertainment_icon.svg" txt="@ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
+</nemocard>
 

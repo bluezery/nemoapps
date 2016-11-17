@@ -2,12 +2,9 @@
 <nemocard>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
-    <background path="@SGE_IMG_DIR@/background" timeout="30000" duration="2000"/>
-    <sketch timeout="3000" min_distance="10.0" dot_count="60"/>
-    <icon count="12" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_duration="1000"/>
-    <item count="8" area_width="2160" area_height="1080" duration="10000" width="431" height="731" grab_min_time="500"/>
-    <guide duration="5000"/>
     <log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>
+    <guide duration="5000"/>
+    <item count="8" area_width="2160" area_height="1080" duration="10000" width="431" height="731" grab_min_time="500"/>
     <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_wifihome.svg" txt="@SGE_ICON_DIR@/name/wifihouse_smarthome.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/SKT SmartHome.mp4"/>
     <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_LHlogo.svg" txt="@SGE_ICON_DIR@/name/LHlogo_promotion.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH 홍보영상.mp4"/>
     <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_city.svg" txt="@SGE_ICON_DIR@/name/city_smartcity.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Smart City.mp4"/>
@@ -55,15 +52,4 @@
     <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_mountain.svg" txt="@SGE_ICON_DIR@/name/mountain_hanra.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/29" resize="off" sxy="1.0"/>
     <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_ulleungdo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/30" resize="off" sxy="1.0"/>
 -->
-    <icons path="@SGE_ICON_DIR@/icon0.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon1.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon2.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon3.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon4.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon5.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon6.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon7.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo0.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo1.svg"/>
 </nemocard>

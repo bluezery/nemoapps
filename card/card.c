@@ -1032,7 +1032,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
-    List *tags  = xml_search_tags(xml, SUBPROJECT"/items");
+    List *tags  = xml_search_tags(xml, APPNAME"/items");
     List *l;
     XmlTag *tag;
     LIST_FOR_EACH(tags, l, tag) {
@@ -1098,7 +1098,6 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     temp = xml_get_value(xml, buf, "x");
     if (!temp) {
         app->item_x = -99;
-        ERR("%d", app->item_x);
     } else {
         app->item_x = atoi(temp);
     }
@@ -1106,11 +1105,9 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     temp = xml_get_value(xml, buf, "y");
     if (!temp) {
         app->item_y = -99;
-        ERR("%d", app->item_y);
     } else {
         app->item_y = atoi(temp);
     }
-    ERR("%d %d", app->item_x, app->item_x);
     app->item_y *= app->sxy;
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
@@ -1169,7 +1166,7 @@ static void _config_unload(ConfigApp *app)
     free(app);
 }
 
-static void _card_menu_win_layer(NemoWidget *win, const char *id, void *info, void *userdata)
+static void _card_win_layer(NemoWidget *win, const char *id, void *info, void *userdata)
 {
     Card *card = userdata;
     int32_t visible = (intptr_t)info;
@@ -1188,7 +1185,7 @@ static void _card_menu_win_layer(NemoWidget *win, const char *id, void *info, vo
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, SUBPROJECT, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     if (app->logfile) _log = log_create(app->logfile);
@@ -1215,7 +1212,7 @@ int main(int argc, char *argv[])
                 it->type, it->bg, it->icon, it->txt, it->exec, it->resize, it->sxy);
     }
     card_show(card);
-    nemowidget_append_callback(win, "layer", _card_menu_win_layer, card);
+    nemowidget_append_callback(win, "layer", _card_win_layer, card);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nemocard>
+    <size width="3840" height="2160"/>
+    <frame rate="30"/>
+    <guide duration="5000"/>
+    <item count="8" area_width="2160" area_height="1080" duration="10000" width="454" height="681" grab_min_time="500"/>
+    <!--<log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>-->
+    <items bg="@HYUNDAI_IMG_DIR@/card_01.png" icon="@HYUNDAI_IMG_DIR@/aslan.png" txt="@HYUNDAI_ICON_DIR@/name/aslan.svg"       type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/aslan"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_02.png" icon="@HYUNDAI_IMG_DIR@/grandeur.png" txt="@HYUNDAI_ICON_DIR@/name/grandeur.svg" type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/grandeur"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_03.png" icon="@HYUNDAI_IMG_DIR@/i40.png" txt="@HYUNDAI_ICON_DIR@/name/i40.svg"           type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/i40"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_04.png" icon="@HYUNDAI_IMG_DIR@/santafe.png" txt="@HYUNDAI_ICON_DIR@/name/santafe.svg"   type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/santafe"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_05.png" icon="@HYUNDAI_IMG_DIR@/tucson.png" txt="@HYUNDAI_ICON_DIR@/name/tucson.svg"     type="app"  exec="/usr/bin/nemoplayer;-f;/opt/contents/hyundai/tucson.mp4"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_06.png" icon="@HYUNDAI_IMG_DIR@/accent.png" txt="@HYUNDAI_ICON_DIR@/name/accent.svg"     type="app"  exec="/usr/bin/nemoplayer;-f;/opt/contents/hyundai/accent.mp4"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_07.png" icon="@HYUNDAI_IMG_DIR@/avante.png" txt="@HYUNDAI_ICON_DIR@/name/avante.svg"     type="app"  exec="/usr/bin/nemoplayer;-f;/opt/contents/hyundai/avante.mp4"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_08.png" icon="@HYUNDAI_IMG_DIR@/sonata.png" txt="@HYUNDAI_ICON_DIR@/name/sonata.svg"     type="app"  exec="/usr/bin/nemoplayer;-f;/opt/contents/hyundai/sonata.mp4"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_09.png" icon="@HYUNDAI_IMG_DIR@/genesis.png" txt="@HYUNDAI_ICON_DIR@/name/genesis.svg"   type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/genesis"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_10.png" icon="@HYUNDAI_IMG_DIR@/sports.png" txt="@HYUNDAI_ICON_DIR@/name/sports.svg"     type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/sports"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_11.png" icon="@HYUNDAI_IMG_DIR@/experience.png" txt="@HYUNDAI_ICON_DIR@/name/experience.svg" type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/experience"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_12.png" icon="@HYUNDAI_IMG_DIR@/vr.png" txt="@HYUNDAI_ICON_DIR@/name/vr.svg"             type="xapp" exec="/usr/bin/electron;@HYUNDAI_LINK_DIR@/vr"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_13.png" icon="@HYUNDAI_IMG_DIR@/movie.png" txt="@HYUNDAI_ICON_DIR@/name/movie.svg"       type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/hyundai/movie"/>
+    <items bg="@HYUNDAI_IMG_DIR@/card_14.png" icon="@HYUNDAI_IMG_DIR@/catalog.png" txt="@HYUNDAI_ICON_DIR@/name/catalog.svg"   type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/hyundai/catalog"/>
+</nemocard>
