@@ -2,6 +2,7 @@
 <nemocard>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
+    <launch type="table"/>
     <guide duration="5000"/>
     <item count="8" area_width="2160" area_height="1080" duration="10000" width="454" height="681" grab_min_time="500"/>
     <!--<log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>-->
