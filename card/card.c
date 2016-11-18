@@ -1065,19 +1065,11 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
-    List *tags  = xml_search_tags(xml, APPNAME"/items");
-    List *l;
-    XmlTag *tag;
-    LIST_FOR_EACH(tags, l, tag) {
-        MenuItem *it = parse_tag_menu(tag);
-        if (!it) continue;
-        if (!it->type) it->type = strdup("xapp");
-        app->menu_items = list_append(app->menu_items, it);
-    }
-
     char buf[PATH_MAX];
     const char *temp;
 
+    double sx = 1.0;
+    double sy = 1.0;
     int width, height;
     snprintf(buf, PATH_MAX, "%s/size", appname);
     temp = xml_get_value(xml, buf, "width");
@@ -1092,13 +1084,20 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     } else {
         height = atoi(temp);
     }
-
-    double sx = 1.0;
-    double sy = 1.0;
     if (width > 0) sx = (double)app->config->width/width;
     if (width > 0) sy = (double)app->config->height/height;
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
+
+    List *tags  = xml_search_tags(xml, APPNAME"/items");
+    List *l;
+    XmlTag *tag;
+    LIST_FOR_EACH(tags, l, tag) {
+        MenuItem *it = parse_tag_menu(tag);
+        if (!it) continue;
+        if (!it->type) it->type = strdup("xapp");
+        app->menu_items = list_append(app->menu_items, it);
+    }
 
     snprintf(buf, PATH_MAX, "%s/item", appname);
     temp = xml_get_value(xml, buf, "count");
