@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<@APPNAME@>
+    <size width="3840" height="2160" col="4" row="4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <!--
+    <file path="/home/root/FUTURE/MS 2011.mp4"/>
+    <file path="/home/root/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
+    <file path="/home/root/FUTURE/Expected future for the Deaf.mp4"/>
+    <file path="/home/root/FUTURE/FutureVision Town.mp4"/>
+    <file path="/home/root/FUTURE/IKEA Kitchen 2025.mp4"/>
+    <file path="/home/root/FUTURE/Meta Glasses are the future of computing.mp4"/>
+    <file path="/home/root/FUTURE/Microsoft in 2019 [HQ].mp4"/>
+    <file path="/home/root/FUTURE/Microsoft- Productivity Future Vision.mp4"/>
+    <file path="/home/root/FUTURE/PGR 21 SMART.mp4"/>
+    <file path="/home/root/FUTURE/Smart buildings - the future of building technology.mp4"/>
+    <file path="/home/root/FUTURE/Pizza Hut + Chaotic Moon Studios Interactive Concept Table.mp4"/>
+    <file path="/home/root/FUTURE/The Future According To Samsung.mp4"/>
+    <file path="/home/root/FUTURE/United Rentals - Future Vision - HD.mp4"/>
+    <file path="/home/root/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
+    <file path="/home/root/FUTURE/A Day Made of Glass... Made possible by Corning. (2011).mp4"/>
+    -->
+</@APPNAME@>
