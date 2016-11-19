@@ -507,7 +507,9 @@ int main(int argc, char *argv[])
                 (i%app->col) * w, (i/app->row) * h);
         playerview_show(view);
         i++;
+        if (i >= app->col * app->row) break;
     }
+    LIST_FREE(app->paths, path) free(path);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
