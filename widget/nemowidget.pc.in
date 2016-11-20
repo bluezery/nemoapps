@@ -4,7 +4,7 @@ libdir=@CMAKE_INSTALL_LIBDIR@
 includedir=@CMAKE_INSTALL_INCDIR@
 libname=@LIBNAME@
 
-Name: Nemowidget
+Name: @LIBNAME@
 Description: NEMO Widget Library
 Version: 0.1.0
 Requires: nemoapps nemoutil

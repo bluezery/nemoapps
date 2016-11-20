@@ -13,8 +13,8 @@
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
-
 #include <nemoplay.h>
+
 #include <nemosound.h>
 
 #include "util.h"

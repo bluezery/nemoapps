@@ -13,11 +13,12 @@ LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 
 ADD_EXECUTABLE(${APPNAME}
     livestream.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoview)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
+    nemoview
     ${NEMOAPPS_COMMON_LIBRARIES}
     ${NEMOPLAY_LIBRARIES}
 	)

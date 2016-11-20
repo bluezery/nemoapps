@@ -1,6 +1,9 @@
 #ifndef __UTIL_COMMON_H__
 #define __UTIL_COMMON_H__
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #define EPSILON 0.001
 #define EQUAL(a, b) (((a) > (b)) ? (((a) - (b)) < EPSILON) : (((b) - (a)) < EPSILON))
 #define DISTANCE(x, y, xx, yy) sqrt(pow((x) - (xx), 2.0) + pow((y) - (yy), 2.0))
@@ -90,6 +93,14 @@ Clock clock_get();
 
 void WELLRNG512_INIT();
 unsigned long WELLRNG512(void);
+
+
+static inline void parse_seconds_to_hms(int64_t seconds, int *hour, int *min, int *sec)
+{
+    if (hour) *hour = seconds/3600;
+    if (min) *min = (seconds%3600)/60;
+    if (sec) *sec = (seconds%3600)%60;
+}
 
 #ifdef __cplusplus
 }

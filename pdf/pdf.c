@@ -19,11 +19,6 @@
 #include "graph.h"
 #include "nemohelper.h"
 
-#define NEMOPLAY_POS_CMD 0x10000
-#define NEMOPLAY_FF_CMD 0x10
-#define NEMOPLAY_FR_CMD 0x100
-#define NEMOPLAY_RESET_CMD 0x1000
-
 #define COLOR0 0xEA562DFF
 #define COLOR1 0x35FFFFFF
 #define COLORBACK 0x10171E99

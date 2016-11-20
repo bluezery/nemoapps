@@ -251,13 +251,6 @@ static void *_nemoplay_handle_audioplay(void *data)
 	return NULL;
 }
 
-static void parse_seconds_to_hms(int64_t seconds, int *hour, int *min, int *sec)
-{
-    if (hour) *hour = seconds/3600;
-    if (min) *min = (seconds%3600)/60;
-    if (sec) *sec = (seconds%3600)%60;
-}
-
 static void _nemoplay_dispatch_progress_timeout(struct nemotimer *timer, void *userdata)
 {
     PlayerView *view = userdata;

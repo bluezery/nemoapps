@@ -5,9 +5,9 @@ includedir=@CMAKE_INSTALL_INCDIR@
 libname=@LIBNAME@
 
 Name: @LIBNAME@
-Description: NEMO Utility Library
+Description: NEMO View Library
 Version: 0.1.0
-Requires: MagickWand expat
+Requires: nemoutil nemowidget nemoplay
 Requires.private:
-Libs: -L${libdir} -l${libname} -lmagic
+Libs: -L${libdir} -l${libname} -lnemoutil -lnemowidget -lnemoplay
 Cflags: -I${includedir}/${libname}
