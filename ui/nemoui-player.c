@@ -1,10 +1,14 @@
+#include <nemotool.h>
+#include <nemoshow.h>
+
 #include <ao/ao.h>
 #include <nemoplay.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemohelper.h"
 #include "nemoui.h"
+#include "nemoui-player.h"
 
 struct _PlayerView {
     struct nemotool *tool;

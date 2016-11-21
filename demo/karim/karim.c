@@ -12,7 +12,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"
@@ -2146,9 +2146,9 @@ static WorkIcon *work_view_create_icon(WorkView *view, const char *id,
     h = h * (view->h/2160.0);
     icon->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    nemoshow_one_set_state(img->one, NEMOSHOW_PICK_STATE);
-    if (id) nemoshow_one_set_id(img->one, id);
-    nemoshow_one_set_userdata(img->one, icon);
+    nemoshow_one_set_state(image_get_one(img), NEMOSHOW_PICK_STATE);
+    if (id) nemoshow_one_set_id(image_get_one(img), id);
+    nemoshow_one_set_userdata(image_get_one(img), icon);
     image_translate(img, 0, 0, 0, img_tx, img_ty);
     image_scale(img, 0, 0, 0, 0, 0);
     image_set_alpha(img, 0, 0, 0, 0.0);
@@ -2184,7 +2184,7 @@ static void work_icon_show(WorkIcon *icon, uint32_t easetype, int duration, int 
             "alpha", 1.0, NULL);
 
     image_set_alpha(icon->img, easetype, duration, delay, 1.0);
-    _nemoshow_item_motion_bounce(icon->img->group, easetype, duration, delay,
+    _nemoshow_item_motion_bounce(image_get_group(icon->img), easetype, duration, delay,
             "sx", 1.25, 1.0, "sy", 1.25, 1.0, NULL);
     _nemoshow_item_motion_bounce(icon->txt, easetype, duration, delay,
             "sx", 1.25, 1.0, NULL);
@@ -2403,11 +2403,11 @@ void work_view_hide(WorkView *view, uint32_t easetype, int duration, int delay)
 
 static void work_icon_down(WorkIcon *icon, uint32_t easetype, int duration, int delay)
 {
-    _nemoshow_item_motion_bounce(icon->img->group, easetype, duration, delay,
+    _nemoshow_item_motion_bounce(image_get_group(icon->img), easetype, duration, delay,
             "sx", 1.5, 1.4, "sy", 1.5, 1.4,
             NULL);
     if (icon->img1) {
-        _nemoshow_item_motion_bounce(icon->img1->group, easetype, duration, delay,
+        _nemoshow_item_motion_bounce(image_get_group(icon->img1), easetype, duration, delay,
                 "sx", 1.5, 1.4, "sy", 1.5, 1.4,
                 NULL);
         image_set_alpha(icon->img, easetype, duration, delay, 0.0);
@@ -2417,11 +2417,11 @@ static void work_icon_down(WorkIcon *icon, uint32_t easetype, int duration, int 
 
 static void work_icon_up(WorkIcon *icon, uint32_t easetype, int duration, int delay)
 {
-    _nemoshow_item_motion_bounce(icon->img->group, easetype, duration, delay,
+    _nemoshow_item_motion_bounce(image_get_group(icon->img), easetype, duration, delay,
             "sx", 0.8, 1.0, "sy", 0.8, 1.0,
             NULL);
     if (icon->img1) {
-        _nemoshow_item_motion_bounce(icon->img1->group, easetype, duration, delay,
+        _nemoshow_item_motion_bounce(image_get_group(icon->img1), easetype, duration, delay,
                 "sx", 0.8, 1.0, "sy", 0.8, 1.0,
                 NULL);
         image_set_alpha(icon->img, easetype, duration, delay, 1.0);

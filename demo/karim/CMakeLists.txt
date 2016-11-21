@@ -12,10 +12,11 @@ ADD_DEFINITIONS(-DKARIM_LINK_DIR="${KARIM_LINK_DIR}")
 ADD_EXECUTABLE(${APPNAME}
     karim.c
 	)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
+    nemoui
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)

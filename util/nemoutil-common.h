@@ -102,6 +102,12 @@ static inline void parse_seconds_to_hms(int64_t seconds, int *hour, int *min, in
     if (sec) *sec = (seconds%3600)%60;
 }
 
+static inline int factorial(int n)
+{
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
 #ifdef __cplusplus
 }
 #endif

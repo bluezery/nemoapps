@@ -14,7 +14,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"

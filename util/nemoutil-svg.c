@@ -1,6 +1,6 @@
-#include "util-internal.h"
-#include "util-svg.h"
-#include "util-file.h"
+#include "nemoutil-internal.h"
+#include "nemoutil.h"
+#include "nemoutil-svg.h"
 
 const char *svg_get_value(Xml *xml, const char *xpath, const char *name)
 {

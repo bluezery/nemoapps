@@ -10,6 +10,12 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-player.h
     nemoui-misc.h
     nemoui-graph.h
+    nemoui-image.cpp
+    nemoui-image.h
+    nemoui-thread.c
+    nemoui-thread.h
+    nemoui-path.c
+    nemoui-path.h
     nemoui.h
     )
 TARGET_LINK_LIBRARIES(${LIBNAME}
@@ -25,6 +31,9 @@ INSTALL(FILES
     nemoui-player.h
     nemoui-misc.h
     nemoui-graph.h
+    nemoui-image.h
+    nemoui-thread.h
+    nemoui-path.h
     nemoui.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )

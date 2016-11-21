@@ -1,13 +1,17 @@
-#ifndef __NEMOGRAPH__
-#define __NEMOGRAPH__
+#ifndef __NEMOUI_GRAPH__
+#define __NEMOUI_GRAPH__
 
 #include <nemotool.h>
 #include <nemoshow.h>
 #include <nemomisc.h>
 #include <nemocanvas.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "nemowrapper.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*************************************************/
 /* GraphBar */
@@ -867,5 +871,9 @@ static inline void graph_pies_hide(GraphPies *pies, uint32_t easetype, int durat
         graph_pie_hide(it->pie, easetype, duration, delay);
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

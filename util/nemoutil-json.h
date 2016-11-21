@@ -2,9 +2,8 @@
 #define __JSONPARSE_H__
 
 #include <json.h>
-
-#include <util-common.h>
-#include <util-log.h>
+#include <string.h>
+#include <nemoutil-common.h>
 
 /********************************************************/
 /* Json Parser */

@@ -13,7 +13,7 @@
 #include <nemotimer.h>
 #include <nemobus.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemohelper.h"
 

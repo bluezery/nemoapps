@@ -9,11 +9,12 @@ ADD_EXECUTABLE(${APPNAME}
     background.c
     $<TARGET_OBJECTS:sound>
     )
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
+    nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)
 

@@ -1,7 +1,7 @@
 #ifndef __UTIL_XML_H__
 #define __UTIL_XML_H__
 
-#include <util-list.h>
+#include <nemoutil-list.h>
 
 #ifdef __cplusplus
 extern "C" {

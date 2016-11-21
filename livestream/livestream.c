@@ -17,7 +17,7 @@
 #include <nemoplay.h>
 #include <nemosound.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"

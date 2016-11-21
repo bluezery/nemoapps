@@ -1,9 +1,15 @@
-#ifndef __VIEW_H__
-#define __VIEW_H__
+#ifndef __NEMOUI_MISC_H__
+#define __NEMOUI_MISC_H__
 
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
+
+#include <nemoui-image.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct _SpinFx SpinFx;
 struct _SpinFx {
@@ -4008,5 +4014,9 @@ static inline void map_set_clip_circle(Map *map, int r)
 
     map_set_clip(map, clip);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

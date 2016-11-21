@@ -14,7 +14,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"
@@ -169,7 +169,7 @@ void imageview_prev(ImageView *view)
         image_set_alpha(it->img, 0, 0, 0, 0.5);
         image_translate(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, view->width/2, view->height/2);
         image_scale(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 1.0, 1.0);
-        if (!it->img->bitmap) {
+        if (!image_get_bitmap(it->img)) {
             image_load_fit(it->img, view->tool, it->path,
                     view->width, view->height, _image_load_done, it);
         } else {
@@ -210,7 +210,7 @@ bool imageview_next(ImageView *view)
         image_scale(it->img, 0, 0, 0, 1.0, 1.0);
         image_set_alpha(it->img, 0, 0, 0, 0.25);
         image_translate(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, view->width/2, view->height/2);
-        if (!it->img->bitmap) {
+        if (!image_get_bitmap(it->img)) {
             image_load_fit(it->img, view->tool, it->path,
                     view->width, view->height, _image_load_done, it);
         } else {

@@ -1,6 +1,8 @@
 #ifndef __COLOR_H__
 #define __COLOR_H__
 
+#include <stddef.h>
+
 #define ARGB2RGBA(color) \
     (color & 0xFFFFFF) << 8 | (color & 0xFF000000) >> 24
 
@@ -18,6 +20,16 @@
 
 #define RGBA2UINT(r, g, b, a) \
     (((r) << 24) + ((g) << 16) + ((b) << 8) + (a))
+
+static inline void RGBA2ARGB(unsigned char *blob, size_t len)
+{
+    unsigned int i = 0;
+    for (i = 0 ; i < len ; i+=4) {
+        unsigned char temp = blob[i];
+        blob[i] = blob[i+2];
+        blob[i+2] = temp;
+    }
+}
 
 #define BLACK   0x000000FF
 #define WHITE   0xECF0F1FF

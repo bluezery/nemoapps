@@ -1,6 +1,6 @@
-#include "util-internal.h"
-#include "util-log.h"
-#include "util-common.h"
+#include "nemoutil-internal.h"
+#include "nemoutil.h"
+#include "nemoutil-common.h"
 
 void _rect_ratio_full(int w, int h, int cw, int ch, int *_w, int *_h)
 {

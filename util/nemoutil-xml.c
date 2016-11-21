@@ -1,8 +1,7 @@
 #include <expat.h>
-#include "util-internal.h"
-#include "util-common.h"
-#include "util-file.h"
-#include "util-xml.h"
+#include "nemoutil-internal.h"
+#include "nemoutil.h"
+#include "nemoutil-xml.h"
 
 #ifdef XML_LARGE_SIZE
 #define XML_FMT_INT_MOD "ll"

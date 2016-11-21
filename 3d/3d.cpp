@@ -19,7 +19,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"

@@ -1,7 +1,6 @@
-#include <util-internal.h>
-#include "util-file.h"
-#include "util-xml.h"
-#include "util-config.h"
+#include "nemoutil-internal.h"
+#include "nemoutil.h"
+#include "nemoutil-config.h"
 
 Xml *xml_load_from_domain(const char *domain, const char *filename)
 {

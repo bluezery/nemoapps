@@ -8,7 +8,7 @@
 #include <nemoshow.h>
 
 #include "log.h"
-#include "util.h"
+#include "nemoutil.h"
 #include "nemowrapper.h"
 
 #include "widget.h"

@@ -1,7 +1,7 @@
 #ifndef __MAPDATA_H_
 #define __MAPDATA_H_
 
-#include "util.h"
+#include "nemoutil.h"
 
 extern List *__data_parties;
 extern List *__data_runners;

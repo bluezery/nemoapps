@@ -9,11 +9,12 @@ ADD_DEFINITIONS(-DPDF_IMG_DIR="${EXP_IMG_DIR}")
 
 ADD_EXECUTABLE(${APPNAME}
     pdf.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
+    nemoui
     mupdf
     mujs
     muopenjpeg

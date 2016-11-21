@@ -1,7 +1,7 @@
 #ifndef __UTIL_SVG_H__
 #define __UTIL_SVG_H__
 
-#include <util-xml.h>
+#include <nemoutil-xml.h>
 
 #ifdef __cplusplus
 extern "C" {

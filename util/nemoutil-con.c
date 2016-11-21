@@ -1,4 +1,3 @@
-#include <util-internal.h>
 
 #include <curl/curl.h>
 #include <sys/epoll.h>
@@ -6,8 +5,9 @@
 #include <nemotool.h>
 #include <nemotimer.h>
 
-#include "util-list.h"
-#include "util-con.h"
+#include "nemoutil-internal.h"
+#include "nemoutil.h"
+#include "nemoutil-con.h"
 
 /*******************************************
  * Connection *

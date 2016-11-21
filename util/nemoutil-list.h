@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <util-log.h>
+#include <nemoutil-log.h>
 
 #ifdef __cplusplus
 extern "C" {

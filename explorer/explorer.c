@@ -12,7 +12,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 #include "nemohelper.h"
@@ -1002,7 +1002,8 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
         image_set_anchor(it->img, 0.5, 0.5);
         image_translate(it->img, 0, 0, 0, it->w/2, it->h/2);
         image_set_alpha(it->img, 0, 0, 0, 0.0);
-        nemoshow_item_set_clip(it->img->one, clip);
+        // XXX: clip should not be controlled by image
+        nemoshow_item_set_clip(image_get_one(it->img), clip);
     } else if (type == EXPLORER_ITEM_TYPE_SVG) {
         // FIXME: Need thread???
         ITEM_CREATE(one, group, NEMOSHOW_PATHGROUP_ITEM);
@@ -1120,7 +1121,8 @@ static void _explorer_bg_timer(struct nemotimer *timer, void *userdata)
         if (exp->bg0_clip) nemoshow_one_destroy(exp->bg0_clip);
         exp->bg0_clip = clip = path_diamond_create(NULL, exp->w - 10, exp->h - 10);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(exp->bg0->one, clip);
+        // XXX: clip should not be controlled by image
+        nemoshow_item_set_clip(image_get_one(exp->bg0), clip);
 
         data = calloc(sizeof(ClipImgWorkData), 1);
         data->img = exp->bg0;
@@ -1138,7 +1140,7 @@ static void _explorer_bg_timer(struct nemotimer *timer, void *userdata)
         if (exp->bg_it0_clip) nemoshow_one_destroy(exp->bg_it0_clip);
         exp->bg_it0_clip = clip = PATH_CREATE(NULL);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(exp->bg_it0->one, clip);
+        nemoshow_item_set_clip(image_get_one(exp->bg_it0), clip);
 
         data2 = calloc(sizeof(ClipImgWorkData2), 1);
         data2->exp = exp;
@@ -1157,7 +1159,7 @@ static void _explorer_bg_timer(struct nemotimer *timer, void *userdata)
         if (exp->bg_clip) nemoshow_one_destroy(exp->bg_clip);
         exp->bg_clip = clip = path_diamond_create(NULL, exp->w - 10, exp->h - 10);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(exp->bg->one, clip);
+        nemoshow_item_set_clip(image_get_one(exp->bg), clip);
 
         data = calloc(sizeof(ClipImgWorkData), 1);
         data->img = exp->bg;
@@ -1175,7 +1177,7 @@ static void _explorer_bg_timer(struct nemotimer *timer, void *userdata)
         if (exp->bg_it_clip) nemoshow_one_destroy(exp->bg_it_clip);
         exp->bg_it_clip = clip = PATH_CREATE(NULL);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(exp->bg_it->one, clip);
+        nemoshow_item_set_clip(image_get_one(exp->bg_it), clip);
 
         data2 = calloc(sizeof(ClipImgWorkData2), 1);
         data2->exp = exp;

@@ -1,9 +1,7 @@
 #ifndef __UTIL_CONFIG_H__
 #define __UTIL_CONFIG_H__
 
-#include <util-internal.h>
-#include <util-xml.h>
-#include <util-list.h>
+#include <nemoutil-xml.h>
 
 typedef struct _Config Config;
 struct _Config {

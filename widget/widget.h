@@ -12,7 +12,7 @@
 
 #include <pixman.h>
 
-#include <util.h>
+#include <nemoutil.h>
 #include <nemowrapper.h>
 
 // ************************************** //

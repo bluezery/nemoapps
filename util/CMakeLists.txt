@@ -1,24 +1,26 @@
 SET(LIBNAME "nemoutil")
 ADD_LIBRARY(${LIBNAME} SHARED
-    util.h
-    util-common.c
-    util-color.h
-    util-log.h
-    util-list.h
-    util-file.c
-    util-file.h
-    util-image.cpp
-    util-image.h
-    util-xml.c
-    util-xml.h
-    util-config.c
-    util-config.h
-    util-dbus.c
-    util-dbus.h
-    util-svg.c
-    util-svg.h
-    util-con.c
-    util-con.h
+    nemoutil.h
+    nemoutil-common.c
+    nemoutil-color.h
+    nemoutil-log.h
+    nemoutil-list.h
+    nemoutil-file.c
+    nemoutil-file.h
+    nemoutil-image.cpp
+    nemoutil-image.h
+    nemoutil-xml.c
+    nemoutil-xml.h
+    nemoutil-config.c
+    nemoutil-config.h
+    nemoutil-dbus.c
+    nemoutil-dbus.h
+    nemoutil-svg.c
+    nemoutil-svg.h
+    nemoutil-con.c
+    nemoutil-con.h
+    nemoutil-path.c
+    nemoutil-path.h
     )
 
 TARGET_LINK_LIBRARIES(${LIBNAME}
@@ -30,18 +32,19 @@ INSTALL(TARGETS ${LIBNAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 INSTALL(FILES
-    util.h
-    util-common.h
-    util-color.h
-    util-log.h
-    util-list.h
-    util-file.h
-    util-image.h
-    util-xml.h
-    util-config.h
-    util-dbus.h
-    util-svg.h
-    util-con.h
+    nemoutil.h
+    nemoutil-common.h
+    nemoutil-color.h
+    nemoutil-log.h
+    nemoutil-list.h
+    nemoutil-file.h
+    nemoutil-image.h
+    nemoutil-xml.h
+    nemoutil-config.h
+    nemoutil-dbus.h
+    nemoutil-svg.h
+    nemoutil-con.h
+    nemoutil-path.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}.pc

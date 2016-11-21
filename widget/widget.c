@@ -5,7 +5,7 @@
 
 #include <nemoglib.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "widget.h"
 
 // ************************************** //

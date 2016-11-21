@@ -11,11 +11,12 @@ ADD_DEFINITIONS(-DEXP_THUMB_DIR="${EXP_THUMB_DIR}")
 
 ADD_EXECUTABLE(${APPNAME}
     explorer.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
+    nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)
 

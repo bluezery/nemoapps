@@ -9,7 +9,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "util.h"
+#include "nemoutil.h"
 #include "showhelper.h"
 #include "nemowrapper.h"
 #include "widget.h"

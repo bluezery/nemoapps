@@ -1,18 +1,7 @@
 #ifndef __UTIL_DBUS_H__
 #define __UTIL_DBUS_H__
 
-#include <stdint.h>
-#include <sys/time.h>
-#include <stdio.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <magic.h>
-
 #include <dbus/dbus.h>
-
 #include <nemotool.h>
 
 #ifdef __cplusplus

@@ -12,7 +12,7 @@
 #include <nemodavi_transition.h>
 
 #include "mapinfo.h"
-#include "mapinfo_util.h"
+#include "mapinfo_nemoutil.h"
 
 #define PI	3.14159265
 #define RGBA2ARGB(color) \

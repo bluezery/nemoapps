@@ -3,7 +3,7 @@
 #include <showitem.h>
 #include <showcanvas.h>
 
-#include "mapinfo_util.h"
+#include "mapinfo_nemoutil.h"
 
 double mapinfo_util_get_runner_start_angle(uint32_t num, uint32_t nth)
 {
