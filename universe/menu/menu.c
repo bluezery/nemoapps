@@ -264,8 +264,6 @@ MenuItem *menu_create_item(Menu *menu, ConfigMenuItem *menu_item, const char *ur
 
     double ww, hh;
     svg_get_wh(uri0, &ww, &hh);
-    ww = 500;
-    hh = 500;
     ww *= app->sxy;
     hh *= app->sxy;
     it->bg = one = SVG_PATH_CREATE(group, ww, hh, uri0);
@@ -279,8 +277,6 @@ MenuItem *menu_create_item(Menu *menu, ConfigMenuItem *menu_item, const char *ur
 
     int iw, ih;
     file_get_image_wh(uri1, &iw, &ih);
-    iw = 500;
-    ih = 500;
     iw *= app->sxy;
     ih *= app->sxy;
     it->one = one = IMAGE_CREATE(group, iw, ih, uri1);
@@ -428,8 +424,6 @@ Planet *planet_dup(Planet *planet)
 
     int iw, ih;
     file_get_image_wh(uri, &iw, &ih);
-    iw = 200;
-    ih = 200;
     iw *= app->sxy;
     ih *= app->sxy;
     dup->one = one = IMAGE_CREATE(group, iw, ih, uri);
@@ -449,16 +443,12 @@ Planet *planet_dup(Planet *planet)
     }
 
     file_get_image_wh(uri0, &iw, &ih);
-    iw = 220;
-    ih = 220;
     iw *= app->sxy;
     ih *= app->sxy;
     dup->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     int iww, ihh;
     file_get_image_wh(uri1, &iww, &ihh);
-    iww = 240;
-    ihh = 240;
     iww *= app->sxy;
     ihh *= app->sxy;
     dup->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
@@ -544,8 +534,6 @@ Planet *planet_create(MenuView *view, ConfigApp *app, const char *uri)
 
     int iw, ih;
     file_get_image_wh(uri, &iw, &ih);
-    iw = 200;
-    ih = 200;
     iw *= app->sxy;
     ih *= app->sxy;
     planet->one = one = IMAGE_CREATE(group, iw, ih, uri);
@@ -568,16 +556,12 @@ Planet *planet_create(MenuView *view, ConfigApp *app, const char *uri)
     }
 
     file_get_image_wh(uri0, &iw, &ih);
-    iw = 220;
-    ih = 220;
     iw *= app->sxy;
     ih *= app->sxy;
     planet->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     int iww, ihh;
     file_get_image_wh(uri1, &iww, &ihh);
-    iww = 240;
-    ihh = 240;
     iww *= app->sxy;
     ihh *= app->sxy;
     planet->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
@@ -801,8 +785,6 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/sun/%05d.png", 0);
     file_get_image_wh(buf, &iw, &ih);
-    iw = 600;
-    ih = 600;
     iw *= app->sxy;
     ih *= app->sxy;
 
