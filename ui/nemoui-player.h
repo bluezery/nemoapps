@@ -5,15 +5,15 @@
 extern "C" {
 #endif
 
-typedef struct _PlayerView PlayerView;
+typedef struct _PlayerUI PlayerUI;
 
-void nemoui_player_play(PlayerView *view);
-void nemoui_player_stop(PlayerView *view);
-void nemoui_player_show(PlayerView *view);
-void nemoui_player_hide(PlayerView *view);
-void nemoui_player_destroy(PlayerView *view);
-void nemoui_player_translate(PlayerView *view, uint32_t easetype, int duration, int delay, float x, float y);
-PlayerView *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio);
+void nemoui_player_play(PlayerUI *ui);
+void nemoui_player_stop(PlayerUI *ui);
+void nemoui_player_show(PlayerUI *ui);
+void nemoui_player_hide(PlayerUI *ui);
+void nemoui_player_destroy(PlayerUI *ui);
+void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y);
+PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio);
 
 #ifdef __cplusplus
 }

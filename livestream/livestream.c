@@ -38,9 +38,9 @@ struct _ConfigApp {
 
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {
-    PlayerView *view = userdata;
+    PlayerUI *ui = userdata;
 
-    nemoui_player_stop(view);
+    nemoui_player_stop(ui);
 
     nemowidget_win_exit_after(win, 500);
 }
@@ -193,12 +193,12 @@ int main(int argc, char *argv[])
     char *path;
     LIST_FOR_EACH(app->paths, l, path) {
         //if (!file_is_video(path)) continue;
-        PlayerView *view = nemoui_player_create(win, w, h, path, app->enable_audio);
-        if (!view) continue;
+        PlayerUI *ui = nemoui_player_create(win, w, h, path, app->enable_audio);
+        if (!ui) continue;
 
-        nemoui_player_translate(view, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+        nemoui_player_translate(ui, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
                 (i%app->col) * w, (i/app->row) * h);
-        nemoui_player_show(view);
+        nemoui_player_show(ui);
         i++;
         if (i >= app->col * app->row) break;
     }

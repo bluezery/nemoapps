@@ -978,18 +978,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
             _bus_callback,
 			view);
 
-#if 0
-    // Register me
-    struct busmsg *msg;
-    msg = nemobus_msg_create();
-    nemobus_msg_set_name(msg, "register");
-    nemobus_msg_set_attr(msg, "from", view->objpath);
-    nemobus_msg_set_attr(msg, "screenid", view->screenid);
-    int ret = nemobus_send(view->bus, view->objpath, OBJPATH_REMOTE, msg);
-    ERR("send: %d", ret);
-    nemobus_msg_destroy(msg);
-#endif
-
     struct nemoplay *play = nemoplay_create();
     nemoplay_prepare_media(play, path);
     if (!is_audio)
