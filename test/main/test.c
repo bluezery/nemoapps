@@ -14,7 +14,7 @@
 #include "nemowrapper.h"
 #include "widget.h"
 #include "widgets.h"
-#include "graph.h"
+#include "nemoui.h"
 
 typedef struct _TestBin TestBin;
 struct _TestBin {

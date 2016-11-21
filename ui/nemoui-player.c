@@ -3,10 +3,8 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
 #include "nemohelper.h"
-#include "player.h"
+#include "nemoui.h"
 
 struct _PlayerView {
     struct nemotool *tool;
@@ -195,7 +193,7 @@ static void _player_resize(NemoWidget *widget, const char *id, void *info, void 
     nemowidget_dirty(widget);
 }
 
-void nemoview_player_play(PlayerView *view)
+void nemoui_player_play(PlayerView *view)
 {
     struct nemoplay *play = view->play;
 
@@ -215,7 +213,7 @@ void nemoview_player_play(PlayerView *view)
     } else view->pth_audio = pth;
 }
 
-void nemoview_player_stop(PlayerView *view)
+void nemoui_player_stop(PlayerView *view)
 {
     ERR("STOP");
     nemotimer_set_timeout(view->video_timer, 0);
@@ -227,19 +225,19 @@ void nemoview_player_stop(PlayerView *view)
     nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
 }
 
-void nemoview_player_show(PlayerView *view)
+void nemoui_player_show(PlayerView *view)
 {
     nemowidget_show(view->widget, 0, 0, 0);
-    nemoview_player_play(view);
+    nemoui_player_play(view);
 }
 
-void nemoview_player_hide(PlayerView *view)
+void nemoui_player_hide(PlayerView *view)
 {
     nemowidget_hide(view->widget, 0, 0, 0);
-    nemoview_player_stop(view);
+    nemoui_player_stop(view);
 }
 
-void nemoview_player_destroy(PlayerView *view)
+void nemoui_player_destroy(PlayerView *view)
 {
     nemoplay_shader_destroy(view->shader);
     nemoplay_destroy(view->play);
@@ -247,12 +245,12 @@ void nemoview_player_destroy(PlayerView *view)
     free(view);
 }
 
-void nemoview_player_translate(PlayerView *view, uint32_t easetype, int duration, int delay, float x, float y)
+void nemoui_player_translate(PlayerView *view, uint32_t easetype, int duration, int delay, float x, float y)
 {
     nemowidget_translate(view->widget, easetype, duration, delay, x, y);
 }
 
-PlayerView *nemoview_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio)
+PlayerView *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio)
 {
     int vw, vh;
     if (!nemoplay_get_video_info(path, &vw, &vh)) {

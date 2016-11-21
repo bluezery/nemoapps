@@ -16,8 +16,7 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
 #include "nemohelper.h"
 
 #define UPDATE_WINDOW 1

@@ -14,7 +14,7 @@
 #include "nemowrapper.h"
 #include "widget.h"
 #include "widgets.h"
-#include "view.h"
+#include "nemoui.h"
 
 typedef struct _Context Context;
 struct _Context {

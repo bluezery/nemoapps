@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "widgets.h"
-#include "view.h"
+#include "nemoui.h"
 
 
 // ************************************//

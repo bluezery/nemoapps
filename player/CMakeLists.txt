@@ -13,12 +13,12 @@ LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 
 ADD_EXECUTABLE(${APPNAME}
     player.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoview)
+ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
-    nemoview
+    nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}
     ${NEMOPLAY_LIBRARIES}
 	)

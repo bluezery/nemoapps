@@ -14,7 +14,7 @@
 #include "nemowrapper.h"
 #include "widget.h"
 #include "widgets.h"
-#include "view.h"
+#include "nemoui.h"
 
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {

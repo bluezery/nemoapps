@@ -15,7 +15,7 @@
 #include "nemowrapper.h"
 #include "widget.h"
 #include "widgets.h"
-#include "view.h"
+#include "nemoui.h"
 #include "map.h"
 
 #define ACTIVE      0x1EDCDCFF

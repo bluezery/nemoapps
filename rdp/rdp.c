@@ -22,8 +22,8 @@
 #include "config.h"
 #include "image.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
+#include ""
 #include "nemohelper.h"
 
 #include <freerdp/freerdp.h>

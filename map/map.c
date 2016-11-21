@@ -11,8 +11,8 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
+#include ""
 #include "nemohelper.h"
 
 #define TILEITEM_SIZE 255

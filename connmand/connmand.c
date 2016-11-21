@@ -15,8 +15,6 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
 #include "nemohelper.h"
 
 const char *TARGET = "net.connman";

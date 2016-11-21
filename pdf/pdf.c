@@ -15,8 +15,7 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
 #include "nemohelper.h"
 
 #define COLOR0 0xEA562DFF

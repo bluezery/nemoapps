@@ -1,4 +1,4 @@
-SET(LIBNAME "nemoview")
+SET(LIBNAME "nemoui")
 ADD_DEFINITIONS(-DLIBNAME="${LIBNAME}")
 
 PKG_CHECK_MODULES(NEMOPLAY REQUIRED nemoplay)
@@ -6,11 +6,11 @@ INCLUDE_DIRECTORIES(${NEMOPLAY_INCLUDE_DIRS})
 LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 
 ADD_LIBRARY(${LIBNAME} SHARED
-    player.c
-    player.h
-    view.h
-    misc.h
-    graph.h
+    nemoui-player.c
+    nemoui-player.h
+    nemoui-misc.h
+    nemoui-graph.h
+    nemoui.h
     )
 TARGET_LINK_LIBRARIES(${LIBNAME}
     ${NEMOPLAY_LIBRARIES}
@@ -22,10 +22,10 @@ INSTALL(TARGETS ${LIBNAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 INSTALL(FILES
-    player.h
-    view.h
-    misc.h
-    graph.h
+    nemoui-player.h
+    nemoui-misc.h
+    nemoui-graph.h
+    nemoui.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}.pc

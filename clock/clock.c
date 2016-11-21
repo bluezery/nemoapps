@@ -14,8 +14,7 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
 #include "nemohelper.h"
 
 #define SEC_COLOR 0x1EDCDCFF

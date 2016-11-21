@@ -19,8 +19,7 @@
 
 #include "util.h"
 #include "widgets.h"
-#include "view.h"
-#include "graph.h"
+#include "nemoui.h"
 #include "nemohelper.h"
 
 #define COLOR0 0xEA562DFF
@@ -41,7 +40,7 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
 {
     PlayerView *view = userdata;
 
-    nemoview_player_stop(view);
+    nemoui_player_stop(view);
 
     nemowidget_win_exit_after(win, 500);
 }
@@ -194,12 +193,12 @@ int main(int argc, char *argv[])
     char *path;
     LIST_FOR_EACH(app->paths, l, path) {
         //if (!file_is_video(path)) continue;
-        PlayerView *view = nemoview_player_create(win, w, h, path, app->enable_audio);
+        PlayerView *view = nemoui_player_create(win, w, h, path, app->enable_audio);
         if (!view) continue;
 
-        nemoview_player_translate(view, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+        nemoui_player_translate(view, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
                 (i%app->col) * w, (i/app->row) * h);
-        nemoview_player_show(view);
+        nemoui_player_show(view);
         i++;
         if (i >= app->col * app->row) break;
     }
