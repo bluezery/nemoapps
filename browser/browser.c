@@ -11,7 +11,7 @@
 #include <nemonavi.h>
 
 #include "nemodavi.h"
-#include "util-config.h"
+#include "nemoutil-config.h"
 
 #include "browser.h"
 

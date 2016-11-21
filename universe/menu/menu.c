@@ -373,8 +373,8 @@ Menu *menu_create(MenuView *view)
     LIST_FOR_EACH(view->app->menu_items, l, itt) {
         char uri0[PATH_MAX];
         char uri1[PATH_MAX];
-        snprintf(uri0, PATH_MAX, WALL_ICON_DIR"/file_circle%02d.svg", i);
-        snprintf(uri1, PATH_MAX, WALL_IMG_DIR"/file_circle%02d.png", i);
+        snprintf(uri0, PATH_MAX, UNIVERSE_ICON_DIR"/file_circle%02d.svg", i);
+        snprintf(uri1, PATH_MAX, UNIVERSE_IMG_DIR"/file_circle%02d.png", i);
         MenuItem *it = menu_create_item(menu, itt, uri0, uri1);
         menu->items = list_append(menu->items, it);
         i++;
@@ -438,14 +438,14 @@ Planet *planet_dup(Planet *planet)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = WALL_IMG_DIR"/ring0.png";
-        uri1 = WALL_IMG_DIR"/ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/ring1.png";
     } else if (ran == 1) {
-        uri0 = WALL_IMG_DIR"/b_ring0.png";
-        uri1 = WALL_IMG_DIR"/b_ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/b_ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/b_ring1.png";
     } else {
-        uri0 = WALL_IMG_DIR"/p_ring0.png";
-        uri1 = WALL_IMG_DIR"/p_ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/p_ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/p_ring1.png";
     }
 
     file_get_image_wh(uri0, &iw, &ih);
@@ -466,7 +466,7 @@ Planet *planet_dup(Planet *planet)
     dup->width = iww;
     dup->height = ihh;
 
-    uri = WALL_IMG_DIR"/shine.png";
+    uri = UNIVERSE_IMG_DIR"/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -557,14 +557,14 @@ Planet *planet_create(MenuView *view, ConfigApp *app, const char *uri)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = WALL_IMG_DIR"/ring0.png";
-        uri1 = WALL_IMG_DIR"/ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/ring1.png";
     } else if (ran == 1) {
-        uri0 = WALL_IMG_DIR"/b_ring0.png";
-        uri1 = WALL_IMG_DIR"/b_ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/b_ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/b_ring1.png";
     } else {
-        uri0 = WALL_IMG_DIR"/p_ring0.png";
-        uri1 = WALL_IMG_DIR"/p_ring1.png";
+        uri0 = UNIVERSE_IMG_DIR"/p_ring0.png";
+        uri1 = UNIVERSE_IMG_DIR"/p_ring1.png";
     }
 
     file_get_image_wh(uri0, &iw, &ih);
@@ -585,7 +585,7 @@ Planet *planet_create(MenuView *view, ConfigApp *app, const char *uri)
     planet->width = iww;
     planet->height = ihh;
 
-    uri = WALL_IMG_DIR"/shine.png";
+    uri = UNIVERSE_IMG_DIR"/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -799,7 +799,7 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
 
     int iw, ih;
     char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, WALL_IMG_DIR"/sun/%05d.png", 0);
+    snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/sun/%05d.png", 0);
     file_get_image_wh(buf, &iw, &ih);
     iw = 600;
     ih = 600;
@@ -827,14 +827,14 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
 
     i = 0;
     do {
-        snprintf(buf, PATH_MAX, WALL_IMG_DIR"/sun/%05d.png", i++);
+        snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/sun/%05d.png", i++);
         if (!file_is_exist(buf)) break;
         animation_append_item(anim, buf);
     } while (1);
     animation_set_anchor(anim, 0.5, 0.5);
 
 
-    files = fileinfo_readdir(WALL_IMG_DIR"/planet");
+    files = fileinfo_readdir(UNIVERSE_IMG_DIR"/planet");
     int cnt = 0;
     List *l;
     LIST_FOR_EACH(files, l, file) {
@@ -954,7 +954,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         }
     }
 
-    app->backline_path = strdup_printf("%s/backline%d", WALL_ICON_DIR, id);
+    app->backline_path = strdup_printf("%s/backline%d", UNIVERSE_ICON_DIR, id);
 
     return app;
 }

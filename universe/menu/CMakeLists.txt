@@ -1,8 +1,8 @@
-SET(APPNAME "nemowall-background")
+SET(APPNAME "nemouniverse-menu")
 ADD_DEFINITIONS(-DAPPNAME="${APPNAME}")
 
 ADD_EXECUTABLE(${APPNAME}
-    background.c
+    menu.c
     $<TARGET_OBJECTS:sound>
     )
 ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
