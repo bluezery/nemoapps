@@ -259,6 +259,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
 
     RET_IF(!it->icon_anim);
 
+    // For lotte animation
     if (strstr(it->icon_anim, "shopguide")) {
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_OUT_TYPE, 2000, 0);
@@ -419,7 +420,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
 
     struct showone *one;
     it->bg0 = one = RRECT_CREATE(group, it->width, it->height, 10, 10);
-    nemoshow_item_set_fill_color(one, RGBA(RED));
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
     nemoshow_item_set_alpha(one, 0.0);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_tag(one, 0x999);
@@ -453,7 +454,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
 
     nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
     if (it->icon_anim) {
-        // XXX: for lotte
+        // XXX: for Lotte animation
         if (strstr(it->icon_anim, "smartshopping")) {
             nemoshow_item_set_anchor(one, 0.5, 0.0);
             nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * (app->item_icon_py - 0.15));
