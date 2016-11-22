@@ -369,8 +369,8 @@ Menu *menu_create(MenuView *view)
     LIST_FOR_EACH(view->app->menu_items, l, itt) {
         char uri0[PATH_MAX];
         char uri1[PATH_MAX];
-        snprintf(uri0, PATH_MAX, UNIVERSE_ICON_DIR"/file_circle%02d.svg", i);
-        snprintf(uri1, PATH_MAX, UNIVERSE_IMG_DIR"/file_circle%02d.png", i);
+        snprintf(uri0, PATH_MAX, UNIVERSE_ICON_DIR"/file%02d.svg", i);
+        snprintf(uri1, PATH_MAX, UNIVERSE_IMG_DIR"/file%02d.png", i);
         MenuItem *it = menu_create_item(menu, itt, uri0, uri1);
         menu->items = list_append(menu->items, it);
         i++;
