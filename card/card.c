@@ -247,6 +247,7 @@ struct _CardItem {
     char *exec;
     bool resize;
     double sxy;
+    char *mirror;
 
     double ro;
 	uint32_t grab_time;
@@ -328,6 +329,7 @@ CardItem *card_item_dup(CardItem *it)
     dup->exec = strdup(it->exec);
     dup->resize = it->resize;
     dup->sxy = it->sxy;
+    if (it->mirror) dup->mirror = strdup(it->mirror);
     dup->org = it;
 
     struct showone *group;
@@ -391,7 +393,7 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
-CardItem *card_create_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri,  const char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, ConfigApp *app)
+CardItem *card_create_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri,  const char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
     it->card = card;
@@ -405,6 +407,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
     it->exec = strdup(exec);
     it->resize = resize;
     it->sxy = sxy;
+    if (mirror) it->mirror = strdup(mirror);
 	it->grab_time = 0;
 
     struct showone *group;
@@ -498,10 +501,10 @@ void card_item_destroy(CardItem *it)
     free(it);
 }
 
-CardItem *card_append_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, ConfigApp *app)
+CardItem *card_append_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, char *icon_anim, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
 {
     CardItem *it;
-    it = card_create_item(card, global_sxy, type, bg_uri, icon_uri, icon_anim, txt_uri, exec, resize, sxy, app);
+    it = card_create_item(card, global_sxy, type, bg_uri, icon_uri, icon_anim, txt_uri, exec, resize, sxy, mirror, app);
     RET_IF(!it, NULL);
     card->items = list_append(card->items, it);
 
@@ -837,8 +840,46 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             snprintf(args, PATH_MAX, "%s", tok);
             free(buf);
 
-            nemo_execute(card->uuid, itt->type, path, args, itt->resize? "on" : "off",
-                    x, y, ro, itt->sxy, itt->sxy);
+#if 0
+            struct nemobus *bus;
+            bus = nemobus_create();
+            nemobus_connect(bus, NULL);
+
+            char *uuid = uuid_gen();
+            struct busmsg *msg;
+            msg = nemobus_msg_create();
+            nemobus_msg_set_name(msg, "command");
+            if (card->uuid) nemobus_msg_set_attr(msg, "owner", card->uuid);
+            nemobus_msg_set_attr(msg, "type", itt->type);
+            nemobus_msg_set_attr(msg, "uuid", uuid);
+            nemobus_msg_set_attr(msg, "path", path);
+            nemobus_msg_set_attr(msg, "args", args);
+            if (itt->resize) nemobus_msg_set_attr(msg, "resize", itt->resize? "on" : "off");
+            nemobus_msg_set_attr_format(msg, "x", "%f", x);
+            nemobus_msg_set_attr_format(msg, "y", "%f", y);
+            nemobus_msg_set_attr_format(msg, "r", "%f", ro);
+            nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
+            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
+            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
+            nemobus_msg_set_attr_format(msg, "mirrorscreen", "/nemoshell/fullscreen/0");
+            nemobus_send(bus, "", "/nemoshell", msg);
+            nemobus_msg_destroy(msg);
+
+            nemobus_destroy(bus);
+#endif
+            struct nemobus *bus = NEMOBUS_CREATE();
+            struct busmsg *msg = NEMOMSG_CREATE_CMD(itt->type, path);
+            nemobus_msg_set_attr(msg, "owner", card->uuid);
+            nemobus_msg_set_attr(msg, "args", args);
+            nemobus_msg_set_attr(msg, "resize", itt->resize? "on" : "off");
+            nemobus_msg_set_attr_format(msg, "x", "%f", x);
+            nemobus_msg_set_attr_format(msg, "y", "%f", y);
+            nemobus_msg_set_attr_format(msg, "r", "%f", ro);
+            nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
+            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
+            if (itt->mirror) nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
+            NEMOMSG_SEND(bus, msg);
+
             nemosound_play(CARD_SOUND_DIR"/show.wav");
 
             char buff[PATH_MAX];
@@ -988,6 +1029,7 @@ struct _MenuItem {
     char *exec;
     bool resize;
     double sxy;
+    char *mirror;
 };
 
 static MenuItem *parse_tag_menu(XmlTag *tag)
@@ -1034,6 +1076,10 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
                 } else {
                     item->resize = false;
                 }
+            }
+        } else if (!strcmp(attr->key, "mirror")) {
+            if (attr->val) {
+                item->mirror = strdup(attr->val);
             }
         }
     }
@@ -1277,7 +1323,8 @@ int main(int argc, char *argv[])
     MenuItem *it;
     LIST_FOR_EACH(app->menu_items, l, it) {
         card_append_item(card, app->sxy,
-                it->type, it->bg, it->icon, it->icon_anim, it->txt, it->exec, it->resize, it->sxy, app);
+                it->type, it->bg, it->icon, it->icon_anim, it->txt, it->exec,
+                it->resize, it->sxy, it->mirror, app);
     }
     card_show(card);
     nemowidget_append_callback(win, "layer", _card_win_layer, card);

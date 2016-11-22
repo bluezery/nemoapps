@@ -5,15 +5,15 @@
     <!--<log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>-->
     <guide duration="5000"/>
     <item count="8" area_width="2160" area_height="1080" duration="10000" width="401" height="631" grab_min_time="500" py="-0.1" txt_py="0.80"/>
-    <items bg="@KOEX_IMG_DIR@/back/creative.png"    icon="@KOEX_IMG_DIR@/icon/creative.png"    txt="@KOEX_ICON_DIR@/name/creative.svg"    type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/creative"/>
-    <items bg="@KOEX_IMG_DIR@/back/science.png"     icon="@KOEX_IMG_DIR@/icon/science.png"     txt="@KOEX_ICON_DIR@/name/science.svg"     type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/science"/>
-    <items bg="@KOEX_IMG_DIR@/back/foundation.png"  icon="@KOEX_IMG_DIR@/icon/foundation.png"  txt="@KOEX_ICON_DIR@/name/foundation.svg"  type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/foundation"/>
-    <items bg="@KOEX_IMG_DIR@/back/invention.png"   icon="@KOEX_IMG_DIR@/icon/invention.png"   txt="@KOEX_ICON_DIR@/name/invention.svg"   type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/invention"/>
-    <items bg="@KOEX_IMG_DIR@/back/kova.png"        icon="@KOEX_IMG_DIR@/icon/kova.png"        txt="@KOEX_ICON_DIR@/name/kova.svg"        type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/kova"/>
-    <items bg="@KOEX_IMG_DIR@/back/skt.png"         icon="@KOEX_IMG_DIR@/icon/skt.png"         txt="@KOEX_ICON_DIR@/name/skt.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/skt"/>
-    <items bg="@KOEX_IMG_DIR@/back/ava.png"         icon="@KOEX_IMG_DIR@/icon/ava.png"         txt="@KOEX_ICON_DIR@/name/ava.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/ava"/>
-    <items bg="@KOEX_IMG_DIR@/back/nemoux.png"      icon="@KOEX_IMG_DIR@/icon/nemoux.png"      txt="@KOEX_ICON_DIR@/name/nemoux.svg"      type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/nemoux"/>
-    <items bg="@KOEX_IMG_DIR@/back/3d.png"          icon="@KOEX_IMG_DIR@/icon/3d.png"          txt="@KOEX_ICON_DIR@/name/3d.svg"          type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/3d"/>
-    <items bg="@KOEX_IMG_DIR@/back/map.png"         icon="@KOEX_IMG_DIR@/icon/map.png"         txt="@KOEX_ICON_DIR@/name/map.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/map"/>
-    <items bg="@KOEX_IMG_DIR@/back/filebrowser.png" icon="@KOEX_IMG_DIR@/icon/filebrowser.png" txt="@KOEX_ICON_DIR@/name/filebrowser.svg" type="app" exec="/usr/bin/ste-explorer;-f;/opt/contents/koex"/>
+    <items bg="@KOEX_IMG_DIR@/back/creative.png"    icon="@KOEX_IMG_DIR@/icon/creative.png"    txt="@KOEX_ICON_DIR@/name/creative.svg"    type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/creative" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/science.png"     icon="@KOEX_IMG_DIR@/icon/science.png"     txt="@KOEX_ICON_DIR@/name/science.svg"     type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/science" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/foundation.png"  icon="@KOEX_IMG_DIR@/icon/foundation.png"  txt="@KOEX_ICON_DIR@/name/foundation.svg"  type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/foundation" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/invention.png"   icon="@KOEX_IMG_DIR@/icon/invention.png"   txt="@KOEX_ICON_DIR@/name/invention.svg"   type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/invention" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/kova.png"        icon="@KOEX_IMG_DIR@/icon/kova.png"        txt="@KOEX_ICON_DIR@/name/kova.svg"        type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/kova" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/skt.png"         icon="@KOEX_IMG_DIR@/icon/skt.png"         txt="@KOEX_ICON_DIR@/name/skt.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/skt" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/ava.png"         icon="@KOEX_IMG_DIR@/icon/ava.png"         txt="@KOEX_ICON_DIR@/name/ava.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/ava" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/nemoux.png"      icon="@KOEX_IMG_DIR@/icon/nemoux.png"      txt="@KOEX_ICON_DIR@/name/nemoux.svg"      type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/nemoux" mirror="/nemoshell/fullscreen/0" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/3d.png"          icon="@KOEX_IMG_DIR@/icon/3d.png"          txt="@KOEX_ICON_DIR@/name/3d.svg"          type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/3d" mirror="/nemoshell/fullscreen/0" sxy="0.333" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/map.png"         icon="@KOEX_IMG_DIR@/icon/map.png"         txt="@KOEX_ICON_DIR@/name/map.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/map" mirror="/nemoshell/fullscreen/0" sxy="0.333" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/filebrowser.png" icon="@KOEX_IMG_DIR@/icon/filebrowser.png" txt="@KOEX_ICON_DIR@/name/filebrowser.svg" type="app" exec="/usr/bin/ste-explorer;-f;/opt/contents/koex" resize="off"/>
 </nemocard>

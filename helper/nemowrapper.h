@@ -1555,23 +1555,48 @@ static inline char *uuid_gen()
     return strdup(uuidstr);
 }
 
+static inline struct nemobus *NEMOBUS_CREATE()
+{
+    struct nemobus *bus;
+    bus = nemobus_create();
+    nemobus_connect(bus, NULL);
+    return bus;
+}
+
+static inline struct busmsg *NEMOMSG_CREATE_CMD(const char *type, const char *path)
+{
+    struct busmsg *msg;
+    msg = nemobus_msg_create();
+    nemobus_msg_set_name(msg, "command");
+    nemobus_msg_set_attr(msg, "type", type);
+    nemobus_msg_set_attr(msg, "path", path);
+    return msg;
+}
+
+static inline char *NEMOMSG_SEND(struct nemobus *bus, struct busmsg *msg)
+{
+    char *uuid = uuid_gen();
+    nemobus_msg_set_attr(msg, "uuid", uuid);
+    nemobus_send(bus, "", "/nemoshell", msg);
+    nemobus_msg_destroy(msg);
+
+    nemobus_destroy(bus);
+    return uuid;
+}
+
 static inline char *nemo_execute(const char *owner, const char *type, const char *path, const char *args, const char *resize, float x, float y, float r, float sx, float sy)
 {
     RET_IF(!type, NULL);
     RET_IF(!path, NULL);
 
     struct nemobus *bus;
-    bus = nemobus_create();
-    nemobus_connect(bus, NULL);
-
-    char *uuid = uuid_gen();
     struct busmsg *msg;
-    msg = nemobus_msg_create();
-    nemobus_msg_set_name(msg, "command");
+    char *uuid;
+
+    bus = NEMOBUS_CREATE();
+    msg = NEMOMSG_CREATE_CMD(type, path);
+
     if (owner) nemobus_msg_set_attr(msg, "owner", owner);
-    nemobus_msg_set_attr(msg, "type", type);
-    nemobus_msg_set_attr(msg, "uuid", uuid);
-    nemobus_msg_set_attr(msg, "path", path);
     if (args) nemobus_msg_set_attr(msg, "args", args);
     if (resize) nemobus_msg_set_attr(msg, "resize", resize);
     nemobus_msg_set_attr_format(msg, "x", "%f", x);
@@ -1579,10 +1604,8 @@ static inline char *nemo_execute(const char *owner, const char *type, const char
     nemobus_msg_set_attr_format(msg, "r", "%f", r);
     nemobus_msg_set_attr_format(msg, "sx", "%f", sx);
     nemobus_msg_set_attr_format(msg, "sy", "%f", sy);
-    nemobus_send(bus, "", "/nemoshell", msg);
-    nemobus_msg_destroy(msg);
 
-    nemobus_destroy(bus);
+    uuid = NEMOMSG_SEND(bus, msg);
 
     return uuid;
 }
