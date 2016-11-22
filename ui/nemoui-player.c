@@ -275,7 +275,7 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
 
     struct nemoplay *play;
     ui->play = play = nemoplay_create();
-    nemoplay_prepare_media(play, path);
+    nemoplay_load_media(play, path);
     if (!enable_audio) nemoplay_revoke_audio(play);
 
     if (nemoplay_get_video_framerate(play) <= 30) {

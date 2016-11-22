@@ -252,7 +252,7 @@ ScreenSaver *playerview_create(NemoWidget *parent, int width, int height, int gl
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
     struct nemoplay *play = nemoplay_create();
-    nemoplay_prepare_media(play, path);
+    nemoplay_load_media(play, path);
     if (!is_audio) nemoplay_revoke_audio(play);
     view->play = play;
 
