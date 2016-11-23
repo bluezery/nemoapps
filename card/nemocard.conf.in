@@ -4,6 +4,7 @@
     <frame rate="30"/>
     <launch type="table"/>
     <guide duration="5000"/>
+    <!--<mirror fullscreen="" x="" y="" width="" height=""/>-->
     <item count="5" area_width="1620" area_height="640" duration="10000" width="269" height="478" grab_min_time="500"/>
     <log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>
     <items bg="@IMG_DIR@/shopguide_bg.png" icon="@ICON_DIR@/shopguide_icon.svg" txt="@ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@LINK_DIR@/shopguide" resize="off" sxy="0.5"/>

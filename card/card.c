@@ -19,10 +19,17 @@
 #include "nemohelper.h"
 #include "sound.h"
 
+typedef struct _Mirror Mirror;
+struct _Mirror {
+    int x, y, width, height;
+    char *target;
+};
+
 typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
     Config *config;
     List *menu_items;
+    List *mirrors;
     double sxy;
     int item_cnt;
     int item_area_width, item_area_height;
@@ -82,6 +89,7 @@ typedef struct _Card Card;
 struct _Card {
     int log;
 
+    List *mirrors;
     bool visible;
     int width, height;
     struct nemoshow *show;
@@ -840,33 +848,6 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             snprintf(args, PATH_MAX, "%s", tok);
             free(buf);
 
-#if 0
-            struct nemobus *bus;
-            bus = nemobus_create();
-            nemobus_connect(bus, NULL);
-
-            char *uuid = uuid_gen();
-            struct busmsg *msg;
-            msg = nemobus_msg_create();
-            nemobus_msg_set_name(msg, "command");
-            if (card->uuid) nemobus_msg_set_attr(msg, "owner", card->uuid);
-            nemobus_msg_set_attr(msg, "type", itt->type);
-            nemobus_msg_set_attr(msg, "uuid", uuid);
-            nemobus_msg_set_attr(msg, "path", path);
-            nemobus_msg_set_attr(msg, "args", args);
-            if (itt->resize) nemobus_msg_set_attr(msg, "resize", itt->resize? "on" : "off");
-            nemobus_msg_set_attr_format(msg, "x", "%f", x);
-            nemobus_msg_set_attr_format(msg, "y", "%f", y);
-            nemobus_msg_set_attr_format(msg, "r", "%f", ro);
-            nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
-            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
-            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
-            nemobus_msg_set_attr_format(msg, "mirrorscreen", "/nemoshell/fullscreen/0");
-            nemobus_send(bus, "", "/nemoshell", msg);
-            nemobus_msg_destroy(msg);
-
-            nemobus_destroy(bus);
-#endif
             struct nemobus *bus = NEMOBUS_CREATE();
             struct busmsg *msg = NEMOMSG_CREATE_CMD(itt->type, path);
             nemobus_msg_set_attr(msg, "owner", card->uuid);
@@ -877,7 +858,18 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             nemobus_msg_set_attr_format(msg, "r", "%f", ro);
             nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
             nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
-            if (itt->mirror) nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
+            if (itt->mirror) {
+                nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
+            } else {
+                List *l;
+                Mirror *mirror;
+                LIST_FOR_EACH(card->mirrors, l, mirror) {
+                    if (RECTS_CROSS(x, y, 1, 1, mirror->x, mirror->y, mirror->width, mirror->height)) {
+                        nemobus_msg_set_attr_format(msg, "mirrorscreen", mirror->target);
+                        break;
+                    }
+                }
+            }
             NEMOMSG_SEND(bus, msg);
 
             nemosound_play(CARD_SOUND_DIR"/show.wav");
@@ -951,7 +943,7 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(card->show);
 }
 
-Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, double item_px, double item_py, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *launch_type, const char *logfile)
+Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, double item_px, double item_py, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *launch_type, const char *logfile, List *mirrors)
 {
     Card *card = calloc(sizeof(Card), 1);
     card->show = nemowidget_get_show(parent);
@@ -966,6 +958,7 @@ Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int i
 	card->item_grab_min_time = item_grab_min_time;
     card->guide_duration = guide_duration;
     card->guide_idx = 0;
+    card->mirrors = mirrors;
     if (launch_type) card->launch_type = strdup(launch_type);
 
     double rx, ry;
@@ -1032,6 +1025,37 @@ struct _MenuItem {
     char *mirror;
 };
 
+static Mirror *parse_tag_mirror(XmlTag *tag)
+{
+    List *ll;
+    XmlAttr *attr;
+    Mirror *mirror = calloc(sizeof(Mirror), 1);
+    LIST_FOR_EACH(tag->attrs, ll, attr) {
+        if (!strcmp(attr->key, "target")) {
+            if (attr->val) {
+                 mirror->target = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "x")) {
+            if (attr->val) {
+                 mirror->x = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "y")) {
+            if (attr->val) {
+                 mirror->y = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "width")) {
+            if (attr->val) {
+                 mirror->width = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "height")) {
+            if (attr->val) {
+                 mirror->height = atoi(attr->val);
+            }
+        }
+    }
+    return mirror;
+}
+
 static MenuItem *parse_tag_menu(XmlTag *tag)
 {
     List *ll;
@@ -1083,6 +1107,7 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
             }
         }
     }
+    if (!item->type) item->type = strdup("xapp");
     return item;
 }
 
@@ -1141,8 +1166,14 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     LIST_FOR_EACH(tags, l, tag) {
         MenuItem *it = parse_tag_menu(tag);
         if (!it) continue;
-        if (!it->type) it->type = strdup("xapp");
         app->menu_items = list_append(app->menu_items, it);
+    }
+
+    tags = xml_search_tags(xml, APPNAME"/mirror");
+    LIST_FOR_EACH(tags, l, tag) {
+        Mirror *mirror = parse_tag_mirror(tag);
+        if (!mirror) continue;
+        app->mirrors = list_append(app->mirrors, mirror);
     }
 
     snprintf(buf, PATH_MAX, "%s/item", appname);
@@ -1275,6 +1306,11 @@ static void _config_unload(ConfigApp *app)
         free(it->exec);
         free(it);
     }
+    Mirror *mirror;
+    LIST_FREE(app->mirrors, mirror) {
+        free(mirror->target);
+        free(mirror);
+    }
     if (app->launch_type) free(app->launch_type);
     if (app->logfile) free(app->logfile);
     free(app);
@@ -1317,7 +1353,7 @@ int main(int argc, char *argv[])
             app->item_cnt, app->item_area_width, app->item_area_height, app->item_duration,
             app->item_px, app->item_py, app->item_width, app->item_height,
             app->item_grab_min_time,
-            app->guide_duration, app->launch_type, app->logfile);
+            app->guide_duration, app->launch_type, app->logfile, app->mirrors);
 
     List *l;
     MenuItem *it;
