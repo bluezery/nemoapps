@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@SUBPROJECT@>
-    <size width="7680" height="2160"/>
+<size width="7680" height="2160"/>
     <frame rate="30"/>
     <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/creative"/>
     <items icon="" txt="" type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/koex"/>

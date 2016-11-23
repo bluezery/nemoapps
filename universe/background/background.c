@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/timerfd.h>
+#include <getopt.h>
 
 #include <nemotool.h>
 #include <nemotimer.h>
@@ -24,6 +25,7 @@ typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
     Config *config;
     double sxy;
+    char *bgpath;
 };
 
 typedef struct _StarDot StarDot;
@@ -327,7 +329,7 @@ static void _background_ro_timeout(struct nemotimer *timer, void *userdata)
     nemotimer_set_timeout(timer, 100);
 }
 
-Background *background_create(NemoWidget *parent, int width, int height, double sxy)
+Background *background_create(NemoWidget *parent, int width, int height, double sxy, char *bgpath)
 {
     Background *bg = calloc(sizeof(Background), 1);
     bg->tool = nemowidget_get_tool(parent);
@@ -347,7 +349,11 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
 
     bg->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
-    bg->bg0 = one = IMAGE_CREATE(group, width, height, UNIVERSE_IMG_DIR"/back.png");
+    if (bgpath)
+        bg->bg0 = one = IMAGE_CREATE(group, width, height, bgpath);
+    else
+        bg->bg0 = one = IMAGE_CREATE(group, width, height, UNIVERSE_IMG_DIR"/back.png");
+
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, width/2, height/2);
     bg->bg1 = one = IMAGE_CREATE(group, width, height, UNIVERSE_IMG_DIR"/back_star.png");
@@ -442,7 +448,7 @@ BackgroundView *background_view_create(NemoWidget *parent, int width, int height
     int wh = sqrt(width * width + height * height);
 
     Background *bg;
-    view->bg = bg = background_create(parent, wh, wh, app->sxy);
+    view->bg = bg = background_create(parent, wh, wh, app->sxy, app->bgpath);
     background_translate(bg, (width - wh)/2, (height - wh)/2);
 
     return view;
@@ -499,12 +505,30 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
     xml_unload(xml);
 
+    struct option options[] = {
+        {"file", required_argument, NULL, 'f'},
+        { NULL }
+    };
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "f:", options, NULL)) != -1) {
+        switch(opt) {
+            case 'f':
+                app->bgpath = strdup(optarg);
+                break;
+            default:
+                break;
+        }
+    }
+    ERR("[[%s]]", app->bgpath);
+
     return app;
 }
 
 static void _config_unload(ConfigApp *app)
 {
     config_unload(app->config);
+    if (app->bgpath) free(app->bgpath);
     free(app);
 }
 
