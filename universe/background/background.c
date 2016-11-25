@@ -520,7 +520,6 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
                 break;
         }
     }
-    ERR("[[%s]]", app->bgpath);
 
     return app;
 }
@@ -534,7 +533,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, SUBPROJECT, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     struct nemotool *tool = TOOL_CREATE();
