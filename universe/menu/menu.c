@@ -389,7 +389,7 @@ static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
             nemoshow_item_rotate(it->bg, 0.0);
             nemoshow_item_rotate(it->one, 0.0);
         }
-        duration = 15000 * ((360 - ro)/360.0);
+        duration = 40000 * ((360 - ro)/360.0);
         menu_item_rotate(it, NEMOEASE_LINEAR_TYPE, duration, 0);
     }
     nemoshow_dispatch_frame(view->show);
