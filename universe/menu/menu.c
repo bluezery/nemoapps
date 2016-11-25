@@ -166,8 +166,8 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         }
         menu_item_down(it);
     } else if (nemoshow_event_is_up(show, event)) {
-        nemotimer_set_timeout(view->timer, 100);
         menu_item_up(it);
+        nemotimer_set_timeout(view->timer, 100);
         if (nemoshow_event_is_single_click(show, event)) {
             MenuView *view = it->view;
             char path[PATH_MAX];
@@ -249,6 +249,7 @@ MenuItem *menu_create_item(MenuView *view, ConfigMenuItem *menu_item, const char
 {
     MenuItem *it = calloc(sizeof(MenuItem), 1);
     it->view = view;
+    it->menu_item = menu_item;
 
     struct showone *group;
     struct showone *one;
