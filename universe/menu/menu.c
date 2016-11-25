@@ -681,7 +681,7 @@ static void _planet_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct 
             y = nemoshow_item_get_translate_y(_planet->group);
             w = nemoshow_item_get_width(_planet->ring1);
             h = nemoshow_item_get_height(_planet->ring1);
-            if (RECTS_CROSS(x - w/2, y - h/2, w * 2, h * 2, ex, ey, w, h)) {
+            if (RECTS_CROSS(x - w/2, y - h/2, w, h, ex, ey, w, h)) {
                 over = true;
                 break;
             }
