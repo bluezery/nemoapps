@@ -555,15 +555,12 @@ Planet *planet_create(MenuView *view, ConfigApp *app, const char *uri)
         uri1 = UNIVERSE_IMG_DIR"/p_ring1.png";
     }
 
-    file_get_image_wh(uri0, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
     planet->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
-    int iww, ihh;
-    file_get_image_wh(uri1, &iww, &ihh);
-    iww *= app->sxy;
-    ihh *= app->sxy;
+
+    double iww, ihh;
+    iww = iw;
+    ihh = ih;
     planet->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     planet->width = iww;
