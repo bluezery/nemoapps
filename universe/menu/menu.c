@@ -346,7 +346,7 @@ void menu_translate(Menu *menu, uint32_t easetype, int duration, int delay, floa
     }
 }
 
-void _menu_destroy_timer(struct nemotimer *timer, void *userdata)
+void _menu_destroy_timeout(struct nemotimer *timer, void *userdata)
 {
     Menu *menu = userdata;
     menu_hide_destroy(menu);
@@ -376,7 +376,7 @@ Menu *menu_create(MenuView *view)
         i++;
     }
 
-    menu->destroy_timer = TOOL_ADD_TIMER(menu->tool, 0, _menu_destroy_timer, menu);
+    menu->destroy_timer = TOOL_ADD_TIMER(menu->tool, 0, _menu_destroy_timeout, menu);
 
     return menu;
 }
@@ -734,7 +734,7 @@ static void _menu_view_event(NemoWidget *widget, const char *id, void *info, voi
     }
 }
 
-static void _menu_view_planet_timer(struct nemotimer *timer, void *userdata)
+static void _menu_view_planet_timeout(struct nemotimer *timer, void *userdata)
 {
     MenuView *view = userdata;
     List *l;
@@ -838,7 +838,7 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
         if (ran >= backline_cnt) ran = 0;
         fileinfo_destroy(file);
     }
-    view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _menu_view_planet_timer, view);
+    view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _menu_view_planet_timeout, view);
 
     return view;
 }
