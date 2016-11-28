@@ -538,7 +538,7 @@ void planet_viewshow(PlanetView *view, uint32_t easetype, int duration, int dela
         i++;
     }
     animation_show(view->sun_anim, NEMOEASE_CUBIC_INOUT_TYPE, duration, delay);
-    nemotimer_set_timeout(view->planet_timer, 5000);
+    nemotimer_set_timeout(view->planet_timer, 100);
 
     nemoshow_dispatch_frame(view->show);
 }
