@@ -859,7 +859,8 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
             nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
             if (itt->mirror) {
-                nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
+                if (strstr(itt->mirror, "/nemoshell/fullscreen"))
+                    nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
             } else {
                 List *l;
                 Mirror *mirror;
