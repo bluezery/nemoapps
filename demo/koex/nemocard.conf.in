@@ -17,5 +17,5 @@
     <items bg="@KOEX_IMG_DIR@/back/nemoux.png"      icon="@KOEX_IMG_DIR@/icon/nemoux.png"      txt="@KOEX_ICON_DIR@/name/nemoux.svg"      type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/nemoux" resize="off"/>
     <items bg="@KOEX_IMG_DIR@/back/3d.png"          icon="@KOEX_IMG_DIR@/icon/3d.png"          txt="@KOEX_ICON_DIR@/name/3d.svg"          type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/3d" sxy="0.333" resize="off"/>
     <items bg="@KOEX_IMG_DIR@/back/map.png"         icon="@KOEX_IMG_DIR@/icon/map.png"         txt="@KOEX_ICON_DIR@/name/map.svg"         type="xapp" exec="/usr/bin/electron;@KOEX_LINK_DIR@/map" sxy="0.333" resize="off"/>
-    <items bg="@KOEX_IMG_DIR@/back/filebrowser.png" icon="@KOEX_IMG_DIR@/icon/filebrowser.png" txt="@KOEX_ICON_DIR@/name/filebrowser.svg" type="app" exec="/usr/bin/ste-explorer;-f;/opt/contents/koex" resize="off"/>
+    <items bg="@KOEX_IMG_DIR@/back/filebrowser.png" icon="@KOEX_IMG_DIR@/icon/filebrowser.png" txt="@KOEX_ICON_DIR@/name/filebrowser.svg" type="app" exec="/usr/bin/ste-explorer;-f;/opt/contents/koex" resize="off" mirror="false"/>
 </nemocard>
