@@ -3,7 +3,7 @@
     <size width="950" height="950"/>
     <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/creative"/>
     <items icon="" txt="" type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/koex"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/3d" sxy="0.333"/>
+    <items icon="" txt="" type="app"  exec="/usr/bin/nemoplayer;-f;rtmp://175.207.12.219/live/admin-coex"/>
     <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/map" sxy="0.333"/>
     <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/foundation"/>
     <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/invention"/>
