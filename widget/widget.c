@@ -44,7 +44,7 @@ NemoWidget *nemowidget_get_parent(NemoWidget *widget)
 
 void nemowidget_set_framerate(NemoWidget *widget, int framerate)
 {
-    NEMOWIDGET_CHECK_CLASS(widget, &NEMOWIDGET_WIN);
+    NEMOWIDGET_CHECK(widget);
     struct nemoshow *show = nemowidget_get_show(widget);
     nemoshow_view_set_framerate(show, framerate);
 }
