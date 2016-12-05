@@ -249,6 +249,11 @@ void nemoui_player_destroy(PlayerUI *ui)
     free(ui);
 }
 
+void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
+{
+    nemowidget_scale(ui->widget, easetype, duration, delay, sx, sy);
+}
+
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y)
 {
     nemowidget_translate(ui->widget, easetype, duration, delay, x, y);
@@ -279,9 +284,9 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     if (!enable_audio) nemoplay_revoke_audio(play);
 
     if (nemoplay_get_video_framerate(play) <= 30) {
-        nemowidget_win_set_framerate(parent, 30);
+        nemowidget_set_framerate(parent, 30);
     } else {
-        nemowidget_win_set_framerate(parent, nemoplay_get_video_framerate(play));
+        nemowidget_set_framerate(parent, nemoplay_get_video_framerate(play));
     }
 
     struct playshader *shader;

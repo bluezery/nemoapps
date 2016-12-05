@@ -13,6 +13,7 @@ void nemoui_player_show(PlayerUI *ui);
 void nemoui_player_hide(PlayerUI *ui);
 void nemoui_player_destroy(PlayerUI *ui);
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y);
+void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy);
 PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio);
 
 #ifdef __cplusplus

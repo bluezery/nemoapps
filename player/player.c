@@ -987,9 +987,9 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     NemoWidget *win = nemowidget_get_top_widget(parent);
     if (nemoplay_get_video_framerate(play) <= 30) {
-        nemowidget_win_set_framerate(win, 30);
+        nemowidget_set_framerate(win, 30);
     } else {
-        nemowidget_win_set_framerate(win, nemoplay_get_video_framerate(play));
+        nemowidget_set_framerate(win, nemoplay_get_video_framerate(play));
     }
 
     struct playshader *shader;

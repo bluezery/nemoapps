@@ -158,6 +158,67 @@ static void _config_unload(ConfigApp *app)
     free(app);
 }
 
+typedef struct _View View;
+struct _View {
+    int width, height;
+    struct nemoshow *show;
+    struct nemotool *tool;
+    NemoWidget *widget;
+    struct showone *group;
+    struct showone *bg;
+
+    int row, col;
+    int max_row, max_col;
+
+    List *player_uis;
+};
+
+View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
+{
+    View *view = calloc(sizeof(View), 1);
+    view->show = nemowidget_get_show(parent);
+    view->tool = nemowidget_get_tool(parent);
+    view->width = width;
+    view->height = height;
+    view->max_col = app->col;
+    view->max_row = app->row;
+    view->col = app->col;
+    view->row = app->row;
+
+    NemoWidget *widget;
+    view->widget = widget = nemowidget_create_vector(parent, app->config->width, app->config->height);
+    //nemowidget_append_callback(widget, "event", _win_event, widget);
+
+    struct showone *group;
+    struct showone *one;
+    view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->bg = one = RECT_CREATE(group, width, height);
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+
+    int w, h;
+    w = view->width/view->col;
+    h = view->height/view->row;
+
+    int i = 0;
+    List *l;
+    char *path;
+    LIST_FOR_EACH(app->paths, l, path) {
+        //if (!file_is_video(path)) continue;
+        PlayerUI *ui = nemoui_player_create(widget, w, h, path, app->enable_audio);
+        if (!ui) continue;
+
+        nemoui_player_translate(ui, NEMOEASE_CUBIC_INOUT_TYPE, 1500, 0,
+                (i%app->col) * w, (i/app->row) * h);
+        nemoui_player_scale(ui, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, 0.5, 0.5);
+        nemoui_player_show(ui);
+        view->player_uis = list_append(view->player_uis, ui);
+        i++;
+        if (i >= app->col * app->row) break;
+    }
+
+    return view;
+}
+
 int main(int argc, char *argv[])
 {
     ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
@@ -177,32 +238,7 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
-    NemoWidget *widget = nemowidget_create_vector(win, app->config->width, app->config->height);
-    struct showone *group;
-    struct showone *one;
-    group = GROUP_CREATE(nemowidget_get_canvas(widget));
-    one = RECT_CREATE(group, app->config->width, app->config->height);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
-
-    int w, h;
-    w = app->config->width/app->col;
-    h = app->config->height/app->row;
-
-    int i = 0;
-    List *l;
-    char *path;
-    LIST_FOR_EACH(app->paths, l, path) {
-        //if (!file_is_video(path)) continue;
-        PlayerUI *ui = nemoui_player_create(win, w, h, path, app->enable_audio);
-        if (!ui) continue;
-
-        nemoui_player_translate(ui, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                (i%app->col) * w, (i/app->row) * h);
-        nemoui_player_show(ui);
-        i++;
-        if (i >= app->col * app->row) break;
-    }
-    LIST_FREE(app->paths, path) free(path);
+    View *view = view_create(win, app->config->width, app->config->height, app);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);

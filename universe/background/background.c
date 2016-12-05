@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_move(win, 0);
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
-    nemowidget_win_set_framerate(win, 10);
+    nemowidget_set_framerate(win, 10);
 
     BackgroundView *view = background_view_create(win, app->config->width, app->config->height, app);
     background_view_show(view, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);

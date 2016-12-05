@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-    <size width="3840" height="2160" col="4" row="4"/>
+<size width="3840" height="2160" col="4" row="4"/>
+    <!--
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
@@ -17,6 +18,23 @@
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    -->
+    <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO SKT Table Top Device (with SM Town).mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO SKT Table Top Device (with SM Town).mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
     <!--
     <file path="/home/root/FUTURE/MS 2011.mp4"/>
     <file path="/home/root/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>

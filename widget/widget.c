@@ -42,6 +42,13 @@ NemoWidget *nemowidget_get_parent(NemoWidget *widget)
     return widget->parent;
 }
 
+void nemowidget_set_framerate(NemoWidget *widget, int framerate)
+{
+    NEMOWIDGET_CHECK_CLASS(widget, &NEMOWIDGET_WIN);
+    struct nemoshow *show = nemowidget_get_show(widget);
+    nemoshow_view_set_framerate(show, framerate);
+}
+
 void nemowidget_set_canvas(NemoWidget *widget, struct showone *canvas)
 {
     NEMOWIDGET_CHECK(widget);
@@ -1740,17 +1747,10 @@ NemoWidget *nemowidget_create_win_base(struct nemotool *tool, const char *name, 
         nemowidget_win_load_scene(win, base->width, base->height);
     }
     if (base->framerate > 0) {
-        nemowidget_win_set_framerate(win, base->framerate);
+        nemowidget_set_framerate(win, base->framerate);
     }
 
     return win;
-}
-
-void nemowidget_win_set_framerate(NemoWidget *win, int framerate)
-{
-    NEMOWIDGET_CHECK_CLASS(win, &NEMOWIDGET_WIN);
-    struct nemoshow *show = nemowidget_get_show(win);
-    nemoshow_view_set_framerate(show, framerate);
 }
 
 void nemowidget_win_set_anchor(NemoWidget *win, double ax, double ay)

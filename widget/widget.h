@@ -277,7 +277,7 @@ struct showone *nemowidget_get_canvas(NemoWidget *widget);
 NemoWidgetClass *nemowidget_get_klass(NemoWidget *widget);
 void *nemowidget_get_context(NemoWidget *widget);
 
-void nemowidget_win_set_framerate(NemoWidget *win, int framerate);
+void nemowidget_set_framerate(NemoWidget *widget, int framerate);
 void nemowidget_set_data(NemoWidget *widget, const char *key, void *data);
 void *nemowidget_get_data(NemoWidget *widget, const char *key);
 void nemowidget_set_id(NemoWidget *widget, uint32_t id);
