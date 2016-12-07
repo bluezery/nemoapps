@@ -16,8 +16,8 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-thread.h
     nemoui-path.c
     nemoui-path.h
-    nemoui-event.c
-    nemoui-event.h
+    nemoui-gesture.c
+    nemoui-gesture.h
     nemoui.h
     )
 TARGET_LINK_LIBRARIES(${LIBNAME}
@@ -36,6 +36,7 @@ INSTALL(FILES
     nemoui-image.h
     nemoui-thread.h
     nemoui-path.h
+    nemoui-gesture.h
     nemoui.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )

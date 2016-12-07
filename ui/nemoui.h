@@ -7,6 +7,6 @@
 #include <nemoui-player.h>
 #include <nemoui-image.h>
 #include <nemoui-path.h>
-#include <nemoui-event.h>
+#include <nemoui-gesture.h>
 
 #endif

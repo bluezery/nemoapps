@@ -1,5 +1,5 @@
 #include <nemoutil.h>
-#include "nemoui-event.h"
+#include "nemoui-gesture.h"
 
 #define SCALE_COEFF 0.02
 #define HISTORY_MAX 50
