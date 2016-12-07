@@ -197,14 +197,14 @@ static void _player_resize(NemoWidget *widget, const char *id, void *info, void 
     nemowidget_dirty(widget);
 }
 
-void nemoui_player_play(PlayerUI *ui)
+void nemoui_player_play(PlayerUI *ui, uint32_t easetype, int duration, int delay)
 {
     struct nemoplay *play = ui->play;
 
-    nemotimer_set_timeout(ui->video_timer, 10);
+    nemotimer_set_timeout(ui->video_timer, duration + delay);
     nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
 
-    nemotimer_set_timeout(ui->video_timer, 10);
+    nemotimer_set_timeout(ui->video_timer, duration + delay);
 
     pthread_t pth;
     if (pthread_create(&pth, NULL, _player_decode_thread, (void *)ui) != 0) {
@@ -219,7 +219,6 @@ void nemoui_player_play(PlayerUI *ui)
 
 void nemoui_player_stop(PlayerUI *ui)
 {
-    ERR("STOP");
     nemotimer_set_timeout(ui->video_timer, 0);
     nemoplay_wait_thread(ui->play);
     pthread_cancel(ui->pth_decode);
@@ -229,10 +228,10 @@ void nemoui_player_stop(PlayerUI *ui)
     nemoplay_set_state(ui->play, NEMOPLAY_STOP_STATE);
 }
 
-void nemoui_player_show(PlayerUI *ui)
+void nemoui_player_show(PlayerUI *ui, uint32_t easetype, int duration, int delay)
 {
     nemowidget_show(ui->widget, 0, 0, 0);
-    nemoui_player_play(ui);
+    nemoui_player_play(ui, easetype, duration, delay);
 }
 
 void nemoui_player_hide(PlayerUI *ui)

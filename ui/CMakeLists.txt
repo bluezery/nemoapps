@@ -16,6 +16,8 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-thread.h
     nemoui-path.c
     nemoui-path.h
+    nemoui-event.c
+    nemoui-event.h
     nemoui.h
     )
 TARGET_LINK_LIBRARIES(${LIBNAME}

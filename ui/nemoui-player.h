@@ -7,9 +7,9 @@ extern "C" {
 
 typedef struct _PlayerUI PlayerUI;
 
-void nemoui_player_play(PlayerUI *ui);
+void nemoui_player_play(PlayerUI *ui, uint32_t easetype, int duration, int delay);
 void nemoui_player_stop(PlayerUI *ui);
-void nemoui_player_show(PlayerUI *ui);
+void nemoui_player_show(PlayerUI *ui, uint32_t easetype, int duration, int delay);
 void nemoui_player_hide(PlayerUI *ui);
 void nemoui_player_destroy(PlayerUI *ui);
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y);

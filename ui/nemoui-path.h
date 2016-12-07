@@ -17,5 +17,4 @@ void path_debug(Path *path, struct showone *group, uint32_t color);
 }
 #endif
 
-
 #endif
