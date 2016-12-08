@@ -248,6 +248,11 @@ void nemoui_player_destroy(PlayerUI *ui)
     free(ui);
 }
 
+void nemoui_player_above(PlayerUI *ui, NemoWidget *above)
+{
+    nemowidget_stack_above(ui->widget, above);
+}
+
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
 {
     nemowidget_scale(ui->widget, easetype, duration, delay, sx, sy);
