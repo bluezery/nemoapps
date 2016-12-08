@@ -158,11 +158,11 @@ static void _config_unload(ConfigApp *app)
     free(app);
 }
 
-typedef struct _Tile Tile;
-struct _Tile
+typedef struct _Item Item;
+struct _Item
 {
     PlayerUI *ui;
-    int tx, ty;
+    int ix, iy;
 };
 
 typedef struct _View View;
@@ -177,12 +177,148 @@ struct _View {
     int row;
     int max_row;
     int zoom;
-    int max_zoom;
-    int fw, fh;
+    int zoom_max;
+    int iw0, ih0;
     int iw, ih;
+    int ix, iy;
 
-    List *tiles;
+    int zoom_start;
+
+    List *items;
+
+    NemoWidget *event_widget;
 };
+
+// ix, iy are designated left top item's coordinates.
+void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration, int delay)
+{
+    if (zoom < 1) zoom = 1;
+    if (ix < 0) ix = 0;
+    if (iy < 0) iy = 0;
+    if (ix + zoom >= view->row) ix = view->row - zoom;
+    if (iy + zoom >= view->row) iy = view->row - zoom;
+
+    view->zoom = zoom;
+    view->iw = view->width/view->zoom;
+    view->ih = view->height/view->zoom;
+    view->ix = ix;
+    view->iy = iy;
+
+    double scale;
+    scale = (double)view->iw/view->iw0;
+
+    List *l;
+    Item *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        if (!it) {
+            ERR("it is NULL");
+            continue;
+        }
+        float x, y;
+        x = (it->ix - ix) * view->iw;
+        y = (it->iy - iy) * view->ih;
+        nemoui_player_translate(it->ui, easetype, duration, delay, x, y);
+        nemoui_player_scale(it->ui, easetype, duration, delay, scale, scale);
+    }
+}
+
+void view_zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration, int delay)
+{
+    RET_IF(zoom <= 0);
+    RET_IF(zoom > view->zoom_max);
+    if (view->zoom == zoom) return;
+
+    _zoom(view, zoom, ix, iy, easetype, duration, delay);
+}
+
+void view_show(View *view, uint32_t easetype, int duration, int delay)
+{
+    _zoom(view, view->row, view->ix, view->iy, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+
+    nemowidget_show(view->widget, easetype, duration, delay);
+    nemowidget_show(view->event_widget, easetype, duration, delay);
+
+    List *l;
+    Item *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        if (!it) {
+            ERR("it is NULL");
+            continue;
+        }
+        nemoui_player_show(it->ui, easetype, duration, delay);
+    }
+}
+
+static void _view_event(NemoWidget *widget, const char *id, void *event, void *userdata)
+{
+    View *view = userdata;
+    struct nemoshow *show = nemowidget_get_show(widget);
+    if (nemoshow_event_is_down(show, event)) {
+    } else if (nemoshow_event_is_up(show, event)) {
+        if (nemoshow_event_is_single_click(show, event)) {
+            //view_zoom(view, view->zoom - 1, 0, 0, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        }
+    }
+}
+
+static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event, double scale, void *userdata)
+{
+    View *view = userdata;
+    double zoom = (int)(view->zoom_start + scale + 0.5);
+    if (view->zoom != zoom) {
+        double cx, cy;
+        nemoui_gesture_get_center(gesture, event, &cx, &cy);
+        int ix, iy;
+        if (view->zoom > zoom) {
+            if (cx < view->width/2) {
+                if (cy < view->height/2) {
+                    ix = view->ix;
+                    iy = view->iy;
+                } else {
+                    ix = view->ix;
+                    iy = view->iy + 1;
+                }
+            } else {
+                if (cy < view->height/2) {
+                    ix = view->ix + 1;
+                    iy = view->iy;
+                } else {
+                    ix = view->ix + 1;
+                    iy = view->iy + 1;
+                }
+            }
+        } else {
+            if (cx < view->width/2) {
+                if (cy < view->height/2) {
+                    ix = view->ix - 1;
+                    iy = view->iy - 1;
+                } else {
+                    ix = view->ix - 1;
+                    iy = view->iy;
+                }
+            } else {
+                if (cy < view->height/2) {
+                    ix = view->ix;
+                    iy = view->iy - 1;
+                } else {
+                    ix = view->ix;
+                    iy = view->iy;
+                }
+            }
+        }
+        view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    }
+}
+
+static void _view_scale_start(NemouiGesture *gesture, NemoWidget *widget, void *event, void *userdata)
+{
+    View *view = userdata;
+    view->zoom_start = view->zoom;
+}
+
+static void _view_scale_stop(NemouiGesture *gesture, NemoWidget *widget, void *event, void *userdata)
+{
+}
 
 View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
@@ -193,12 +329,13 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     view->height = height;
     view->max_row = app->row;
     view->row = app->row;
-    view->max_zoom = app->row;
+    view->zoom_max = app->row;
     view->zoom = app->row;
+    view->ix = 0;
+    view->iy = 0;
 
     NemoWidget *widget;
     view->widget = widget = nemowidget_create_vector(parent, app->config->width, app->config->height);
-    //nemowidget_append_callback(widget, "event", _win_event, widget);
 
     struct showone *group;
     struct showone *one;
@@ -208,70 +345,40 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 
     view->iw = view->width/view->zoom;
     view->ih = view->height/view->zoom;
-    view->fw = view->iw;
-    view->fh = view->ih;
+    view->iw0 = view->iw;
+    view->ih0 = view->ih;
 
     int i = 0;
     List *l;
     char *path;
     LIST_FOR_EACH(app->paths, l, path) {
         //if (!file_is_video(path)) continue;
-        Tile *tile = calloc(sizeof(Tile), 1);
-        tile->tx = i%app->row;
-        tile->ty = i/app->row;
+        Item *it = calloc(sizeof(Item), 1);
+        it->ix = i%app->row;
+        it->iy = i/app->row;
 
         PlayerUI *ui;
-        tile->ui = ui = nemoui_player_create(widget, view->iw, view->ih, path, app->enable_audio);
+        it->ui = ui = nemoui_player_create(widget, view->iw, view->ih, path, app->enable_audio);
         if (!ui) {
             ERR("ui is NULL");
-            free(tile);
+            free(it);
             continue;
         }
 
-        view->tiles = list_append(view->tiles, tile);
+        view->items = list_append(view->items, it);
         i++;
         if (i >= app->row * app->row) break;
     }
 
+    view->event_widget = widget = nemowidget_create_vector(parent,
+            app->config->width, app->config->height);
+    nemowidget_append_callback(widget, "event", _view_event, view);
+
+    NemouiGesture *gesture = nemoui_gesture_create(parent, width, height);
+    nemoui_gesture_set_scale(gesture, _view_scale, _view_scale_start, _view_scale_stop, view);
+    nemoui_gesture_show(gesture);
+
     return view;
-}
-
-void view_zoom(View *view, int zoom, int gx, int gy, uint32_t easetype, int duration, int delay)
-{
-    view->zoom = zoom;
-    int w, h;
-    view->iw = view->width/view->zoom;
-    view->ih = view->height/view->zoom;
-
-    double scale;
-    scale = (double)view->iw/view->fw;
-
-    List *l;
-    Tile *tile;
-    LIST_FOR_EACH(view->tiles, l, tile) {
-        if (!tile) {
-            ERR("tile is NULL");
-            continue;
-        }
-
-        float x, y;
-        nemoui_player_translate(tile->ui, easetype, duration, delay,
-                tile->tx * view->iw, tile->ty * view->ih);
-        nemoui_player_scale(tile->ui, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
-    }
-}
-
-void view_show(View *view, uint32_t easetype, int duration, int delay)
-{
-    List *l;
-    Tile *tile;
-    LIST_FOR_EACH(view->tiles, l, tile) {
-        if (!tile) {
-            ERR("tile is NULL");
-            continue;
-        }
-        nemoui_player_show(tile->ui);
-    }
 }
 
 int main(int argc, char *argv[])
@@ -294,7 +401,6 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_scale(win, 0);
 
     View *view = view_create(win, app->config->width, app->config->height, app);
-    view_zoom(view, view->zoom - 3, 0, 0, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
     view_show(view, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
     nemowidget_show(win, 0, 0, 0);

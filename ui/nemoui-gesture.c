@@ -1,7 +1,7 @@
 #include <nemoutil.h>
 #include "nemoui-gesture.h"
 
-#define SCALE_COEFF 0.02
+#define SCALE_COEFF 0.01
 #define HISTORY_MAX 50
 #define HISTORY_MIN_DIST 10
 
@@ -40,10 +40,16 @@ struct _NemouiGesture
     Coord histories[HISTORY_MAX];
 
     GestureMove move;
+    GestureMoveStart move_start;
+    GestureMoveStop move_stop;
     void *move_userdata;
     GestureScale scale;
+    GestureScaleStart scale_start;
+    GestureScaleStop scale_stop;
     void *scale_userdata;
     GestureRotate rotate;
+    GestureRotateStart rotate_start;
+    GestureRotateStop rotate_stop;
     void *rotate_userdata;
     GestureThrow throw;
     void *throw_userdata;
@@ -69,7 +75,7 @@ static void gesture_update_index(NemouiGesture *gesture, NemoWidget *widget, voi
     }
 }
 
-static void gesture_get_center(NemouiGesture *gesture, void *event, double *cx, double *cy)
+void nemoui_gesture_get_center(NemouiGesture *gesture, void *event, double *cx, double *cy)
 {
     RET_IF(!gesture);
     int cnt = list_count(gesture->grabs);
@@ -159,7 +165,7 @@ static void gesture_scale_init(NemouiGesture *gesture, NemoWidget *widget, void 
     //nemoshow_item_set_anchor(gesture->group, cx, cy);
 
     double cx, cy;
-    gesture_get_center(gesture, event, &cx, &cy);
+    nemoui_gesture_get_center(gesture, event, &cx, &cy);
 
     int k = 0;
     double sum = 0;
@@ -184,7 +190,7 @@ bool gesture_scale_calculate(NemouiGesture *gesture, NemoWidget *widget, void *e
     if (list_count(gesture->grabs) < 2) return false;
 
     double cx, cy;
-    gesture_get_center(gesture, event, &cx, &cy);
+    nemoui_gesture_get_center(gesture, event, &cx, &cy);
 
     int k = 0;
     double sum = 0;
@@ -201,7 +207,7 @@ bool gesture_scale_calculate(NemouiGesture *gesture, NemoWidget *widget, void *e
     }
 
     double _scale = sum/k * SCALE_COEFF;
-    if (scale) *scale = _scale - gesture->scale_sum;
+    if (scale) *scale = -(_scale - gesture->scale_sum);
     //double scale_x = gesture->scale_x + (double)(scale - gesture->scale_sum) * coeff;
     //double scale_y = gesture->scale_y + (double)(scale - gesture->scale_sum) * coeff;
     /*
@@ -216,7 +222,7 @@ static void gesture_move_init(NemouiGesture *gesture, NemoWidget *widget, void *
 {
     // diff update
     double cx, cy;
-    gesture_get_center(gesture, event, &cx, &cy);
+    nemoui_gesture_get_center(gesture, event, &cx, &cy);
 
     /*
     double tx, ty;
@@ -239,7 +245,7 @@ static void gesture_move_init(NemouiGesture *gesture, NemoWidget *widget, void *
 static void gesture_move_calculate(NemouiGesture *gesture, NemoWidget *widget, void *event, int *tx, int *ty)
 {
     double cx, cy;
-    gesture_get_center(gesture, event, &cx, &cy);
+    nemoui_gesture_get_center(gesture, event, &cx, &cy);
 
     // history update
     gesture->histories[gesture->history_idx].time = nemoshow_event_get_time(event);
@@ -362,56 +368,6 @@ static void gesture_remove_grab(NemouiGesture *gesture, NemoWidget *widget, void
 
 static void _gesture_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
-    NemouiGesture *gesture = userdata;
-
-    struct nemoshow *show = nemowidget_get_show(widget);
-
-    if (nemoshow_event_is_down(show, event)) {
-        gesture_append_grab(gesture, widget, event);
-        if (list_count(gesture->grabs) == 1) {
-            /*
-            // Revoke all transitions
-            nemoshow_revoke_transition(show, gesture->group, "tx");
-            nemoshow_revoke_transition(show, gesture->group, "ty");
-            nemoshow_revoke_transition(show, gesture->group, "sx");
-            nemoshow_revoke_transition(show, gesture->group, "sy");
-            nemoshow_revoke_transition(show, gesture->group, "ro");
-            nemotimer_set_timeout(gesture->move_timer, 0);
-            */
-        }
-    } else if (nemoshow_event_is_motion(show, event)) {
-        // Move
-        Grab *g = LIST_DATA(LIST_FIRST(gesture->grabs));
-        // XXX: To reduce duplicated caclulation
-        if (g->device == nemoshow_event_get_device(event)) {
-            if (gesture->move) {
-                int tx, ty;
-                gesture_move_calculate(gesture, widget, event, &tx, &ty);
-                gesture->move(gesture, widget, event, tx, ty, gesture->move_userdata);
-            }
-            if (gesture->scale) {
-                double scale;
-                if (gesture_scale_calculate(gesture, widget, event, &scale)) {
-                    gesture->scale(gesture, widget, event, scale, gesture->scale_userdata);
-                }
-            }
-            if (gesture->ro) {
-                double ro;
-                if (gesture_rotate_calculate(gesture, widget, event, &ro)) {
-                    gesture->rotate(gesture, widget, event, ro, gesture->rotate_userdata);
-                }
-            }
-
-        }
-    } else if (nemoshow_event_is_up(show, event)) {
-        gesture_remove_grab(gesture, widget, event);
-        if (gesture->throw) {
-            double tx, ty;
-            if (gesture_throw_calculate(gesture, widget, event, &tx, &ty)) {
-                gesture->throw(gesture, widget, event, tx, ty, gesture->throw_userdata);
-            }
-        }
-    }
 }
 
 static void _nemoui_gesture_event(NemoWidget *widget, const char *id, void *info, void *userdata)
@@ -426,8 +382,64 @@ static void _nemoui_gesture_event(NemoWidget *widget, const char *id, void *info
             nemoshow_event_get_y(event), &ex, &ey);
 
     if (nemoshow_event_is_down(show, event)) {
-        nemowidget_create_grab(widget, event,
-                _gesture_grab_event, gesture);
+        gesture_append_grab(gesture, widget, event);
+        if (list_count(gesture->grabs) == 2) {
+            if (gesture->scale_start) {
+                gesture->scale_start(gesture, widget, event, gesture->scale_userdata);
+            }
+            if (gesture->rotate_start) {
+                gesture->rotate_start(gesture, widget, event, gesture->rotate_userdata);
+            }
+        }
+        /*
+        if (list_count(gesture->grabs) == 1) {
+            // Revoke all transitions
+            nemoshow_revoke_transition(show, gesture->group, "tx");
+            nemoshow_revoke_transition(show, gesture->group, "ty");
+            nemoshow_revoke_transition(show, gesture->group, "sx");
+            nemoshow_revoke_transition(show, gesture->group, "sy");
+            nemoshow_revoke_transition(show, gesture->group, "ro");
+            nemotimer_set_timeout(gesture->move_timer, 0);
+        }
+        */
+    } else if (nemoshow_event_is_motion(show, event)) {
+        Grab *g = LIST_DATA(LIST_FIRST(gesture->grabs));
+        // XXX: To reduce duplicated caclulation
+        if (g->device == nemoshow_event_get_device(event)) {
+            if (gesture->move) {
+                int tx, ty;
+                gesture_move_calculate(gesture, widget, event, &tx, &ty);
+                gesture->move(gesture, widget, event, tx, ty, gesture->move_userdata);
+            }
+            if (gesture->scale) {
+                double scale;
+                if (gesture_scale_calculate(gesture, widget, event, &scale)) {
+                    gesture->scale(gesture, widget, event, scale, gesture->scale_userdata);
+                }
+            }
+            if (gesture->rotate) {
+                double ro;
+                if (gesture_rotate_calculate(gesture, widget, event, &ro)) {
+                    gesture->rotate(gesture, widget, event, ro, gesture->rotate_userdata);
+                }
+            }
+        }
+    } else if (nemoshow_event_is_up(show, event)) {
+        gesture_remove_grab(gesture, widget, event);
+        if (gesture->throw) {
+            double tx, ty;
+            if (gesture_throw_calculate(gesture, widget, event, &tx, &ty)) {
+                gesture->throw(gesture, widget, event, tx, ty, gesture->throw_userdata);
+            }
+        }
+        if (list_count(gesture->grabs) == 1) {
+            if (gesture->scale_stop) {
+                gesture->scale_stop(gesture, widget, event, gesture->scale_userdata);
+            }
+            if (gesture->rotate_stop) {
+                gesture->rotate_stop(gesture, widget, event, gesture->rotate_userdata);
+            }
+        }
     }
 }
 
@@ -443,14 +455,26 @@ NemouiGesture *nemoui_gesture_create(NemoWidget *parent, int width, int height)
     return gesture;
 }
 
+void nemoui_gesture_show(NemouiGesture *gesture)
+{
+    nemowidget_show(gesture->widget, 0, 0, 0);
+}
+
+void nemoui_gesture_hide(NemouiGesture *gesture)
+{
+    nemowidget_hide(gesture->widget, 0, 0, 0);
+}
+
 void nemoui_gesture_translate(NemouiGesture *gesture, int tx, int ty)
 {
     nemowidget_translate(gesture->widget, 0, 0, 0, tx, ty);
 }
 
-void nemoui_gesture_set_move(NemouiGesture *gesture, GestureMove callback, void *userdata)
+void nemoui_gesture_set_move(NemouiGesture *gesture, GestureMove move, GestureMoveStart start, GestureMoveStop stop, void *userdata)
 {
-    gesture->move = callback;
+    gesture->move = move;
+    gesture->move_start = start;
+    gesture->move_stop = stop;
     gesture->move_userdata = userdata;
 }
 
@@ -460,14 +484,18 @@ void nemoui_gesture_set_throw(NemouiGesture *gesture, GestureThrow callback, voi
     gesture->throw_userdata = userdata;
 }
 
-void nemoui_gesture_set_scale(NemouiGesture *gesture, GestureScale callback, void *userdata)
+void nemoui_gesture_set_scale(NemouiGesture *gesture, GestureScale scale, GestureScaleStart start, GestureScaleStop stop, void *userdata)
 {
-    gesture->scale = callback;
+    gesture->scale = scale;
+    gesture->scale_start = start;
+    gesture->scale_stop = stop;
     gesture->scale_userdata = userdata;
 }
 
-void nemoui_gesture_set_rotate(NemouiGesture *gesture, GestureRotate callback, void *userdata)
+void nemoui_gesture_set_rotate(NemouiGesture *gesture, GestureRotate rotate, GestureRotateStart start, GestureRotateStop stop, void *userdata)
 {
-    gesture->rotate = callback;
+    gesture->rotate = rotate;
+    gesture->rotate_start = start;
+    gesture->rotate_stop = stop;
     gesture->rotate_userdata = userdata;
 }
