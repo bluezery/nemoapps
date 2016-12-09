@@ -163,7 +163,9 @@ struct _Item
 {
     PlayerUI *ui;
     int x, y;
+    struct showone *group;
     struct showone *event;
+    struct showone *font;
     struct showone *text;
 };
 
@@ -198,7 +200,7 @@ void item_below(Item *it, NemoWidget *below)
     nemoui_player_below(it->ui, below);
 }
 
-Item *item_create(NemoWidget *widget, struct showone *group,
+Item *item_create(NemoWidget *widget, struct showone *pgroup,
         int x, int y, int w, int h, const char *uri, bool enable_audio)
 {
     Item *it = calloc(sizeof(Item), 1);
@@ -212,22 +214,45 @@ Item *item_create(NemoWidget *widget, struct showone *group,
         free(it);
         return NULL;
     }
+    struct showone *group;
+    it->group = group = GROUP_CREATE(pgroup);
+
+    struct showone *font;
     struct showone *one;
+    it->font = font = FONT_CREATE("NanumGothic", "Regular");
+    it->text = one = TEXT_CREATE(group, font, 15, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_set_fill_color(one, RGBA(BLACK));
+    nemoshow_item_translate(one, w/2.0, h + 30);
+    nemoshow_item_set_alpha(one, 0.0);
+
     it->event = one = RECT_CREATE(group, w, h);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_userdata(one, it);
     return it;
 }
 
+void item_show_text(Item *it)
+{
+    _nemoshow_item_motion(it->text, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
+            "alpha", 1.0, NULL);
+}
+
+void item_hide_text(Item *it)
+{
+    _nemoshow_item_motion(it->text, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
+            "alpha", 0.0, NULL);
+}
+
 void item_translate(Item *it, uint32_t easetype, int duration, int delay, float x, float y)
 {
     nemoui_player_translate(it->ui, easetype, duration, delay, x, y);
     if (duration > 0) {
-        _nemoshow_item_motion(it->event, easetype, duration, delay,
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
                 "tx", (double)x, "ty", (double)y,
                 NULL);
     } else {
-        nemoshow_item_translate(it->event, x, y);
+        nemoshow_item_translate(it->group, x, y);
     }
 }
 
@@ -235,11 +260,11 @@ void item_scale(Item *it, uint32_t easetype, int duration, int delay, float sx, 
 {
     nemoui_player_scale(it->ui, easetype, duration, delay, sx, sy);
     if (duration > 0) {
-        _nemoshow_item_motion(it->event, easetype, duration, delay,
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
                 "sx", sx, "sy", sy,
                 NULL);
     } else {
-        nemoshow_item_scale(it->event, sx, sy);
+        nemoshow_item_scale(it->group, sx, sy);
     }
 }
 
@@ -345,6 +370,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
                         item_translate(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, x, y);
                         item_scale(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
                         item_below(itt, view->event_widget);
+                        item_show_text(itt);
                         view->show_item = it;
                         continue;
                     }
@@ -353,6 +379,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
                     scale = (double)iw/view->iw0;
                     item_translate(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, x, y);
                     item_scale(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
+                    item_hide_text(itt);
                     ix++;
                     if (ix >= view->row - 1) {
                         ix = 0;
