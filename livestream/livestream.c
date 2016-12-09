@@ -186,13 +186,19 @@ struct _View {
     int zoom_start;
 
     List *items;
+    Item *show_item;
 
     NemoWidget *event_widget;
+    NemouiGesture *gesture;
+
+    struct nemotimer *scale_timer;
+    int scale_ix, scale_iy;
+    int scale_zoom;
 };
 
-void item_above_all(Item *it)
+void item_below(Item *it, NemoWidget *below)
 {
-    nemoui_player_above(it->ui, NULL);
+    nemoui_player_below(it->ui, below);
 }
 
 void item_translate(Item *it, uint32_t easetype, int duration, int delay, float x, float y)
@@ -268,6 +274,7 @@ void view_show(View *view, uint32_t easetype, int duration, int delay)
 
     nemowidget_show(view->widget, easetype, duration, delay);
     nemowidget_show(view->event_widget, easetype, duration, delay);
+    nemoui_gesture_show(view->gesture);
 
     List *l;
     Item *it;
@@ -297,93 +304,118 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
         one = nemowidget_pick_one(view->widget, ex, ey);
         if (one) {
             Item *it = nemoshow_one_get_userdata(one);
-            int iw, ih;
-            iw = view->width/(view->row + 1);
-            ih = view->height/(view->row + 1);
-            int ix, iy;
-            ix = 0;
-            iy = 0;
-            List *l;
-            Item *itt;
-            LIST_FOR_EACH(view->items, l, itt) {
-                double scale;
-                float x, y;
-                if (itt == it) {
-                    x = (view->row - 1) * iw;
-                    y = (view->row - 3) * ih;
-                    scale = (double)iw * 2/view->iw0;
+
+            if (view->show_item == it) {
+                view->scale_ix = 0;
+                view->scale_iy = 0;
+                view->scale_zoom = view->row;
+                nemotimer_set_timeout(view->scale_timer, 10);
+                view->show_item = NULL;
+            } else {
+                int iw, ih;
+                iw = view->width/(view->row + 1);
+                ih = view->height/(view->row + 1);
+                int ix, iy;
+                ix = 0;
+                iy = 0;
+                List *l;
+                Item *itt;
+                LIST_FOR_EACH(view->items, l, itt) {
+                    double scale;
+                    float x, y;
+                    if (itt == it) {
+                        x = (view->row - 1) * iw;
+                        y = (view->row - 3) * ih;
+                        scale = (double)iw * 2/view->iw0;
+                        item_translate(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, x, y);
+                        item_scale(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
+                        item_below(itt, view->event_widget);
+                        view->show_item = it;
+                        continue;
+                    }
+                    x = ix * iw;
+                    y = iy * ih;
+                    scale = (double)iw/view->iw0;
                     item_translate(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, x, y);
                     item_scale(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
-                    item_above_all(itt);
-                    continue;
+                    ix++;
+                    if (ix >= view->row - 1) {
+                        ix = 0;
+                        iy++;
+                    }
                 }
-                x = ix * iw;
-                y = iy * ih;
-                scale = (double)iw/view->iw0;
-                item_translate(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, x, y);
-                item_scale(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, scale, scale);
-                ix++;
-                if (ix >= view->row - 1) {
-                    ix = 0;
-                    iy++;
-                }
+                view->ix = 0;
+                view->iy = 0;
+                view->zoom = view->row + 1;
             }
-            view->zoom = view->row;
-            view->ix = 0;
-            view->iy = 0;
         }
     }
+}
+
+static void _view_scale_timer(struct nemotimer *timer, void *userdata)
+{
+    View *view = userdata;
+    view->show_item = NULL;
+    view_zoom(view, view->scale_zoom, view->scale_ix, view->scale_iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
 }
 
 static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event, double scale, void *userdata)
 {
     View *view = userdata;
+    // XXX: only increase/decrease by one step
+    if (scale >= 1.0) scale = 1.0;
     double zoom = (int)(view->zoom_start + scale + 0.5);
-    if (view->zoom != zoom) {
-        double cx, cy;
-        nemoui_gesture_get_center(gesture, event, &cx, &cy);
-        int ix, iy;
-        if (view->zoom > zoom) {
-            if (cx < view->width/2) {
-                if (cy < view->height/2) {
-                    ix = view->ix;
-                    iy = view->iy;
-                } else {
-                    ix = view->ix;
-                    iy = view->iy + 1;
-                }
+    if (view->zoom == zoom) return;
+    if (view->zoom - zoom > 1) zoom = view->zoom - 1;
+    else if (zoom - view->zoom > 1) zoom = view->zoom + 1;
+
+    double cx, cy;
+    nemoui_gesture_get_center(gesture, event, &cx, &cy);
+    int ix, iy;
+    if (view->zoom > zoom) {
+        if (cx < view->width/2) {
+            if (cy < view->height/2) {
+                ix = view->ix;
+                iy = view->iy;
             } else {
-                if (cy < view->height/2) {
-                    ix = view->ix + 1;
-                    iy = view->iy;
-                } else {
-                    ix = view->ix + 1;
-                    iy = view->iy + 1;
-                }
+                ix = view->ix;
+                iy = view->iy + 1;
             }
         } else {
-            if (cx < view->width/2) {
-                if (cy < view->height/2) {
-                    ix = view->ix - 1;
-                    iy = view->iy - 1;
-                } else {
-                    ix = view->ix - 1;
-                    iy = view->iy;
-                }
+            if (cy < view->height/2) {
+                ix = view->ix + 1;
+                iy = view->iy;
             } else {
-                if (cy < view->height/2) {
-                    ix = view->ix;
-                    iy = view->iy - 1;
-                } else {
-                    ix = view->ix;
-                    iy = view->iy;
-                }
+                ix = view->ix + 1;
+                iy = view->iy + 1;
             }
         }
-
-        view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-        nemoshow_event_set_done_all(event);
+    } else {
+        if (cx < view->width/2) {
+            if (cy < view->height/2) {
+                ix = view->ix - 1;
+                iy = view->iy - 1;
+            } else {
+                ix = view->ix - 1;
+                iy = view->iy;
+            }
+        } else {
+            if (cy < view->height/2) {
+                ix = view->ix;
+                iy = view->iy - 1;
+            } else {
+                ix = view->ix;
+                iy = view->iy;
+            }
+        }
     }
+
+    view->scale_ix = ix;
+    view->scale_iy = iy;
+    view->scale_zoom = zoom;
+    nemotimer_set_timeout(view->scale_timer, 10);
+    //view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    nemoshow_event_set_done_all(event);
 }
 
 static void _view_scale_start(NemouiGesture *gesture, NemoWidget *widget, void *event, void *userdata)
@@ -454,9 +486,11 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
             app->config->width, app->config->height);
     nemowidget_append_callback(widget, "event", _view_event, view);
 
-    NemouiGesture *gesture = nemoui_gesture_create(parent, width, height);
+    NemouiGesture *gesture;
+    gesture = view->gesture = nemoui_gesture_create(parent, width, height);
     nemoui_gesture_set_scale(gesture, _view_scale, _view_scale_start, _view_scale_stop, view);
-    nemoui_gesture_show(gesture);
+
+    view->scale_timer = TOOL_ADD_TIMER(view->tool, 0, _view_scale_timer, view);
 
     return view;
 }

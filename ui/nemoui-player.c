@@ -10,6 +10,114 @@
 #include "nemoui.h"
 #include "nemoui-player.h"
 
+// TODO: Retry when network is disconnected!
+// TODO: Create thread to call avformat_open_input()!!
+// For network stream, it takes long times.
+int _nemoplay_load_media(struct nemoplay *play, const char *mediapath)
+{
+	AVFormatContext *container;
+	AVCodecContext *context;
+	AVCodec *codec;
+	AVCodecContext *video_context = NULL;
+	AVCodecContext *audio_context = NULL;
+	AVCodecContext *subtitle_context = NULL;
+	int video_stream = -1;
+	int audio_stream = -1;
+	int subtitle_stream = -1;
+	int i;
+
+	container = avformat_alloc_context();
+	if (container == NULL)
+		return -1;
+
+	if (avformat_open_input(&container, mediapath, NULL, NULL) < 0)
+		goto err1;
+
+	if (avformat_find_stream_info(container, NULL) < 0)
+		goto err1;
+
+	for (i = 0; i < container->nb_streams; i++) {
+		context = container->streams[i]->codec;
+
+		if (context->codec_type == AVMEDIA_TYPE_VIDEO) {
+			video_stream = i;
+			video_context = context;
+
+			codec = avcodec_find_decoder(context->codec_id);
+			if (codec != NULL)
+				avcodec_open2(context, codec, NULL);
+		} else if (context->codec_type == AVMEDIA_TYPE_AUDIO) {
+			audio_stream = i;
+			audio_context = context;
+
+			codec = avcodec_find_decoder(context->codec_id);
+			if (codec != NULL)
+				avcodec_open2(context, codec, NULL);
+		} else if (context->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+			subtitle_stream = i;
+			subtitle_context = context;
+
+			codec = avcodec_find_decoder(context->codec_id);
+			if (codec != NULL)
+				avcodec_open2(context, codec, NULL);
+		}
+	}
+
+	video_stream = av_find_best_stream(container, AVMEDIA_TYPE_VIDEO, video_stream, -1, NULL, 0);
+	audio_stream = av_find_best_stream(container, AVMEDIA_TYPE_AUDIO, audio_stream, video_stream, NULL, 0);
+	subtitle_stream = av_find_best_stream(container, AVMEDIA_TYPE_SUBTITLE, subtitle_stream, audio_stream >= 0 ? audio_stream : video_stream, NULL, 0);
+
+	if (video_context != NULL) {
+		play->video_width = video_context->width;
+		play->video_height = video_context->height;
+		play->video_timebase = av_q2d(container->streams[video_stream]->time_base);
+	}
+
+	if (audio_context != NULL) {
+		SwrContext *swr;
+
+		play->audio_channels = audio_context->channels;
+		play->audio_samplerate = audio_context->sample_rate;
+		play->audio_samplebits = 16;
+		play->audio_timebase = av_q2d(container->streams[audio_stream]->time_base);
+
+		swr = swr_alloc();
+		av_opt_set_int(swr, "in_channel_layout", audio_context->channel_layout, 0);
+		av_opt_set_int(swr, "out_channel_layout", audio_context->channel_layout, 0);
+		av_opt_set_int(swr, "in_sample_rate", audio_context->sample_rate, 0);
+		av_opt_set_int(swr, "out_sample_rate", audio_context->sample_rate, 0);
+		av_opt_set_sample_fmt(swr, "in_sample_fmt", audio_context->sample_fmt, 0);
+		av_opt_set_sample_fmt(swr, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
+		swr_init(swr);
+
+		play->swr = swr;
+	}
+
+	play->container = container;
+
+	play->duration = container->duration / AV_TIME_BASE;
+
+	play->video_context = video_context;
+	play->audio_context = audio_context;
+	play->subtitle_context = subtitle_context;
+	play->video_stream = video_stream;
+	play->audio_stream = audio_stream;
+	play->subtitle_stream = subtitle_stream;
+
+	play->video_framerate = av_q2d(av_guess_frame_rate(container, container->streams[video_stream], NULL));
+
+	play->state = NEMOPLAY_PLAY_STATE;
+	play->cmd = 0x0;
+	play->frame = 0;
+
+	return 0;
+
+err1:
+	avformat_close_input(&container);
+
+	return -1;
+}
+
 struct _PlayerUI {
     struct nemotool *tool;
     struct nemoshow *show;
@@ -251,6 +359,11 @@ void nemoui_player_destroy(PlayerUI *ui)
 void nemoui_player_above(PlayerUI *ui, NemoWidget *above)
 {
     nemowidget_stack_above(ui->widget, above);
+}
+
+void nemoui_player_below(PlayerUI *ui, NemoWidget *below)
+{
+    nemowidget_stack_below(ui->widget, below);
 }
 
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
