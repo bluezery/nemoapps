@@ -340,8 +340,11 @@ static ExplorerIcon *explorer_icon_create(Explorer *exp, ExplorerIconType type, 
     if (!svg_get_wh(uri, &w, &h)) {
         ERR("svg get wh failed: %s", uri);
     }
+    icon->w = w;
+    icon->h = h;
 
     icon->bg = one = RECT_CREATE(group, w, h);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_tag(one, 0x2);
@@ -575,6 +578,9 @@ static void explorer_item_hide(ExplorerItem *it, uint32_t easetype, int duration
 {
     if (it->video_timer) nemotimer_set_timeout(it->video_timer, 0);
     if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "alpha", 0.0,
+                "sx", 0.0, "sy", 0.0, NULL);
     } else {
         nemoshow_item_set_alpha(it->group, 0.0);
         nemoshow_item_scale(it->group, 0.0, 0.0);
@@ -685,7 +691,6 @@ static void _explorer_grab_icon_event(NemoWidgetGrab *grab, NemoWidget *widget, 
                 nemowidget_callback_dispatch(win, "exit", NULL);
             } else if (icon->type == EXPLORER_ICON_TYPE_UP) {
                 char *uppath = file_get_updir(exp->curpath);
-                ERR("%s %s", exp->curpath, uppath);
                 explorer_show_dir(exp, uppath);
                 free(uppath);
             } else if (icon->type == EXPLORER_ICON_TYPE_PREV) {
@@ -1146,16 +1151,16 @@ static void explorer_hide(Explorer *exp)
 {
     worker_stop(exp->img_worker);
 
-    image_set_alpha(exp->bg, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
+    image_set_alpha(exp->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 0.0);
 
-    explorer_icon_hide(exp->prev, NEMOEASE_CUBIC_OUT_TYPE, 250, 0);
-    explorer_icon_hide(exp->next, NEMOEASE_CUBIC_OUT_TYPE, 250, 200);
+    explorer_icon_hide(exp->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    explorer_icon_hide(exp->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
 
     int delay = 0;
     List *l;
     ExplorerItem *it;
     LIST_FOR_EACH(exp->items, l, it) {
-        explorer_item_hide(it, NEMOEASE_CUBIC_OUT_TYPE, 150, delay);
+        explorer_item_hide(it, NEMOEASE_CUBIC_OUT_TYPE, 250, delay);
         delay += 30;
     }
     nemoshow_dispatch_frame(exp->show);
