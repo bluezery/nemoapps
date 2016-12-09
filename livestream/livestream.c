@@ -162,8 +162,9 @@ typedef struct _Item Item;
 struct _Item
 {
     PlayerUI *ui;
-    int ix, iy;
+    int x, y;
     struct showone *event;
+    struct showone *text;
 };
 
 typedef struct _View View;
@@ -172,8 +173,8 @@ struct _View {
     struct nemoshow *show;
     struct nemotool *tool;
     NemoWidget *widget;
-    struct showone *group;
     struct showone *bg;
+    struct showone *item_group;
 
     int row;
     int max_row;
@@ -190,15 +191,32 @@ struct _View {
 
     NemoWidget *event_widget;
     NemouiGesture *gesture;
-
-    struct nemotimer *scale_timer;
-    int scale_ix, scale_iy;
-    int scale_zoom;
 };
 
 void item_below(Item *it, NemoWidget *below)
 {
     nemoui_player_below(it->ui, below);
+}
+
+Item *item_create(NemoWidget *widget, struct showone *group,
+        int x, int y, int w, int h, const char *uri, bool enable_audio)
+{
+    Item *it = calloc(sizeof(Item), 1);
+    it->x = x;
+    it->y = y;
+
+    PlayerUI *ui;
+    it->ui = ui = nemoui_player_create(widget, w, h, uri, enable_audio);
+    if (!ui) {
+        ERR("ui is NULL");
+        free(it);
+        return NULL;
+    }
+    struct showone *one;
+    it->event = one = RECT_CREATE(group, w, h);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_userdata(one, it);
+    return it;
 }
 
 void item_translate(Item *it, uint32_t easetype, int duration, int delay, float x, float y)
@@ -252,8 +270,8 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
             continue;
         }
         float x, y;
-        x = (it->ix - ix) * view->iw;
-        y = (it->iy - iy) * view->ih;
+        x = (it->x - ix) * view->iw;
+        y = (it->y - iy) * view->ih;
         item_translate(it, easetype, duration, delay, x, y);
         item_scale(it, easetype, duration, delay, scale, scale);
     }
@@ -306,10 +324,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
             Item *it = nemoshow_one_get_userdata(one);
 
             if (view->show_item == it) {
-                view->scale_ix = 0;
-                view->scale_iy = 0;
-                view->scale_zoom = view->row;
-                nemotimer_set_timeout(view->scale_timer, 10);
+                view_zoom(view, view->row, 0, 0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
                 view->show_item = NULL;
             } else {
                 int iw, ih;
@@ -352,13 +367,6 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
     }
 }
 
-static void _view_scale_timer(struct nemotimer *timer, void *userdata)
-{
-    View *view = userdata;
-    view->show_item = NULL;
-    view_zoom(view, view->scale_zoom, view->scale_ix, view->scale_iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-}
-
 static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event, double scale, void *userdata)
 {
     View *view = userdata;
@@ -366,8 +374,8 @@ static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event,
     if (scale >= 1.0) scale = 1.0;
     double zoom = (int)(view->zoom_start + scale + 0.5);
     if (view->zoom == zoom) return;
-    if (view->zoom - zoom > 1) zoom = view->zoom - 1;
-    else if (zoom - view->zoom > 1) zoom = view->zoom + 1;
+    if (view->zoom_start - zoom > 1) zoom = view->zoom_start - 1;
+    else if (view->zoom_start - view->zoom > 1) zoom = view->zoom_start + 1;
 
     double cx, cy;
     nemoui_gesture_get_center(gesture, event, &cx, &cy);
@@ -410,11 +418,8 @@ static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event,
         }
     }
 
-    view->scale_ix = ix;
-    view->scale_iy = iy;
-    view->scale_zoom = zoom;
-    nemotimer_set_timeout(view->scale_timer, 10);
-    //view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    view->show_item = NULL;
     nemoshow_event_set_done_all(event);
 }
 
@@ -447,7 +452,7 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 
     struct showone *group;
     struct showone *one;
-    view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->item_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     view->bg = one = RECT_CREATE(group, width, height);
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
@@ -461,21 +466,12 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     char *path;
     LIST_FOR_EACH(app->paths, l, path) {
         //if (!file_is_video(path)) continue;
-        Item *it = calloc(sizeof(Item), 1);
-        it->ix = i%app->row;
-        it->iy = i/app->row;
+        int ix = i%app->row;
+        int iy = i/app->row;
 
-        PlayerUI *ui;
-        it->ui = ui = nemoui_player_create(widget, view->iw, view->ih, path, app->enable_audio);
-        if (!ui) {
-            ERR("ui is NULL");
-            free(it);
-            continue;
-        }
-        struct showone *one;
-        it->event = one = RECT_CREATE(group, view->iw, view->ih);
-        nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-        nemoshow_one_set_userdata(one, it);
+        Item *it;
+        it = item_create(widget, group, ix, iy, view->iw, view->ih, path, app->enable_audio);
+        if (!it) continue;
 
         view->items = list_append(view->items, it);
         i++;
@@ -489,8 +485,6 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     NemouiGesture *gesture;
     gesture = view->gesture = nemoui_gesture_create(parent, width, height);
     nemoui_gesture_set_scale(gesture, _view_scale, _view_scale_start, _view_scale_stop, view);
-
-    view->scale_timer = TOOL_ADD_TIMER(view->tool, 0, _view_scale_timer, view);
 
     return view;
 }
