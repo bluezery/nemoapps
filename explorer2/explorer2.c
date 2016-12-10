@@ -252,7 +252,8 @@ struct _Explorer {
     Image *bg;
 
     struct showone *group;
-    struct showone *title;
+    struct showone *title[2];
+    int title_idx;
 
     struct showone *it_group;
     List *items;
@@ -868,7 +869,6 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     it->txt_bg = one;
 
     it->txt_str = strdup(txt);
-    ERR("%ld (%s)", strlen_utf8(txt), txt);
 
     char buf[25];
     snprintf(buf, 25, txt);
@@ -944,6 +944,7 @@ static Explorer *explorer_create(NemoWidget *parent, int width, int height, cons
     image_load(img, exp->tool, EXP_IMG_DIR"/background.png",
             exp->w, exp->h, NULL, NULL);
 
+#if 0
     double w, h;
     char uri[PATH_MAX];
     snprintf(uri, PATH_MAX, "%s/.title.svg", exp->rootpath);
@@ -959,6 +960,15 @@ static Explorer *explorer_create(NemoWidget *parent, int width, int height, cons
     nemoshow_item_translate(one, exp->x_pad, 30);
     //nemoshow_item_set_alpha(one, 0.0);
     exp->title = one;
+#endif
+    /*
+    struct showone *one;
+    one = PATH_TEXT_CREATE(group, "NanumGothic", 40, NULL);
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    nemoshow_item_translate(one, exp->x_pad, 30);
+    nemoshow_item_set_alpha(one, 0.0);
+    exp->title = one;
+    */
 
     exp->it_group = GROUP_CREATE(canvas);
     exp->icon_group = GROUP_CREATE(canvas);
@@ -1136,6 +1146,28 @@ static void explorer_show_dir(Explorer *exp, const char *path)
 
     if (exp->curpath) free(exp->curpath);
     exp->curpath = strdup(path);
+
+    char *temp = strdup(path);
+    char *title = basename(temp);
+    struct showone *one;
+    ERR("%s", title);
+    one = PATH_TEXT_CREATE(exp->group, "NanumGothic", 40, title);
+    free(temp);
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    nemoshow_item_translate(one, exp->x_pad, 30);
+    nemoshow_item_set_alpha(one, 0.0);
+    _nemoshow_item_motion(one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 1.0, NULL);
+    if (exp->title[exp->title_idx])
+        _nemoshow_item_motion(exp->title[exp->title_idx],
+                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "alpha", 0.0, NULL);
+
+    if (exp->title_idx == 0) exp->title_idx = 1;
+    else exp->title_idx = 0;
+    exp->title[exp->title_idx] = one;
+
+
 
     image_set_alpha(exp->bg, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 1.0);
 
