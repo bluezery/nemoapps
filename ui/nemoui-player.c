@@ -305,47 +305,55 @@ static void _player_resize(NemoWidget *widget, const char *id, void *info, void 
     nemowidget_dirty(widget);
 }
 
-void nemoui_player_play(PlayerUI *ui, uint32_t easetype, int duration, int delay)
+void nemoui_player_play(PlayerUI *ui)
 {
     struct nemoplay *play = ui->play;
 
-    nemotimer_set_timeout(ui->video_timer, duration + delay);
-    nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-
-    nemotimer_set_timeout(ui->video_timer, duration + delay);
+    nemotimer_set_timeout(ui->video_timer, 10);
 
     pthread_t pth;
-    if (pthread_create(&pth, NULL, _player_decode_thread, (void *)ui) != 0) {
-        ERR("pthread frame decoder create failed");
-    } else ui->pth_decode = pth;
+    if (!ui->pth_decode) {
+        if (pthread_create(&pth, NULL, _player_decode_thread, (void *)ui) != 0) {
+            ERR("pthread frame decoder create failed");
+        } else
+            ui->pth_decode = pth;
+    }
 
-    if (pthread_create(&pth, NULL, _player_audio_thread, (void *)ui) != 0) {
-        ERR("pthread audio handler create failed");
-        pthread_cancel(ui->pth_decode);
-    } else ui->pth_audio = pth;
+    if (!ui->pth_audio) {
+        if (pthread_create(&pth, NULL, _player_audio_thread, (void *)ui) != 0) {
+            ERR("pthread audio handler create failed");
+        } else
+            ui->pth_audio = pth;
+    }
+    nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
 }
 
 void nemoui_player_stop(PlayerUI *ui)
 {
     nemotimer_set_timeout(ui->video_timer, 0);
-    nemoplay_wait_thread(ui->play);
-    pthread_cancel(ui->pth_decode);
-    pthread_cancel(ui->pth_audio);
-
-    nemotimer_set_timeout(ui->video_timer, 0);
     nemoplay_set_state(ui->play, NEMOPLAY_STOP_STATE);
+
+    // TODO: refactoring thread
+    /*
+    nemoplay_wait_thread(ui->play);
+    if (ui->pth_decode) pthread_cancel(ui->pth_decode);
+    if (ui->pth_audio) pthread_cancel(ui->pth_audio);
+    */
+
 }
 
 void nemoui_player_show(PlayerUI *ui, uint32_t easetype, int duration, int delay)
 {
+    nemoui_player_play(ui);
     nemowidget_show(ui->widget, 0, 0, 0);
-    nemoui_player_play(ui, easetype, duration, delay);
+    nemowidget_set_alpha(ui->widget, easetype, duration, delay, 1.0);
 }
 
-void nemoui_player_hide(PlayerUI *ui)
+void nemoui_player_hide(PlayerUI *ui, uint32_t easetype, int duration, int delay)
 {
-    nemowidget_hide(ui->widget, 0, 0, 0);
     nemoui_player_stop(ui);
+    nemowidget_hide(ui->widget, 0, 0, 0);
+    nemowidget_set_alpha(ui->widget, easetype, duration, delay, 0.0);
 }
 
 void nemoui_player_destroy(PlayerUI *ui)
@@ -368,7 +376,11 @@ void nemoui_player_below(PlayerUI *ui, NemoWidget *below)
 
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
 {
+#if 0
     nemowidget_scale(ui->widget, easetype, duration, delay, sx, sy);
+#else
+    nemowidget_resize(ui->widget, ui->w * sx, ui->h * sy);
+#endif
 }
 
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y)

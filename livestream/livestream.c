@@ -268,6 +268,27 @@ void item_scale(Item *it, uint32_t easetype, int duration, int delay, float sx, 
     }
 }
 
+void item_hide(Item *it, uint32_t easetype, int duration, int delay)
+{
+    nemoui_player_hide(it->ui, easetype, duration, delay);
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "alpha", 0.0, NULL);
+    } else {
+        nemoshow_item_set_alpha(it->group, 0.0);
+    }
+}
+
+void item_show(Item *it, uint32_t easetype, int duration, int delay)
+{
+    nemoui_player_show(it->ui, easetype, duration, delay);
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "alpha", 1.0, NULL);
+    } else {
+        nemoshow_item_set_alpha(it->group, 1.0);
+    }
+}
 
 // ix, iy are designated left top item's coordinates.
 void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration, int delay)
@@ -297,8 +318,13 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
         float x, y;
         x = (it->x - ix) * view->iw;
         y = (it->y - iy) * view->ih;
-        item_translate(it, easetype, duration, delay, x, y);
-        item_scale(it, easetype, duration, delay, scale, scale);
+        if (ix <= it->x && it->x < ix + zoom && iy <= it->y && it->y < iy + zoom) {
+            item_translate(it, easetype, duration, delay, x, y);
+            item_scale(it, easetype, duration, delay, scale, scale);
+            item_show(it, 0, 0, 0);
+        } else {
+            item_hide(it, easetype, duration, delay);
+        }
     }
 }
 
@@ -361,6 +387,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
                 List *l;
                 Item *itt;
                 LIST_FOR_EACH(view->items, l, itt) {
+                    item_show(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
                     double scale;
                     float x, y;
                     if (itt == it) {
