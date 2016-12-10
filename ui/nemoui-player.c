@@ -374,13 +374,37 @@ void nemoui_player_below(PlayerUI *ui, NemoWidget *below)
     nemowidget_stack_below(ui->widget, below);
 }
 
+static void _player_scale_done(NemoMotion *m, void *userdata)
+{
+    PlayerUI *ui = userdata;
+
+
+    struct showone *canvas;
+    canvas = nemowidget_get_canvas(ui->widget);
+    double sx, sy;
+    sx = NEMOSHOW_CANVAS_AT(canvas, sx);
+    sy = NEMOSHOW_CANVAS_AT(canvas, sy);
+    nemowidget_resize(ui->widget, ui->w * sx, ui->h * sy);
+    nemowidget_scale(ui->widget, 0, 0, 0, 1.0, 1.0);
+}
+
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
 {
-#if 0
-    nemowidget_scale(ui->widget, easetype, duration, delay, sx, sy);
-#else
-    nemowidget_resize(ui->widget, ui->w * sx, ui->h * sy);
-#endif
+    struct showone *canvas = nemowidget_get_canvas(ui->widget);
+    struct nemoshow *show = nemowidget_get_show(ui->widget);
+
+    if (duration > 0) {
+        NemoMotion *m = nemomotion_create(show, easetype, duration, delay);
+        nemomotion_set_done_callback(m, _player_scale_done, ui);
+        nemomotion_attach(m, 1.0,
+                canvas, "sx", sx, canvas, "sy", sy,
+                NULL);
+        nemomotion_run(m);
+    } else {
+        ui->w = ui->w * sx;
+        ui->h = ui->h * sy;
+        nemowidget_resize(ui->widget, ui->w, ui->h);
+    }
 }
 
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y)
