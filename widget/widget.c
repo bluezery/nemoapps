@@ -384,6 +384,8 @@ NemoWidget *nemowidget_create(NemoWidgetClass *klass, NemoWidget *parent, int wi
 
     widget->target.width = width;
     widget->target.height = height;
+    widget->target.sx = 1.0;
+    widget->target.sy = 1.0;
     widget->event_enable = true;
     widget->event_grab_enable = true;
     nemowidget_call_register(widget, "event");
@@ -525,6 +527,11 @@ void nemowidget_update(NemoWidget *widget)
 
 void nemowidget_resize(NemoWidget *widget, double width, double height)
 {
+    /*
+    if (EQUAL(widget->target.width, width) && EQUAL(widget->target.height, height))
+        return;
+        */
+
     NEMOWIDGET_CHECK(widget);
     if (widget->container) {
         ERR("Widget(%s) cannot change it's size if it's in the (%s) of (%s)",
@@ -642,6 +649,10 @@ void nemowidget_set_alpha(NemoWidget *widget, uint32_t easetype, int duration, i
 
 void nemowidget_scale(NemoWidget *widget, uint32_t easetype, int duration, int delay, double sx, double sy)
 {
+    /*
+    if (EQUAL(widget->target.sx, sx) && EQUAL(widget->target.sy, sy)) return;
+    */
+
     NEMOWIDGET_CHECK(widget);
 
     widget->target.sx = sx;
@@ -1676,6 +1687,8 @@ NemoWidget *nemowidget_create_win(struct nemotool *tool, const char *name, int w
 
     win->target.width = width;
     win->target.height = height;
+    win->target.sx = 1.0;
+    win->target.sy = 1.0;
     win->event_enable = true;
     win->event_grab_enable = true;
     nemowidget_call_register(win, "event");

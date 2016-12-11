@@ -266,6 +266,7 @@ void item_scale(Item *it, uint32_t easetype, int duration, int delay, float sx, 
     } else {
         nemoshow_item_scale(it->group, sx, sy);
     }
+    nemoshow_dispatch_frame(it->group->show);
 }
 
 void item_hide(Item *it, uint32_t easetype, int duration, int delay)
@@ -318,11 +319,14 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
         float x, y;
         x = (it->x - ix) * view->iw;
         y = (it->y - iy) * view->ih;
+        // XXX: show only visible players
         if (ix <= it->x && it->x < ix + zoom && iy <= it->y && it->y < iy + zoom) {
             item_translate(it, easetype, duration, delay, x, y);
             item_scale(it, easetype, duration, delay, scale, scale);
             item_show(it, 0, 0, 0);
         } else {
+            item_translate(it, easetype, duration, delay, x, y);
+            item_scale(it, easetype, duration, delay, scale, scale);
             item_hide(it, easetype, duration, delay);
         }
     }

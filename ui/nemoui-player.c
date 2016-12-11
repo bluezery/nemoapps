@@ -123,6 +123,7 @@ struct _PlayerUI {
     struct nemoshow *show;
     int vw, vh;
     int w, h;
+    double sx, sy;
     struct nemoplay *play;
     struct playshader *shader;
     NemoWidget *widget;
@@ -378,18 +379,18 @@ static void _player_scale_done(NemoMotion *m, void *userdata)
 {
     PlayerUI *ui = userdata;
 
-
-    struct showone *canvas;
-    canvas = nemowidget_get_canvas(ui->widget);
-    double sx, sy;
-    sx = NEMOSHOW_CANVAS_AT(canvas, sx);
-    sy = NEMOSHOW_CANVAS_AT(canvas, sy);
-    nemowidget_resize(ui->widget, ui->w * sx, ui->h * sy);
+    // TODO: fix scale resize timing for smoothing scaling
     nemowidget_scale(ui->widget, 0, 0, 0, 1.0, 1.0);
+    nemowidget_resize(ui->widget, ui->w * ui->sx, ui->h * ui->sy);
+    nemoshow_dispatch_frame(ui->show);
 }
 
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy)
 {
+    if (EQUAL(ui->sx, sx) && EQUAL(ui->sy, sy)) return;
+    ui->sx = sx;
+    ui->sy = sy;
+
     struct showone *canvas = nemowidget_get_canvas(ui->widget);
     struct nemoshow *show = nemowidget_get_show(ui->widget);
 
@@ -425,6 +426,8 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     ui->show = nemowidget_get_show(parent);
     ui->w = cw;
     ui->h = ch;
+    ui->sx = 1.0;
+    ui->sy = 1.0;
 
     int w, h;
     _rect_ratio_fit(vw, vh, cw, ch, &w, &h);
