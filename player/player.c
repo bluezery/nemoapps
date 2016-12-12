@@ -23,11 +23,6 @@
 #include "widgets.h"
 #include "nemoui.h"
 
-#define NEMOPLAY_POS_CMD 0x10000
-#define NEMOPLAY_FF_CMD 0x10
-#define NEMOPLAY_FR_CMD 0x100
-#define NEMOPLAY_RESET_CMD 0x1000
-
 #define COLOR0 0xEA562DFF
 #define COLOR1 0x35FFFFFF
 #define COLORBACK 0x10171E99
@@ -104,8 +99,6 @@ struct _PlayerView
     double progress_pos;
     struct showone *progress_event;
 
-    struct nemotimer *progress_timer;
-
     Text *cur_time_back;
     Text *cur_time;
     Text *total_time_back;
@@ -117,267 +110,6 @@ struct _PlayerView
     double dbox_grab_diff_x, dbox_grab_diff_y;
 };
 
-#if 0
-static void *_nemoplay_handle_decode_frame(void *data)
-{
-    PlayerView *view = data;
-    struct nemoplay *play = view->play;
-    int state;
-
-	nemoplay_enter_thread(play);
-
-	while ((state = nemoplay_get_state(play)) != NEMOPLAY_DONE_STATE) {
-        if (nemoplay_has_cmd(play, NEMOPLAY_POS_CMD)) {
-            nemoplay_put_cmd(play, NEMOPLAY_POS_CMD);
-            nemoplay_seek_media(play, view->progress_pos);
-
-            if (state == NEMOPLAY_STOP_STATE) {
-                nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-                nemoplay_decode_media(play, 256, 128);
-                nemoplay_set_state(play, NEMOPLAY_STOP_STATE);
-            }
-        } else if (nemoplay_has_cmd(play, NEMOPLAY_FR_CMD)) {
-            nemoplay_put_cmd(play, NEMOPLAY_FR_CMD);
-            double cts = nemoplay_get_cts(view->play);
-            if (cts - 10 < 0) {
-                cts = 0;
-            } else
-                cts = cts - 10;
-            nemoplay_seek_media(play, cts);
-
-            if (state == NEMOPLAY_STOP_STATE) {
-                nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-                nemoplay_decode_media(play, 256, 128);
-                nemoplay_set_state(play, NEMOPLAY_STOP_STATE);
-            }
-        } else if (nemoplay_has_cmd(play, NEMOPLAY_FF_CMD)) {
-            nemoplay_put_cmd(play, NEMOPLAY_FF_CMD);
-            double cts = nemoplay_get_cts(view->play);
-            if (cts + 10 > view->duration) {
-                cts = view->duration;
-            } else
-                cts = cts + 10;
-            nemoplay_seek_media(play, cts);
-
-            if (state == NEMOPLAY_STOP_STATE) {
-                nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-                nemoplay_decode_media(play, 256, 128);
-                nemoplay_set_state(play, NEMOPLAY_STOP_STATE);
-            }
-        } else if (nemoplay_has_cmd(play, NEMOPLAY_RESET_CMD)) {
-			nemoplay_put_cmd(play, NEMOPLAY_RESET_CMD);
-			nemoplay_seek_media(play, 0.0);
-            nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-        }
-
-		if (state == NEMOPLAY_PLAY_STATE) {
-			nemoplay_decode_media(play, 256, 128);
-		} else if (state == NEMOPLAY_WAIT_STATE || state == NEMOPLAY_STOP_STATE) {
-			nemoplay_wait_media(play);
-		}
-	}
-
-	nemoplay_leave_thread(play);
-
-    return NULL;
-}
-
-static void *_nemoplay_handle_audioplay(void *data)
-{
-    PlayerView *view = data;
-	struct nemoplay *play = view->play;
-	struct playqueue *queue;
-	struct playone *one;
-	ao_device *device;
-	ao_sample_format format;
-	int driver;
-	int state;
-
-	nemoplay_enter_thread(play);
-
-	ao_initialize();
-
-	format.channels = nemoplay_get_audio_channels(play);
-	format.bits = nemoplay_get_audio_samplebits(play);
-	format.rate = nemoplay_get_audio_samplerate(play);
-	format.byte_format = AO_FMT_NATIVE;
-	format.matrix = 0;
-
-	driver = ao_default_driver_id();
-    device = ao_open_live(driver, &format, NULL);
-    if (device == NULL) {
-        nemoplay_revoke_audio(play);
-        ao_shutdown();
-
-        nemoplay_leave_thread(play);
-        return NULL;
-    }
-
-    queue = nemoplay_get_audio_queue(play);
-
-	while ((state = nemoplay_queue_get_state(queue)) != NEMOPLAY_QUEUE_DONE_STATE) {
-		if (state == NEMOPLAY_QUEUE_NORMAL_STATE) {
-			if (nemoplay_queue_get_count(queue) < 64)
-                nemoplay_set_state(play, NEMOPLAY_WAKE_STATE);
-
-			one = nemoplay_queue_dequeue(queue);
-			if (one == NULL) {
-				nemoplay_queue_wait(queue);
-			} else if (nemoplay_queue_get_one_serial(one) != nemoplay_queue_get_serial(queue)) {
-				nemoplay_queue_destroy_one(one);
-			} else if (nemoplay_queue_get_one_cmd(one) == NEMOPLAY_QUEUE_NORMAL_COMMAND) {
-
-				nemoplay_set_audio_pts(play, nemoplay_queue_get_one_pts(one));
-
-				ao_play(device,
-						nemoplay_queue_get_one_data(one),
-						nemoplay_queue_get_one_size(one));
-
-				nemoplay_queue_destroy_one(one);
-			}
-		} else if (state == NEMOPLAY_QUEUE_STOP_STATE) {
-			nemoplay_queue_wait(queue);
-		}
-	}
-
-	ao_close(device);
-	ao_shutdown();
-
-	nemoplay_leave_thread(play);
-
-	return NULL;
-}
-#endif
-
-static void _nemoplay_dispatch_progress_timeout(struct nemotimer *timer, void *userdata)
-{
-    PlayerView *view = userdata;
-    bool showit = false;
-
-    double cts = nemoplay_get_cts(view->play);
-    if (cts < view->duration - 0.1) {
-        nemotimer_set_timeout(view->progress_timer, 200);
-    } else if (view->repeat != 0) {
-        ERR("REPEAT");
-        view->progress_pos = 0.0;
-        nemoplay_set_cmd(view->play, NEMOPLAY_POS_CMD);
-        nemotimer_set_timeout(view->progress_timer, 10);
-        if (view->repeat > 0) view->repeat--;
-        showit = true;
-    } else {
-        ERR("FIN");
-        view->fin = true;
-        view->is_playing = false;
-        nemotimer_set_timeout(view->progress_timer, 0);
-        nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
-
-        _nemoshow_item_motion(view->ss0,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                "alpha", 0.0, NULL);
-        _nemoshow_item_motion(view->ss1,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                "alpha", 1.0, NULL);
-
-        cts = view->duration;
-        showit = true;
-    }
-
-    if (view->overlay->show || showit) {
-        char buf[16];
-        int hour, min, sec;
-        parse_seconds_to_hms(cts, &hour, &min, &sec);
-        snprintf(buf, 16, "%02d:%02d:%02d", hour, min, sec);
-        text_update(view->cur_time_back, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
-        text_update(view->cur_time, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
-
-        double p0, p1;
-        p0 = cts/(double)view->duration;
-        p1 = 1.0 - cts/(double)view->duration;
-        graph_bar_item_set_percent(view->progress_it0, p0);
-        graph_bar_item_set_percent(view->progress_it1, p1);
-        graph_bar_update(view->progress, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
-    }
-
-    if (!view->is_playing) {
-        nemotimer_set_timeout(timer, 0);
-    }
-}
-
-#if 0
-static void _nemoplay_dispatch_video_timer(struct nemotimer *timer, void *userdata)
-{
-    PlayerView *view = userdata;
-    struct nemoplay *play = view->play;
-    struct playqueue *queue;
-    struct playone *one;
-    int state;
-
-	queue = nemoplay_get_video_queue(play);
-
-	state = nemoplay_queue_get_state(queue);
-	if (state == NEMOPLAY_QUEUE_NORMAL_STATE) {
-
-#if 0
-        double p0, p1;
-        p0 = cts/(double)view->duration;
-        p1 = 1.0 - cts/(double)view->duration;
-        graph_bar_item_set_percent(view->progress_it0, p0);
-        graph_bar_item_set_percent(view->progress_it1, p1);
-        graph_bar_update(view->progress, NEMOEASE_CUBIC_INOUT_TYPE, 100, 0);
-#endif
-
-		if (nemoplay_queue_get_count(queue) < 64)
-            nemoplay_set_state(play, NEMOPLAY_WAKE_STATE);
-
-		one = nemoplay_queue_dequeue(queue);
-		if (one == NULL) {
-			nemotimer_set_timeout(timer, 1000 / nemoplay_get_video_framerate(play));
-		} else if (nemoplay_queue_get_one_serial(one) != nemoplay_queue_get_serial(queue)) {
-			nemoplay_queue_destroy_one(one);
-			nemotimer_set_timeout(timer, 1);
-		} else if (nemoplay_queue_get_one_cmd(one) == NEMOPLAY_QUEUE_NORMAL_COMMAND) {
-			double threshold = 1.0f / nemoplay_get_video_framerate(play);
-			double cts = nemoplay_get_cts(play);
-			double pts;
-
-			nemoplay_set_video_pts(play, nemoplay_queue_get_one_pts(one));
-
-			if (cts > nemoplay_queue_get_one_pts(one) + threshold) {
-				nemoplay_queue_destroy_one(one);
-				nemotimer_set_timeout(timer, 1);
-			} else if (cts < nemoplay_queue_get_one_pts(one) - threshold) {
-				nemoplay_queue_enqueue_tail(queue, one);
-				nemotimer_set_timeout(timer, threshold * 1000);
-			} else {
-				if (nemoplay_shader_get_texture_linesize(view->shader) !=
-                        nemoplay_queue_get_one_width(one))
-					nemoplay_shader_set_texture_linesize(view->shader,
-                            nemoplay_queue_get_one_width(one));
-
-				nemoplay_shader_update(view->shader,
-						nemoplay_queue_get_one_y(one),
-						nemoplay_queue_get_one_u(one),
-						nemoplay_queue_get_one_v(one));
-				nemoplay_shader_dispatch(view->shader);
-                nemowidget_dirty(view->video);
-                nemoshow_dispatch_frame(view->show);
-
-				if (nemoplay_queue_peek_pts(queue, &pts) != 0)
-					nemotimer_set_timeout(timer, MINMAX(pts > cts ? pts - cts : 1.0f, 1.0f, threshold) * 1000);
-				else
-					nemotimer_set_timeout(timer, threshold * 1000);
-
-				nemoplay_queue_destroy_one(one);
-
-				nemoplay_next_frame(play);
-			}
-		}
-	} else if (state == NEMOPLAY_QUEUE_STOP_STATE) {
-        //nemotimer_set_timeout(timer, 1000 / nemoplay_get_video_framerate(play));
-        nemotimer_set_timeout(timer, 0);
-	}
-}
-#endif
 
 static void _playerview_resize(NemoWidget *widget, const char *id, void *info, void *data)
 {
@@ -461,26 +193,23 @@ void playerview_play(PlayerView *view)
     struct nemoplay *play = view->play;
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    nemotimer_set_timeout(view->progress_timer, 10);
-
     _nemoshow_item_motion(view->ss0,
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 1.0, NULL);
     _nemoshow_item_motion(view->ss1,
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 0.0, NULL);
+
     if (view->fin) {
         ERR("RESET");
+        nemoplay_decoder_seek(view->decoder, 0.0f);
+        nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
         view->is_playing = true;
         view->fin = false;
-
-        nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-        nemoplay_set_cmd(play, NEMOPLAY_RESET_CMD);
-
     } else {
         ERR("PLAY");
-        view->is_playing = true;
         nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
+        view->is_playing = true;
     }
 }
 
@@ -489,9 +218,6 @@ void playerview_stop(PlayerView *view)
     ERR("STOP");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    view->is_playing = false;
-    nemotimer_set_timeout(view->progress_timer, 0);
-
     _nemoshow_item_motion(view->ss0,
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 0.0, NULL);
@@ -499,7 +225,9 @@ void playerview_stop(PlayerView *view)
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 1.0, NULL);
 
+    view->is_playing = false;
     nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
+
 }
 
 void playerview_fr(PlayerView *view)
@@ -507,10 +235,13 @@ void playerview_fr(PlayerView *view)
     ERR("FR");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    view->fin = false;
-    nemotimer_set_timeout(view->progress_timer, 10);
+    double cts = nemoplay_get_cts(view->play);
+    if (cts - 10 > view->duration) {
+        cts = view->duration;
+    } else
+        cts = cts - 10;
 
-    nemoplay_set_cmd(view->play, NEMOPLAY_FR_CMD);
+    nemoplay_decoder_seek(view->decoder, cts);
 }
 
 void playerview_ff(PlayerView *view)
@@ -518,11 +249,13 @@ void playerview_ff(PlayerView *view)
     ERR("FF");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    if (!view->fin) {
-        //view->fin = false;
-        nemotimer_set_timeout(view->progress_timer, 10);
-        nemoplay_set_cmd(view->play, NEMOPLAY_FF_CMD);
-    }
+    double cts = nemoplay_get_cts(view->play);
+    if (cts + 10 > view->duration) {
+        cts = view->duration;
+    } else
+        cts = cts + 10;
+
+    nemoplay_decoder_seek(view->decoder, cts);
 }
 
 void playerview_volume_up(PlayerView *view)
@@ -579,6 +312,26 @@ void playerview_volume_disable(PlayerView *view)
             NULL);
 }
 
+static void _progressbar_update(PlayerView *view)
+{
+    double cts = nemoplay_get_cts(view->play);
+    char buf[16];
+    int hour, min, sec;
+    parse_seconds_to_hms(cts, &hour, &min, &sec);
+    snprintf(buf, 16, "%02d:%02d:%02d", hour, min, sec);
+    text_update(view->cur_time_back, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
+    text_update(view->cur_time, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
+
+    ERR("%lf %d", cts, view->duration);
+
+    double p0, p1;
+    p0 = cts/(double)view->duration;
+    p1 = 1.0 - cts/(double)view->duration;
+    graph_bar_item_set_percent(view->progress_it0, p0);
+    graph_bar_item_set_percent(view->progress_it1, p1);
+    graph_bar_update(view->progress, 0, 0, 0);
+}
+
 static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     PlayerView *view = userdata;
@@ -631,9 +384,6 @@ static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
                             "sx", 0.7, 0.75, "sy", 0.7, 0.75,
                             NULL);
                 }
-            } else if (tag == 50) {
-                graph_bar_item_set_color(view->progress_it0, COLOR0, COLOR0);
-                nemotimer_set_timeout(view->progress_timer, 10);
             }
         }
     } else if (nemoshow_event_is_motion(show, event)) {
@@ -743,7 +493,6 @@ static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
                 }
             } else if (tag == 100) {
                 graph_bar_item_set_color(view->progress_it0, COLOR1, COLOR1);
-                nemotimer_set_timeout(view->progress_timer, 10);
             }
 
             if (nemoshow_event_is_single_click(show, event)) {
@@ -768,7 +517,6 @@ static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
                 } else if (tag == 6) {
                     playerview_volume_down(view);
                 } else if (tag == 100) {
-                    view->fin = false;
                     int x, w;
                     graph_bar_get_geometry(view->progress, &x, NULL, &w, NULL);
 
@@ -777,9 +525,9 @@ static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
                             nemoshow_event_get_x(event),
                             nemoshow_event_get_y(event), &ex, &ey);
                     ERR("POS: %lf", ((ex - x)/w) * view->duration);
-                    view->progress_pos = ((ex - x)/w) * view->duration;
-                    nemoplay_set_cmd(play, NEMOPLAY_POS_CMD);
-                    nemotimer_set_timeout(view->progress_timer, 10);
+
+                    double cts = ((ex - x)/w) * view->duration;
+                    nemoplay_decoder_seek(view->decoder, cts);
                 }
             }
         }
@@ -792,6 +540,7 @@ static void _playerview_event(NemoWidget *widget, const char *id, void *event, v
     PlayerView *view = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
     if (nemoshow_event_is_down(show, event)) {
+        _progressbar_update(view);
         playerview_overlay_down(view);
     } else if (nemoshow_event_is_up(show, event)) {
         playerview_overlay_up(view);
@@ -949,6 +698,17 @@ static void _video_update(struct nemoplay *play, void *data)
 {
     PlayerView *view = data;
 
+    // Progress bar
+    if (view->overlay->show) {
+        _progressbar_update(view);
+    }
+
+    // XXX: DONE here
+    if (view->fin) {
+        ERR("DONE");
+        playerview_stop(view);
+    }
+
     nemowidget_dirty(view->video_widget);
 	nemoshow_dispatch_frame(view->show);
 }
@@ -957,7 +717,11 @@ static void _video_done(struct nemoplay *play, void *data)
 {
     PlayerView *view = data;
 
-	nemoplay_decoder_seek(view->decoder, 0.0f);
+    view->fin = true;
+    if (view->repeat != 0) {
+        if (view->repeat > 0) view->repeat--;
+        playerview_play(view);
+    }
 }
 
 PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool is_audio, int repeat)
@@ -1147,9 +911,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     graph_bar_show(bar, 0, 0, 0);
 
-    view->progress_timer = timer = TOOL_ADD_TIMER(tool, 0,
-            _nemoplay_dispatch_progress_timeout, view);
-
     one = RECT_CREATE(bottom, bar_w, bar_h * 3);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_id(one, "player");
@@ -1299,8 +1060,12 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
 static void playerview_show(PlayerView *view)
 {
+    playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
+    sketch_show(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+
     frame_show(view->frame);
     frame_content_show(view->frame, -1);
+    drawingbox_show(view->dbox);
 
     button_show(view->fr, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
     button_show(view->ff, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
@@ -1311,31 +1076,27 @@ static void playerview_show(PlayerView *view)
     button_show(view->vol_down, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
     _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
             "to", (360/100.0) * view->vol_cnt - 90.0, NULL);
-    playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
-
-    sketch_show(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    drawingbox_show(view->dbox);
-
-    view->is_playing = true;
-    nemotimer_set_timeout(view->progress_timer, 10);
 
     nemoshow_dispatch_frame(view->show);
 }
 
 static void playerview_hide(PlayerView *view)
 {
-    nemoplay_set_state(view->play, NEMOPLAY_DONE_STATE);
-
-    view->is_playing = false;
-    nemotimer_set_timeout(view->progress_timer, 0);
-    nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
-
     playerview_overlay_hide(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
     sketch_hide(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    drawingbox_hide(view->dbox);
 
     frame_hide(view->frame);
     frame_content_hide(view->frame, -1);
+    drawingbox_hide(view->dbox);
+
+    button_hide(view->fr, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->ff, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->pf, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->nf, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->vol_up, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->vol_mute, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    button_hide(view->vol_down, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+
     nemoshow_dispatch_frame(view->show);
 }
 
@@ -1343,7 +1104,6 @@ static void playerview_destroy(PlayerView *view)
 {
     //nemoplay_shader_destroy(view->shader);
     nemoplay_destroy(view->play);
-    nemotimer_destroy(view->progress_timer);
 
     // XXX: remove from frame to destroy
     frame_remove_widget(view->frame, view->sketch->widget);
@@ -1412,6 +1172,7 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
 {
     PlayerView *view = userdata;
 
+    playerview_stop(view);
     playerview_hide(view);
 
     nemowidget_win_exit_after(win, 500);
