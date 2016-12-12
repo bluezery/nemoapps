@@ -17,7 +17,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 #include "sound.h"
 
 typedef struct _Background Background;
@@ -249,18 +248,18 @@ Icon *create_icon(Background *bg, const char *uri, double rx, double ry)
 void icon_revoke(Icon *icon)
 {
     struct nemoshow *show = icon->group->show;
-    nemoshow_revoke_transition(show, icon->group, "tx");
-    nemoshow_revoke_transition(show, icon->group, "ty");
-    nemoshow_revoke_transition(show, icon->group, "sx");
-    nemoshow_revoke_transition(show, icon->group, "sy");
-    nemoshow_revoke_transition(show, icon->group, "ro");
+    nemoshow_revoke_transition_one(show, icon->group, "tx");
+    nemoshow_revoke_transition_one(show, icon->group, "ty");
+    nemoshow_revoke_transition_one(show, icon->group, "sx");
+    nemoshow_revoke_transition_one(show, icon->group, "sy");
+    nemoshow_revoke_transition_one(show, icon->group, "ro");
 
-    nemoshow_revoke_transition(show, icon->one, "sx");
-    nemoshow_revoke_transition(show, icon->one, "sy");
-    nemoshow_revoke_transition(show, icon->one, "tx");
-    nemoshow_revoke_transition(show, icon->one, "ty");
-    nemoshow_revoke_transition(show, icon->one, "alpha");
-    nemoshow_revoke_transition(show, icon->one, "ro");
+    nemoshow_revoke_transition_one(show, icon->one, "sx");
+    nemoshow_revoke_transition_one(show, icon->one, "sy");
+    nemoshow_revoke_transition_one(show, icon->one, "tx");
+    nemoshow_revoke_transition_one(show, icon->one, "ty");
+    nemoshow_revoke_transition_one(show, icon->one, "alpha");
+    nemoshow_revoke_transition_one(show, icon->one, "ro");
 }
 
 void icon_show(Icon *icon, uint32_t easetype, int duration, int delay)
@@ -663,11 +662,11 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
         icon_append_grab(icon, widget, event);
         if (list_count(icon->grabs) == 1) {
             // Revoke all transitions
-            nemoshow_revoke_transition(show, icon->group, "tx");
-            nemoshow_revoke_transition(show, icon->group, "ty");
-            nemoshow_revoke_transition(show, icon->group, "sx");
-            nemoshow_revoke_transition(show, icon->group, "sy");
-            nemoshow_revoke_transition(show, icon->group, "ro");
+            nemoshow_revoke_transition_one(show, icon->group, "tx");
+            nemoshow_revoke_transition_one(show, icon->group, "ty");
+            nemoshow_revoke_transition_one(show, icon->group, "sx");
+            nemoshow_revoke_transition_one(show, icon->group, "sy");
+            nemoshow_revoke_transition_one(show, icon->group, "ro");
             nemotimer_set_timeout(icon->move_timer, 0);
         }
     } else if (nemoshow_event_is_motion(show, event)) {

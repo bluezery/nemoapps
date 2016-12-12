@@ -11,7 +11,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include <nemopoly.h>
+//#include <nemopoly.h>
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
@@ -22,12 +22,10 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #include "showhelper.h"
 #include "glhelper.h"
 #include "meshhelper.h"
-#include "oshelper.h"
 #include "fbohelper.h"
 
 #define COL_ACTIVE      0x1EDCDCFF

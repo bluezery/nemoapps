@@ -16,12 +16,12 @@
 #include <nemobus.h>
 
 #include <nemoplay.h>
+#include <playback.h>
 #include <nemosound.h>
 
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #define NEMOPLAY_POS_CMD 0x10000
 #define NEMOPLAY_FF_CMD 0x10
@@ -55,17 +55,14 @@ struct _PlayerView
 
     char *screenid;
 
-
     Frame *frame;
 
-    NemoWidget *video;
-
-    pthread_t pth_decoder;
-    pthread_t pth_audioplayer;
+    NemoWidget *video_widget;
 
     struct nemoplay *play;
-    struct playshader *shader;
-    struct nemotimer *video_timer;
+    struct playvideo *video;
+    struct playdecoder *decoder;
+    struct playaudio *audio;
 
     struct nemotimer *frame_timer;
     Sketch *sketch;
@@ -120,6 +117,7 @@ struct _PlayerView
     double dbox_grab_diff_x, dbox_grab_diff_y;
 };
 
+#if 0
 static void *_nemoplay_handle_decode_frame(void *data)
 {
     PlayerView *view = data;
@@ -249,6 +247,7 @@ static void *_nemoplay_handle_audioplay(void *data)
 
 	return NULL;
 }
+#endif
 
 static void _nemoplay_dispatch_progress_timeout(struct nemotimer *timer, void *userdata)
 {
@@ -270,7 +269,6 @@ static void _nemoplay_dispatch_progress_timeout(struct nemotimer *timer, void *u
         view->fin = true;
         view->is_playing = false;
         nemotimer_set_timeout(view->progress_timer, 0);
-        nemotimer_set_timeout(view->video_timer, 0);
         nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
 
         _nemoshow_item_motion(view->ss0,
@@ -305,6 +303,7 @@ static void _nemoplay_dispatch_progress_timeout(struct nemotimer *timer, void *u
     }
 }
 
+#if 0
 static void _nemoplay_dispatch_video_timer(struct nemotimer *timer, void *userdata)
 {
     PlayerView *view = userdata;
@@ -378,20 +377,21 @@ static void _nemoplay_dispatch_video_timer(struct nemotimer *timer, void *userda
         nemotimer_set_timeout(timer, 0);
 	}
 }
+#endif
 
 static void _playerview_resize(NemoWidget *widget, const char *id, void *info, void *data)
 {
     NemoWidgetInfo_Resize *resize = info;
     PlayerView *view = data;
 
-    if (!view->shader) return;
+    struct showone *canvas;
+    int width, height;
+    canvas = nemowidget_get_canvas(widget);
 
-	nemoplay_shader_set_viewport(view->shader,
-			nemowidget_get_texture(view->video),
-			resize->width, resize->height);
-
-	if (nemoplay_get_frame(view->play) != 0)
-		nemoplay_shader_dispatch(view->shader);
+	nemoplay_video_set_texture(view->video,
+			nemoshow_canvas_get_texture(canvas),
+			nemoshow_canvas_get_viewport_width(canvas),
+			nemoshow_canvas_get_viewport_height(canvas));
 
     nemowidget_dirty(widget);
 }
@@ -462,7 +462,6 @@ void playerview_play(PlayerView *view)
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
     nemotimer_set_timeout(view->progress_timer, 10);
-    nemotimer_set_timeout(view->video_timer, 10);
 
     _nemoshow_item_motion(view->ss0,
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
@@ -492,7 +491,6 @@ void playerview_stop(PlayerView *view)
 
     view->is_playing = false;
     nemotimer_set_timeout(view->progress_timer, 0);
-    nemotimer_set_timeout(view->video_timer, 0);
 
     _nemoshow_item_motion(view->ss0,
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
@@ -511,7 +509,6 @@ void playerview_fr(PlayerView *view)
 
     view->fin = false;
     nemotimer_set_timeout(view->progress_timer, 10);
-    nemotimer_set_timeout(view->video_timer, 10);
 
     nemoplay_set_cmd(view->play, NEMOPLAY_FR_CMD);
 }
@@ -524,7 +521,6 @@ void playerview_ff(PlayerView *view)
     if (!view->fin) {
         //view->fin = false;
         nemotimer_set_timeout(view->progress_timer, 10);
-        nemotimer_set_timeout(view->video_timer, 10);
         nemoplay_set_cmd(view->play, NEMOPLAY_FF_CMD);
     }
 }
@@ -911,7 +907,7 @@ static void _bus_callback(void *data, const char *events)
             ERR("%s", type);
             if (!type) continue;
             if (!strcmp(type, "exit")) {
-                NemoWidget *win = nemowidget_get_top_widget(view->video);
+                NemoWidget *win = nemowidget_get_top_widget(view->video_widget);
                 nemowidget_callback_dispatch(win, "exit", NULL);
             } else if (!strcmp(type, "play")) {
                 playerview_play(view);
@@ -949,6 +945,21 @@ static void _bus_callback(void *data, const char *events)
 	nemoitem_destroy(it);
 }
 
+static void _video_update(struct nemoplay *play, void *data)
+{
+    PlayerView *view = data;
+
+    nemowidget_dirty(view->video_widget);
+	nemoshow_dispatch_frame(view->show);
+}
+
+static void _video_done(struct nemoplay *play, void *data)
+{
+    PlayerView *view = data;
+
+	nemoplay_decoder_seek(view->decoder, 0.0f);
+}
+
 PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool is_audio, int repeat)
 {
     struct nemotool *tool;
@@ -980,10 +991,8 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     struct nemoplay *play = nemoplay_create();
     nemoplay_load_media(play, path);
-    if (!is_audio)
-        nemoplay_revoke_audio(play);
+    if (!is_audio) nemoplay_revoke_audio(play);
     view->play = play;
-
 
     NemoWidget *win = nemowidget_get_top_widget(parent);
     if (nemoplay_get_video_framerate(play) <= 30) {
@@ -991,13 +1000,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     } else {
         nemowidget_set_framerate(win, nemoplay_get_video_framerate(play));
     }
-
-    struct playshader *shader;
-    view->shader = shader= nemoplay_shader_create();
-    nemoplay_shader_prepare(shader,
-            NEMOPLAY_TO_RGBA_VERTEX_SHADER,
-            NEMOPLAY_TO_RGBA_FRAGMENT_SHADER);
-    nemoplay_shader_set_texture(shader, vw, vh);
 
     struct showone *one;
     struct showone *group;
@@ -1011,15 +1013,22 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     cw = view->frame->content_width;
     ch = view->frame->content_height;
 
-    view->video = widget = nemowidget_create_opengl(parent, cw, ch);
+    // Video
+    view->video_widget = widget = nemowidget_create_opengl(parent, cw, ch);
     nemowidget_append_callback(widget, "event", _playerview_event, view);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     nemowidget_scale(widget, 0, 0, 0, 0.0, 0.0);
     nemowidget_append_callback(widget, "resize", _playerview_resize, view);
     frame_append_widget(view->frame, widget);
 
-    view->video_timer = timer = TOOL_ADD_TIMER(tool, 0,
-            _nemoplay_dispatch_video_timer, view);
+    struct playvideo *video;
+    view->decoder = nemoplay_decoder_create(play);
+    view->audio = nemoplay_audio_create_by_ao(play);
+    view->video = video = nemoplay_video_create_by_timer(play, view->tool);
+	nemoplay_video_set_texture(video, nemowidget_get_texture(widget), vw, vh);
+	nemoplay_video_set_update(video, _video_update);
+	nemoplay_video_set_done(video, _video_done);
+	nemoplay_video_set_data(video, view);
 
     // Sketch
     view->frame_timer = TOOL_ADD_TIMER(view->tool, 0, _playerview_frame_timeout, view);
@@ -1308,33 +1317,17 @@ static void playerview_show(PlayerView *view)
     drawingbox_show(view->dbox);
 
     view->is_playing = true;
-    nemotimer_set_timeout(view->video_timer, 10);
     nemotimer_set_timeout(view->progress_timer, 10);
 
-    pthread_t pth;
-	if (pthread_create(&pth, NULL, _nemoplay_handle_decode_frame, (void *)view) != 0) {
-        ERR("pthread frame decoder create failed");
-    } else
-        view->pth_decoder = pth;
-
-	if (pthread_create(&pth, NULL, _nemoplay_handle_audioplay, (void *)view) != 0) {
-        ERR("pthread audio handler create failed");
-        pthread_cancel(view->pth_decoder);
-    } else
-        view->pth_audioplayer = pth;
     nemoshow_dispatch_frame(view->show);
 }
 
 static void playerview_hide(PlayerView *view)
 {
     nemoplay_set_state(view->play, NEMOPLAY_DONE_STATE);
-    nemoplay_wait_thread(view->play);
-    pthread_cancel(view->pth_decoder);
-    pthread_cancel(view->pth_audioplayer);
 
     view->is_playing = false;
     nemotimer_set_timeout(view->progress_timer, 0);
-    nemotimer_set_timeout(view->video_timer, 0);
     nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
 
     playerview_overlay_hide(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
@@ -1348,9 +1341,8 @@ static void playerview_hide(PlayerView *view)
 
 static void playerview_destroy(PlayerView *view)
 {
-    nemoplay_shader_destroy(view->shader);
+    //nemoplay_shader_destroy(view->shader);
     nemoplay_destroy(view->play);
-    nemotimer_destroy(view->video_timer);
     nemotimer_destroy(view->progress_timer);
 
     // XXX: remove from frame to destroy
@@ -1406,9 +1398,14 @@ static void _win_fullscreen_callback(NemoWidget *win, const char *id, void *info
         frame_go_normal(view->frame);
     }
 
+	nemoplay_video_redraw(view->video);
+    nemoshow_dispatch_frame(view->show);
+
+    /*
 	if (nemoplay_get_frame(view->play) != 0) {
 		nemoplay_shader_dispatch(view->shader);
 	}
+    */
 }
 
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)

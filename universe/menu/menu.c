@@ -18,7 +18,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 #include "sound.h"
 
 #define PLANET_GRAB_MIN_TIME 500
@@ -161,8 +160,8 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         List *l;
         MenuItem *itt;
         LIST_FOR_EACH(view->items, l, itt) {
-            nemoshow_revoke_transition(view->show, itt->bg, "ro");
-            nemoshow_revoke_transition(view->show, itt->one, "ro");
+            nemoshow_revoke_transition_one(view->show, itt->bg, "ro");
+            nemoshow_revoke_transition_one(view->show, itt->one, "ro");
         }
         menu_item_down(it);
     } else if (nemoshow_event_is_up(show, event)) {

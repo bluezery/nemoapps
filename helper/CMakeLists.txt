@@ -13,10 +13,10 @@ ADD_LIBRARY(meshhelper OBJECT
     meshhelper.h
     )
 
-ADD_LIBRARY(oshelper OBJECT
-    oshelper.c
-    oshelper.h
-    )
+#ADD_LIBRARY(oshelper OBJECT
+#    oshelper.c
+#    oshelper.h
+#    )
 
 ADD_LIBRARY(fbohelper OBJECT
     fbohelper.c

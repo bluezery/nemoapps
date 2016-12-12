@@ -15,7 +15,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #define COLOR_BASE 0x00FFC2FF
 #define COLOR_ICON 0x53AED6FF

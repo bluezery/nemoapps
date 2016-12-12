@@ -13,6 +13,7 @@ ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
 TARGET_LINK_LIBRARIES(${APPNAME}
     nemoutil
     nemowidget
+    nemoui
     ${NEMOPLAY_LIBRARIES}
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)

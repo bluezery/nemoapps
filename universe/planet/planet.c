@@ -18,7 +18,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 #include "sound.h"
 
 #define PLANET_GRAB_MIN_TIME 500

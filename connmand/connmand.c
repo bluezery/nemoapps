@@ -15,7 +15,6 @@
 
 #include "nemoutil.h"
 #include "widgets.h"
-#include "nemohelper.h"
 
 const char *TARGET = "net.connman";
 const char *IFACE_MANAGER = "net.connman.Manager";

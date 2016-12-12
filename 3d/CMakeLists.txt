@@ -7,6 +7,7 @@ ADD_EXECUTABLE(${APPNAME}
     3d.cpp
     $<TARGET_OBJECTS:glhelper>
     $<TARGET_OBJECTS:meshhelper>
+    $<TARGET_OBJECTS:fbohelper>
     ${CMAKE_SOURCE_DIR}/thirds/tiny_obj_loader.cc
     ${CMAKE_SOURCE_DIR}/thirds/tiny_obj_loader.h
 	)

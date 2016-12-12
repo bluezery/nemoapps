@@ -17,7 +17,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #define FRAME_TIMEOUT 2000
 #define OVERLAY_TIMEOUT 1500

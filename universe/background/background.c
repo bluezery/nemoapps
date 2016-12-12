@@ -18,7 +18,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 #include "sound.h"
 
 typedef struct _ConfigApp ConfigApp;

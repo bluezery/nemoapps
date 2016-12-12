@@ -15,7 +15,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #define SAVER_TIMEOUT 600000
 
