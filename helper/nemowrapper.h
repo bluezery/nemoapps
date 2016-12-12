@@ -88,7 +88,7 @@ static inline void _nemoshow_destroy_transition_all(struct nemoshow *show)
 	while (nemolist_empty(&show->transition_list) == 0) {
         struct showtransition *trans;
 		trans = nemolist_node0(&show->transition_list, struct showtransition, link);
-		nemoshow_transition_destroy(trans, 1);
+		nemoshow_transition_destroy(trans);
 	}
 }
 

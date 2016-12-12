@@ -3637,8 +3637,8 @@ void drawingbox_translate(DrawingBox *dbox, uint32_t easetype, int duration, int
         _nemoshow_item_motion(dbox->group, easetype, duration, delay,
                 "tx", tx, "ty", ty, NULL);
     } else {
-        nemoshow_revoke_transition(dbox->group->show, dbox->group, "tx");
-        nemoshow_revoke_transition(dbox->group->show, dbox->group, "ty");
+        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "tx");
+        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "ty");
         nemoshow_item_translate(dbox->group, tx, ty);
     }
 }
@@ -3649,8 +3649,8 @@ void drawingbox_scale(DrawingBox *dbox, uint32_t easetype, int duration, int del
         _nemoshow_item_motion(dbox->group, easetype, duration, delay,
                 "sx", sx, "sy", sy, NULL);
     } else {
-        nemoshow_revoke_transition(dbox->group->show, dbox->group, "sx");
-        nemoshow_revoke_transition(dbox->group->show, dbox->group, "sy");
+        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "sx");
+        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "sy");
         nemoshow_item_scale(dbox->group, sx, sy);
     }
 }

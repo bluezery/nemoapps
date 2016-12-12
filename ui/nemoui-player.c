@@ -6,7 +6,6 @@
 
 #include "nemoutil.h"
 #include "widgets.h"
-#include "nemohelper.h"
 #include "nemoui.h"
 #include "nemoui-player.h"
 

@@ -432,7 +432,7 @@ void nemomesh_update_transform(struct nemomesh *mesh)
 {
 	nemomatrix_init_identity(&mesh->modelview);
 	nemomatrix_translate_xyz(&mesh->modelview, mesh->tx, mesh->ty, mesh->tz);
-	nemomatrix_multiply_quaternion(&mesh->modelview, &mesh->cquat);
+	nemoquaternion_multiply_matrix(&mesh->cquat, &mesh->modelview);
 	nemomatrix_scale_xyz(&mesh->modelview, mesh->sx, mesh->sy, mesh->sz);
 }
 
