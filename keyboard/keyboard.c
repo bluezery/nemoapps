@@ -17,7 +17,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 const char *LAYOUT[] =  {
     "eng",

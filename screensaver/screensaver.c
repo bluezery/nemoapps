@@ -20,7 +20,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 #define TIMEOUT 2000
 

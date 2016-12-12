@@ -15,7 +15,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 
 const char *WEEKS[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 

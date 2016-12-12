@@ -16,7 +16,6 @@
 #include "nemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
-#include "nemohelper.h"
 #include "sound.h"
 
 typedef struct _Mirror Mirror;
@@ -627,19 +626,19 @@ void card_show(Card *card)
 static void card_item_revoke(CardItem *it)
 {
     struct nemoshow *show = it->group->show;
-    nemoshow_revoke_transition(show, it->group, "alpha");
-    nemoshow_revoke_transition(show, it->group, "ro");
-    nemoshow_revoke_transition(show, it->group, "sx");
-    nemoshow_revoke_transition(show, it->group, "sy");
-    nemoshow_revoke_transition(show, it->group, "tx");
-    nemoshow_revoke_transition(show, it->group, "ty");
+    nemoshow_revoke_transition_one(show, it->group, "alpha");
+    nemoshow_revoke_transition_one(show, it->group, "ro");
+    nemoshow_revoke_transition_one(show, it->group, "sx");
+    nemoshow_revoke_transition_one(show, it->group, "sy");
+    nemoshow_revoke_transition_one(show, it->group, "tx");
+    nemoshow_revoke_transition_one(show, it->group, "ty");
 
-    nemoshow_revoke_transition(show, it->icon, "alpha");
-    nemoshow_revoke_transition(show, it->icon, "ro");
-    nemoshow_revoke_transition(show, it->icon, "sx");
-    nemoshow_revoke_transition(show, it->icon, "sy");
-    nemoshow_revoke_transition(show, it->icon, "tx");
-    nemoshow_revoke_transition(show, it->icon, "ty");
+    nemoshow_revoke_transition_one(show, it->icon, "alpha");
+    nemoshow_revoke_transition_one(show, it->icon, "ro");
+    nemoshow_revoke_transition_one(show, it->icon, "sx");
+    nemoshow_revoke_transition_one(show, it->icon, "sy");
+    nemoshow_revoke_transition_one(show, it->icon, "tx");
+    nemoshow_revoke_transition_one(show, it->icon, "ty");
 }
 
 void card_hide(Card *card)
