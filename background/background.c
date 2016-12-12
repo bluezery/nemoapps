@@ -20,8 +20,8 @@
 #include "nemohelper.h"
 #include "sound.h"
 
-typedef struct _CardBackground CardBackground;
-struct _CardBackground {
+typedef struct _Background Background;
+struct _Background {
     bool visible;
     int width, height;
     struct nemoshow *show;
@@ -79,9 +79,9 @@ uint32_t COL[] = {
     0xD1E778FF
 };
 
-typedef struct _CardIcon CardIcon;
-struct _CardIcon {
-    CardBackground *bg;
+typedef struct _Icon Icon;
+struct _Icon {
+    Background *bg;
     List *grabs;
     uint64_t grab_dev0, grab_dev1;
     double grab_ro;
@@ -106,7 +106,7 @@ struct _CardIcon {
 
 static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
 {
-    CardIcon *icon = userdata;
+    Icon *icon = userdata;
     int idx = WELLRNG512()%(sizeof(COL)/sizeof(COL[0]));
     _nemoshow_item_motion(icon->one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "fill", COL[idx],
@@ -116,8 +116,8 @@ static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
 
 static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
 {
-    CardIcon *icon = userdata;
-    CardBackground *bg = icon->bg;
+    Icon *icon = userdata;
+    Background *bg = icon->bg;
 
     double t, tx, ty, sxy, ro;
     t = (WELLRNG512() % 60) * 1000 + 20000;
@@ -137,7 +137,7 @@ static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
 
 static void _icon_timeout(struct nemotimer *timer, void *userdata)
 {
-    CardIcon *icon = userdata;
+    Icon *icon = userdata;
     struct nemoshow *show = icon->one->show;
     int timeout = 0;
     if (strstr(icon->uri, "shopguide")) {
@@ -194,9 +194,9 @@ static void _icon_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(icon->bg->show);
 }
 
-CardIcon *create_icon(CardBackground *bg, const char *uri, double rx, double ry)
+Icon *create_icon(Background *bg, const char *uri, double rx, double ry)
 {
-    CardIcon *icon = calloc(sizeof(CardIcon), 1);
+    Icon *icon = calloc(sizeof(Icon), 1);
     icon->bg = bg;
 
     icon->uri = strdup(uri);
@@ -246,7 +246,7 @@ CardIcon *create_icon(CardBackground *bg, const char *uri, double rx, double ry)
     return icon;
 }
 
-void icon_revoke(CardIcon *icon)
+void icon_revoke(Icon *icon)
 {
     struct nemoshow *show = icon->group->show;
     nemoshow_revoke_transition(show, icon->group, "tx");
@@ -263,7 +263,7 @@ void icon_revoke(CardIcon *icon)
     nemoshow_revoke_transition(show, icon->one, "ro");
 }
 
-void icon_show(CardIcon *icon, uint32_t easetype, int duration, int delay)
+void icon_show(Icon *icon, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -276,7 +276,7 @@ void icon_show(CardIcon *icon, uint32_t easetype, int duration, int delay)
     nemotimer_set_timeout(icon->move_timer, 100 + delay);
 }
 
-void icon_hide(CardIcon *icon, uint32_t easetype, int duration, int delay)
+void icon_hide(Icon *icon, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -289,7 +289,7 @@ void icon_hide(CardIcon *icon, uint32_t easetype, int duration, int delay)
     nemotimer_set_timeout(icon->move_timer, 0);
 }
 
-void icon_rotate(CardIcon *icon, uint32_t easetype, int duration, int delay, double ro)
+void icon_rotate(Icon *icon, uint32_t easetype, int duration, int delay, double ro)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -300,7 +300,7 @@ void icon_rotate(CardIcon *icon, uint32_t easetype, int duration, int delay, dou
     }
 }
 
-void icon_scale(CardIcon *icon, uint32_t easetype, int duration, int delay, double sx, double sy)
+void icon_scale(Icon *icon, uint32_t easetype, int duration, int delay, double sx, double sy)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -311,7 +311,7 @@ void icon_scale(CardIcon *icon, uint32_t easetype, int duration, int delay, doub
     }
 }
 
-void icon_translate(CardIcon *icon, uint32_t easetype, int duration, int delay, double tx, double ty)
+void icon_translate(Icon *icon, uint32_t easetype, int duration, int delay, double tx, double ty)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -322,7 +322,7 @@ void icon_translate(CardIcon *icon, uint32_t easetype, int duration, int delay, 
     }
 }
 
-void icon_get_center(CardIcon *icon, void *event, double *cx, double *cy)
+void icon_get_center(Icon *icon, void *event, double *cx, double *cy)
 {
     RET_IF(!icon);
     int cnt = list_count(icon->grabs);
@@ -345,7 +345,7 @@ void icon_get_center(CardIcon *icon, void *event, double *cx, double *cy)
     if (cy) *cy = sumy/cnt;
 }
 
-void icon_rotate_init(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_rotate_init(Icon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
@@ -395,7 +395,7 @@ void icon_rotate_init(CardIcon *icon, NemoWidget *widget, void *event)
     icon->grab_ro = nemoshow_item_get_rotate(icon->group) + atan2f(x0 - x1, y0 - y1) * 180/M_PI;
 }
 
-void icon_do_rotate(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_do_rotate(Icon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
@@ -418,7 +418,7 @@ void icon_do_rotate(CardIcon *icon, NemoWidget *widget, void *event)
     icon_rotate(icon, 0, 0, 0, icon->grab_ro - r1 * 180/M_PI);
 }
 
-void icon_do_scale(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_do_scale(Icon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
@@ -457,7 +457,7 @@ void icon_do_scale(CardIcon *icon, NemoWidget *widget, void *event)
     }
 }
 
-void icon_scale_init(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_scale_init(Icon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
     //nemoshow_item_set_anchor(icon->group, cx, cy);
@@ -486,7 +486,7 @@ void icon_scale_init(CardIcon *icon, NemoWidget *widget, void *event)
     icon->grab_scale_y = nemoshow_item_get_scale_y(icon->group);
 }
 
-void icon_do_move(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_do_move(Icon *icon, NemoWidget *widget, void *event)
 {
     double cx, cy;
     icon_get_center(icon, event, &cx, &cy);
@@ -505,9 +505,9 @@ void icon_do_move(CardIcon *icon, NemoWidget *widget, void *event)
             cy + icon->grab_diff_y);
 }
 
-void icon_do_move_up(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_do_move_up(Icon *icon, NemoWidget *widget, void *event)
 {
-    CardBackground *bg = icon->bg;
+    Background *bg = icon->bg;
     int history_cnt = icon->bg->icon_history_cnt;
     // Move
     if (list_count(icon->grabs) >= 1) {
@@ -602,7 +602,7 @@ void icon_do_move_up(CardIcon *icon, NemoWidget *widget, void *event)
     }
 }
 
-void icon_move_init(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_move_init(Icon *icon, NemoWidget *widget, void *event)
 {
     // diff update
     double cx, cy;
@@ -625,7 +625,7 @@ void icon_move_init(CardIcon *icon, NemoWidget *widget, void *event)
     nemotimer_set_timeout(icon->color_timer, 20);
 }
 
-void icon_append_grab(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_append_grab(Icon *icon, NemoWidget *widget, void *event)
 {
     Grab *g = grab_create(nemoshow_event_get_device(event));
     icon->grabs = list_append(icon->grabs, g);
@@ -635,7 +635,7 @@ void icon_append_grab(CardIcon *icon, NemoWidget *widget, void *event)
     icon_scale_init(icon, widget, event);
 }
 
-void icon_remove_grab(CardIcon *icon, NemoWidget *widget, void *event)
+void icon_remove_grab(Icon *icon, NemoWidget *widget, void *event)
 {
     List *l;
     Grab *g;
@@ -654,8 +654,8 @@ void icon_remove_grab(CardIcon *icon, NemoWidget *widget, void *event)
 
 static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
-    CardIcon *icon = userdata;
-    CardBackground *bg = icon->bg;
+    Icon *icon = userdata;
+    Background *bg = icon->bg;
 
     struct nemoshow *show = nemowidget_get_show(widget);
 
@@ -687,7 +687,7 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
 
 static void _background_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
-    CardBackground *bg = userdata;
+    Background *bg = userdata;
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
 
@@ -700,7 +700,7 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
         struct showone *one;
         one = nemowidget_pick_one(bg->icon_widget, ex, ey);
         if (one && 0x111 == nemoshow_one_get_tag(one)) {
-            CardIcon *icon = nemoshow_one_get_userdata(one);
+            Icon *icon = nemoshow_one_get_userdata(one);
             nemowidget_create_grab(widget, event,
                     _icon_grab_event, icon);
             // XXX: To prevent drawing in the sketch
@@ -711,7 +711,7 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
 
 static void _sketch_timeout(struct nemotimer *timer, void *userdata)
 {
-    CardBackground *bg = userdata;
+    Background *bg = userdata;
     sketch_remove_old(bg->sketch, bg->sketch_timeout);
     nemotimer_set_timeout(timer, bg->sketch_timeout);
     nemoshow_dispatch_frame(bg->show);
@@ -719,7 +719,7 @@ static void _sketch_timeout(struct nemotimer *timer, void *userdata)
 
 static void _background_gallery_timeout(struct nemotimer *timer, void *userdata)
 {
-    CardBackground *bg = userdata;
+    Background *bg = userdata;
 
     GalleryItem *gallery_it;
     gallery_it = LIST_DATA(list_get_nth(bg->gallery->items, bg->gallery_idx));
@@ -736,9 +736,9 @@ static void _background_gallery_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(bg->show);
 }
 
-CardBackground *background_create(NemoWidget *parent, int width, int height, const char *bgpath, int gallery_timeout, int gallery_duration, int sketch_timeout, int sketch_min_dist, int sketch_dot_cnt, int icon_cnt, int icon_history_cnt, int icon_history_min_dist, int icon_throw_min_dist, int icon_throw_coeff, int icon_throw_duration, List *icons)
+Background *background_create(NemoWidget *parent, int width, int height, const char *bgpath, int gallery_timeout, int gallery_duration, int sketch_timeout, int sketch_min_dist, int sketch_dot_cnt, int icon_cnt, int icon_history_cnt, int icon_history_min_dist, int icon_throw_min_dist, int icon_throw_coeff, int icon_throw_duration, List *icons)
 {
-    CardBackground *bg = calloc(sizeof(CardBackground), 1);
+    Background *bg = calloc(sizeof(Background), 1);
     bg->show = nemowidget_get_show(parent);
     bg->tool = nemowidget_get_tool(parent);
     bg->parent = parent;
@@ -801,7 +801,7 @@ CardBackground *background_create(NemoWidget *parent, int width, int height, con
         tx = WELLRNG512()%bg->width;
         ty = WELLRNG512()%bg->height;
 
-        CardIcon *icon;
+        Icon *icon;
         icon = create_icon(bg, path, rx, ry);
         icon_translate(icon, 0, 0, 0, tx, ty);
         bg->icons = list_append(bg->icons, icon);
@@ -810,7 +810,7 @@ CardBackground *background_create(NemoWidget *parent, int width, int height, con
     return bg;
 }
 
-void background_show(CardBackground *bg)
+void background_show(Background *bg)
 {
     nemowidget_show(bg->widget, 0, 0, 0);
     int easetype = NEMOEASE_CUBIC_OUT_TYPE;
@@ -828,7 +828,7 @@ void background_show(CardBackground *bg)
     nemowidget_show(bg->icon_widget, 0, 0, 0);
     int delay = 0;
     List *l;
-    CardIcon *icon;
+    Icon *icon;
     LIST_FOR_EACH(bg->icons, l, icon) {
         icon_show(icon, NEMOEASE_CUBIC_OUT_TYPE, 1000, delay);
         delay += 250;
@@ -841,7 +841,7 @@ void background_show(CardBackground *bg)
     nemoshow_dispatch_frame(bg->show);
 }
 
-void background_hide(CardBackground *bg)
+void background_hide(Background *bg)
 {
     nemowidget_show(bg->widget, 0, 0, 0);
     nemotimer_set_timeout(bg->gallery_timer, 0);
@@ -854,7 +854,7 @@ void background_hide(CardBackground *bg)
             */
     nemowidget_show(bg->icon_widget, 0, 0, 0);
     List *l;
-    CardIcon *icon;
+    Icon *icon;
     LIST_FOR_EACH(bg->icons, l, icon) {
         icon_revoke(icon);
         icon_hide(icon, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
@@ -868,7 +868,7 @@ void background_hide(CardBackground *bg)
 
 static void _background_win_layer(NemoWidget *win, const char *id, void *info, void *userdata)
 {
-    CardBackground *bg = userdata;
+    Background *bg = userdata;
     int32_t visible = (intptr_t)info;
     if (visible == -1) {
         if (bg->visible) {
@@ -1070,7 +1070,7 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
-    CardBackground *bg = background_create(win, app->config->width, app->config->height,
+    Background *bg = background_create(win, app->config->width, app->config->height,
             app->bgpath, app->bgtimeout, app->bgduration,
             app->sketch_timeout, app->sketch_min_dist, app->sketch_dot_cnt,
             app->icon_cnt, app->icon_history_cnt, app->icon_history_min_dist, app->icon_throw_min_dist,
