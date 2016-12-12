@@ -843,7 +843,7 @@ void background_show(Background *bg)
 
 void background_hide(Background *bg)
 {
-    nemowidget_show(bg->widget, 0, 0, 0);
+    nemowidget_hide(bg->widget, 0, 0, 0);
     nemotimer_set_timeout(bg->gallery_timer, 0);
     gallery_hide(bg->gallery, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
 
