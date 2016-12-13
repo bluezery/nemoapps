@@ -217,13 +217,13 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     PlayerUI *ui = calloc(sizeof(PlayerUI), 1);
     ui->tool = nemowidget_get_tool(parent);
     ui->show = nemowidget_get_show(parent);
-    ui->w = cw;
-    ui->h = ch;
     ui->sx = 1.0;
     ui->sy = 1.0;
 
     int w, h;
     _rect_ratio_fit(vw, vh, cw, ch, &w, &h);
+    ui->w = w;
+    ui->h = h;
     ui->vw = vw;
     ui->vh = vh;
 
@@ -253,7 +253,7 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     ui->decoder = nemoplay_decoder_create(play);
     ui->audio = nemoplay_audio_create_by_ao(play);
     ui->video = video = nemoplay_video_create_by_timer(play, ui->tool);
-	nemoplay_video_set_texture(video, nemowidget_get_texture(widget), vw, vh);
+	nemoplay_video_set_texture(video, nemowidget_get_texture(widget), w, h);
 	nemoplay_video_set_update(video, _video_update);
 	nemoplay_video_set_done(video, _video_done);
 	nemoplay_video_set_data(video, ui);

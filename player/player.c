@@ -1104,6 +1104,7 @@ static void _win_fullscreen_callback(NemoWidget *win, const char *id, void *info
         if (view->screenid) free(view->screenid);
         view->screenid = strdup(id);
         frame_go_full(view->frame, fs->width, fs->height);
+        //nemoui_player_scale(view->player, 0, 0, 0, 0.5, 0.5);
     } else {
         /*
 		nemoenvs_send(view->envs,
