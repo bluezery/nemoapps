@@ -2815,6 +2815,11 @@ static inline void sketch_set_min_distance(Sketch *sketch, uint32_t min_dist)
     sketch->min_dist = min_dist;
 }
 
+static inline bool sketch_is_enable(Sketch *sketch)
+{
+    return sketch->enable;
+}
+
 static inline void sketch_enable(Sketch *sketch, bool enable)
 {
     sketch->enable = !!enable;
