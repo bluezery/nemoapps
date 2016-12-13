@@ -44,6 +44,7 @@ struct _PlayerView
     struct nemoshow *show;
 
     bool fin;
+    bool need_stop;
     bool is_playing;
     int repeat;  // -1, 0, 1
     char *path;
@@ -66,8 +67,8 @@ struct _PlayerView
     struct nemotimer *overlay_timer;
 
     struct showone *overlay_group;
-    struct showone *top;
-    struct showone *bottom;
+    struct showone *overlay_top;
+    struct showone *overlay_bottom;
     struct showone *text_blur;
     double ss_w, ss_h;
 
@@ -106,18 +107,16 @@ struct _PlayerView
     int32_t duration;
 
     DrawingBox *dbox;
-    bool dbox_grab;
     double dbox_grab_diff_x, dbox_grab_diff_y;
 };
 
 
 static void _playerview_resize(NemoWidget *widget, const char *id, void *info, void *data)
 {
-    NemoWidgetInfo_Resize *resize = info;
+    //NemoWidgetInfo_Resize *resize = info;
     PlayerView *view = data;
 
     struct showone *canvas;
-    int width, height;
     canvas = nemowidget_get_canvas(widget);
 
 	nemoplay_video_set_texture(view->video,
@@ -200,17 +199,15 @@ void playerview_play(PlayerView *view)
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 0.0, NULL);
 
+    view->is_playing = true;
     if (view->fin) {
         ERR("RESET");
         nemoplay_decoder_seek(view->decoder, 0.0f);
-        nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-        view->is_playing = true;
         view->fin = false;
     } else {
         ERR("PLAY");
-        nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
-        view->is_playing = true;
     }
+    nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
 }
 
 void playerview_stop(PlayerView *view)
@@ -240,8 +237,12 @@ void playerview_fr(PlayerView *view)
         cts = view->duration;
     } else
         cts = cts - 10;
-
     nemoplay_decoder_seek(view->decoder, cts);
+
+    if (!view->is_playing) {
+        view->need_stop = true;
+        nemoplay_set_state(view->play, NEMOPLAY_PLAY_STATE);
+    }
 }
 
 void playerview_ff(PlayerView *view)
@@ -254,8 +255,12 @@ void playerview_ff(PlayerView *view)
         cts = view->duration;
     } else
         cts = cts + 10;
-
     nemoplay_decoder_seek(view->decoder, cts);
+
+    if (!view->is_playing) {
+        view->need_stop = true;
+        nemoplay_set_state(view->play, NEMOPLAY_PLAY_STATE);
+    }
 }
 
 void playerview_volume_up(PlayerView *view)
@@ -322,8 +327,6 @@ static void _progressbar_update(PlayerView *view)
     text_update(view->cur_time_back, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
     text_update(view->cur_time, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
 
-    ERR("%lf %d", cts, view->duration);
-
     double p0, p1;
     p0 = cts/(double)view->duration;
     p1 = 1.0 - cts/(double)view->duration;
@@ -332,15 +335,25 @@ static void _progressbar_update(PlayerView *view)
     graph_bar_update(view->progress, 0, 0, 0);
 }
 
-static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+static void _playerview_event(NemoWidget *widget, const char *id, void *event, void *userdata)
 {
     PlayerView *view = userdata;
-    struct nemoplay *play = view->play;
+    struct nemoshow *show = nemowidget_get_show(widget);
+    if (nemoshow_event_is_down(show, event)) {
+        playerview_overlay_down(view);
+    } else if (nemoshow_event_is_up(show, event)) {
+        playerview_overlay_up(view);
+    }
+}
+
+static void _overlay_dbox_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+{
+    struct showone *one = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
 
-    struct showone *one = nemowidget_grab_get_data(grab, "button");
-    const char *id = one->id;
     uint32_t tag = nemoshow_one_get_tag(one);
+    Button *btn = nemoshow_one_get_userdata(one);
+    PlayerView *view = nemowidget_grab_get_data(grab, "view");
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -350,201 +363,194 @@ static void _overlay_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
     frame_util_transform_to_group(view->overlay_group, ex, ey, &ex, &ey);
 
     if (nemoshow_event_is_down(show, event)) {
-        if (id && !strcmp(id, "dbox")) {
-            Button *btn = nemoshow_one_get_userdata(one);
-            button_down(btn);
-            nemowidget_enable_event_repeat(widget, false);
+        // XXX: Prevent propagating events to sketch
+        nemowidget_enable_event_repeat(widget, false);
 
-            double cx, cy;
-            drawingbox_get_translate(view->dbox, &cx, &cy);
-            view->dbox_grab_diff_x = cx - ex;
-            view->dbox_grab_diff_y = cy - ey;
-            view->dbox_grab = true;
+        NemoWidget *win = nemowidget_get_top_widget(widget);
+        nemowidget_win_enable_move(win, false);
+        nemowidget_win_enable_rotate(win, false);
+        nemowidget_win_enable_scale(win, false);
+        nemotimer_set_timeout(view->frame_timer, 10);
 
-            NemoWidget *win = nemowidget_get_top_widget(widget);
-            nemowidget_win_enable_move(win, false);
-            nemowidget_win_enable_rotate(win, false);
-            nemowidget_win_enable_scale(win, false);
-            nemotimer_set_timeout(view->frame_timer, 10);
-        } else if (!view->sketch->enable && id && !strcmp(id, "player")) {
-            if (tag == 1) {
-                _nemoshow_item_motion_bounce(view->progress_circle,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                        "sx", 0.7, 0.75,
-                        "sy", 0.7, 0.75,
-                        NULL);
-                graph_bar_translate(view->progress, NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                        view->progress_x - 5, view->progress_y);
-            } else if (2 <= tag && tag <= 6) {
-                Button *btn = nemoshow_one_get_userdata(one);
-                button_down(btn);
-                if (tag == 5) {
-                    _nemoshow_item_motion_bounce(view->vol,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 150, 100,
-                            "sx", 0.7, 0.75, "sy", 0.7, 0.75,
-                            NULL);
-                }
+        button_down(btn);
+
+        double cx, cy;
+        drawingbox_get_translate(view->dbox, &cx, &cy);
+        view->dbox_grab_diff_x = cx - ex;
+        view->dbox_grab_diff_y = cy - ey;
+    } else if (nemoshow_event_is_motion(show, event)) {
+        drawingbox_translate(view->dbox, 0, 0, 0,
+                ex + view->dbox_grab_diff_x,
+                ey + view->dbox_grab_diff_y);
+        nemowidget_dirty(widget);
+    } else if (nemoshow_event_is_up(show, event)) {
+        if (nemoshow_event_is_single_click(show, event)) {
+            if (tag == 10) { // pencil
+                nemotimer_set_timeout(view->overlay_timer, 0);
+                _nemoshow_item_motion(view->overlay_top,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                        "alpha", 0.0, NULL);
+                _nemoshow_item_motion(view->overlay_bottom,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                        "alpha", 0.0, NULL);
+
+                drawingbox_show_menu(view->dbox);
+                _drawingbox_adjust(view, -1, -1);
+
+                sketch_set_color(view->sketch, view->dbox->color);
+                sketch_set_size(view->sketch, view->dbox->size);
+                sketch_enable(view->sketch, true);
+
+                NemoWidget *win = nemowidget_get_top_widget(widget);
+                nemowidget_win_enable_move(win, false);
+                nemowidget_win_enable_rotate(win, false);
+                nemowidget_win_enable_scale(win, false);
+                nemotimer_set_timeout(view->frame_timer, 10);
+            } else if (tag == 11) { // quit
+                nemotimer_set_timeout(view->overlay_timer, OVERLAY_TIMEOUT);
+                _nemoshow_item_motion(view->overlay_top,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                        "alpha", 1.0, NULL);
+                _nemoshow_item_motion(view->overlay_bottom,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                        "alpha", 1.0, NULL);
+
+                drawingbox_show_pencil(view->dbox);
+                _drawingbox_adjust(view, -1, -1);
+                sketch_enable(view->sketch, false);
+            } else if (tag == 12) { // share
+            } else if (tag == 13) { // undo one
+                sketch_undo(view->sketch, 1);
+            } else if (tag == 14) { // undo all
+                sketch_undo(view->sketch, -1);
+            } else if (tag == 15) { // change stroke
+                drawingbox_change_stroke(view->dbox, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+                sketch_set_size(view->sketch, view->dbox->size);
+            } else if (tag == 16) { // change color
+                drawingbox_change_color(view->dbox, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+                sketch_set_color(view->sketch, view->dbox->color);
             }
         }
-    } else if (nemoshow_event_is_motion(show, event)) {
-        if (view->dbox_grab) {
-            drawingbox_translate(view->dbox, 0, 0, 0,
-                    ex + view->dbox_grab_diff_x,
-                    ey + view->dbox_grab_diff_y);
-            nemowidget_dirty(widget);
-        }
-    } else if (nemoshow_event_is_up(show, event)) {
-        if (!view->sketch->enable) {
+
+        // XXX: Prevent propagating events to sketch
+        nemowidget_enable_event_repeat(widget, true);
+
+        button_up(btn);
+
+        double tx, ty;
+        tx = ex + view->dbox_grab_diff_x;
+        ty = ey + view->dbox_grab_diff_y;
+        _drawingbox_adjust(view, tx, ty);
+        view->dbox_grab_diff_x = 0;
+        view->dbox_grab_diff_y = 0;
+
+        if (!sketch_is_enable(view->sketch)) {
             NemoWidget *win = nemowidget_get_top_widget(widget);
             nemowidget_win_enable_move(win, true);
             nemowidget_win_enable_rotate(win, true);
             nemowidget_win_enable_scale(win, true);
             nemotimer_set_timeout(view->frame_timer, 0);
         }
-        nemowidget_enable_event_repeat(widget, true);
-        if (view->dbox_grab) {
-            double tx, ty;
-            tx = ex + view->dbox_grab_diff_x;
-            ty = ey + view->dbox_grab_diff_y;
-
-            _drawingbox_adjust(view, tx, ty);
-            view->dbox_grab_diff_x = 0;
-            view->dbox_grab_diff_y = 0;
-            view->dbox_grab = false;
-        }
-
-        if (id && !strcmp(id, "dbox")) {
-            if (one) {
-                Button *btn = nemoshow_one_get_userdata(one);
-                button_up(btn);
-            }
-            if (nemoshow_event_is_single_click(show, event)) {
-                uint32_t tag = nemoshow_one_get_tag(one);
-                if (tag == 10) {
-                    nemotimer_set_timeout(view->overlay_timer, 0);
-
-                    drawingbox_show_menu(view->dbox);
-                    _drawingbox_adjust(view, -1, -1);
-
-                    sketch_set_color(view->sketch, view->dbox->color);
-                    sketch_set_size(view->sketch, view->dbox->size);
-                    sketch_enable(view->sketch, true);
-                    _nemoshow_item_motion(view->top,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 0.0, NULL);
-                    _nemoshow_item_motion(view->bottom,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 0.0, NULL);
-
-                    NemoWidget *win = nemowidget_get_top_widget(widget);
-                    nemowidget_win_enable_move(win, false);
-                    nemowidget_win_enable_rotate(win, false);
-                    nemowidget_win_enable_scale(win, false);
-                    nemotimer_set_timeout(view->frame_timer, 10);
-                } else if (tag == 11) {
-                    nemotimer_set_timeout(view->overlay_timer, OVERLAY_TIMEOUT);
-
-                    drawingbox_show_pencil(view->dbox);
-                    _drawingbox_adjust(view, -1, -1);
-
-                    sketch_enable(view->sketch, false);
-                    _nemoshow_item_motion(view->top,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 1.0, NULL);
-                    _nemoshow_item_motion(view->bottom,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 1.0, NULL);
-
-                    NemoWidget *win = nemowidget_get_top_widget(widget);
-                    nemowidget_win_enable_move(win, true);
-                    nemowidget_win_enable_rotate(win, true);
-                    nemowidget_win_enable_scale(win, true);
-                    nemotimer_set_timeout(view->frame_timer, 0);
-                } else if (tag == 12) {
-                    // share
-                } else if (tag == 13) {
-                    sketch_undo(view->sketch, 1);
-                } else if (tag == 14) {
-                    sketch_undo(view->sketch, -1);
-                } else if (tag == 15) {
-                    drawingbox_change_stroke(view->dbox, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-                    sketch_set_size(view->sketch, view->dbox->size);
-                } else if (tag == 16) {
-                    drawingbox_change_color(view->dbox, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-                    sketch_set_color(view->sketch, view->dbox->color);
-                }
-            }
-        } else if (!view->sketch->enable && id && !strcmp(id, "player")) {
-            if (tag == 1) {
-                _nemoshow_item_motion_bounce(view->progress_circle,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                        "sx", 1.1, 1.00, "sy", 1.1, 1.00,
-                        NULL);
-                graph_bar_translate(view->progress, NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                        view->progress_x, view->progress_y);
-            } else if (2 <= tag && tag <= 6) {
-                Button *btn = nemoshow_one_get_userdata(one);
-                button_up(btn);
-                if (tag == 5) {
-                    _nemoshow_item_motion_bounce(view->vol,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 150, 100,
-                            "sx", 1.1, 1.00, "sy", 1.1, 1.00,
-                            NULL);
-                }
-            } else if (tag == 100) {
-                graph_bar_item_set_color(view->progress_it0, COLOR1, COLOR1);
-            }
-
-            if (nemoshow_event_is_single_click(show, event)) {
-                if (tag == 1) {
-                    if (view->play->state == NEMOPLAY_WAIT_STATE) {
-                        playerview_stop(view);
-                    } else {
-                        playerview_play(view);
-                    }
-                } else if (tag == 2) {
-                    playerview_fr(view);
-                } else if (tag == 3) {
-                    playerview_ff(view);
-                } else if (tag == 4) {
-                    playerview_volume_up(view);
-                } else if (tag == 5) {
-                    if (view->is_mute) {
-                        playerview_volume_enable(view);
-                    } else {
-                        playerview_volume_disable(view);
-                    }
-                } else if (tag == 6) {
-                    playerview_volume_down(view);
-                } else if (tag == 100) {
-                    int x, w;
-                    graph_bar_get_geometry(view->progress, &x, NULL, &w, NULL);
-
-                    double ex, ey;
-                    nemowidget_transform_from_global(widget,
-                            nemoshow_event_get_x(event),
-                            nemoshow_event_get_y(event), &ex, &ey);
-                    ERR("POS: %lf", ((ex - x)/w) * view->duration);
-
-                    double cts = ((ex - x)/w) * view->duration;
-                    nemoplay_decoder_seek(view->decoder, cts);
-                }
-            }
-        }
     }
     nemoshow_dispatch_frame(view->show);
 }
 
-static void _playerview_event(NemoWidget *widget, const char *id, void *event, void *userdata)
+static void _overlay_player_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
-    PlayerView *view = userdata;
+    struct showone *one = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
+
+    uint32_t tag = nemoshow_one_get_tag(one);
+    PlayerView *view = nemowidget_grab_get_data(grab, "view");
+
+    if (sketch_is_enable(view->sketch)) return;
+
+    double ex, ey;
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+
+    frame_util_transform_to_group(view->overlay_group, ex, ey, &ex, &ey);
+
     if (nemoshow_event_is_down(show, event)) {
-        _progressbar_update(view);
-        playerview_overlay_down(view);
+        if (tag == 1) {
+            _nemoshow_item_motion_bounce(view->progress_circle,
+                    NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
+                    "sx", 0.7, 0.75,
+                    "sy", 0.7, 0.75,
+                    NULL);
+            graph_bar_translate(view->progress,
+                    NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
+                    view->progress_x - 5, view->progress_y);
+        } else if (2 <= tag && tag <= 6) {
+            Button *btn = nemoshow_one_get_userdata(one);
+            button_down(btn);
+
+            if (tag == 5) {
+                _nemoshow_item_motion_bounce(view->vol,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 150, 100,
+                        "sx", 0.7, 0.75, "sy", 0.7, 0.75,
+                        NULL);
+            }
+        }
     } else if (nemoshow_event_is_up(show, event)) {
-        playerview_overlay_up(view);
+        if (tag == 1) {
+            _nemoshow_item_motion_bounce(view->progress_circle,
+                    NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
+                    "sx", 1.1, 1.00, "sy", 1.1, 1.00,
+                    NULL);
+            graph_bar_translate(view->progress, NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
+                    view->progress_x, view->progress_y);
+        } else if (2 <= tag && tag <= 6) {
+            Button *btn = nemoshow_one_get_userdata(one);
+            button_up(btn);
+            if (tag == 5) {
+                _nemoshow_item_motion_bounce(view->vol,
+                        NEMOEASE_CUBIC_INOUT_TYPE, 150, 100,
+                        "sx", 1.1, 1.00, "sy", 1.1, 1.00,
+                        NULL);
+            }
+        } else if (tag == 100) {
+            graph_bar_item_set_color(view->progress_it0, COLOR1, COLOR1);
+        }
+
+        if (nemoshow_event_is_single_click(show, event)) {
+            if (tag == 1) {
+                if (view->play->state == NEMOPLAY_WAIT_STATE) {
+                    playerview_stop(view);
+                } else {
+                    playerview_play(view);
+                }
+            } else if (tag == 2) {
+                playerview_fr(view);
+            } else if (tag == 3) {
+                playerview_ff(view);
+            } else if (tag == 4) {
+                playerview_volume_up(view);
+            } else if (tag == 5) {
+                if (view->is_mute) {
+                    playerview_volume_enable(view);
+                } else {
+                    playerview_volume_disable(view);
+                }
+            } else if (tag == 6) {
+                playerview_volume_down(view);
+            } else if (tag == 100) {
+                int x, w;
+                graph_bar_get_geometry(view->progress, &x, NULL, &w, NULL);
+
+                double ex, ey;
+                nemowidget_transform_from_global(widget,
+                        nemoshow_event_get_x(event),
+                        nemoshow_event_get_y(event), &ex, &ey);
+                ERR("POS: %lf", ((ex - x)/w) * view->duration);
+
+                double cts = ((ex - x)/w) * view->duration;
+                nemoplay_decoder_seek(view->decoder, cts);
+            }
+        }
     }
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _overlay_event(NemoWidget *widget, const char *id, void *event, void *userdata)
@@ -552,7 +558,7 @@ static void _overlay_event(NemoWidget *widget, const char *id, void *event, void
     PlayerView *view = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
 
-    if (!view->sketch->enable) {
+    if (!sketch_is_enable(view->sketch)) {
         if (nemoshow_event_is_down(show, event)) {
             playerview_overlay_down(view);
         } else if (nemoshow_event_is_up(show, event)) {
@@ -568,10 +574,19 @@ static void _overlay_event(NemoWidget *widget, const char *id, void *event, void
                 nemoshow_event_get_y(event), &ex, &ey);
         one = nemowidget_pick_one(widget, ex, ey);
         if (one) {
-            NemoWidgetGrab *grab;
-            grab = nemowidget_create_grab(widget, event,
-                        _overlay_grab_event, view);
-            nemowidget_grab_set_data(grab, "button", one);
+            const char *id = nemoshow_one_get_id(one);;
+            if (id) {
+                NemoWidgetGrab *grab;
+                if (!strcmp(id, "dbox")) {
+                    grab = nemowidget_create_grab(widget, event,
+                            _overlay_dbox_grab_event, one);
+                    nemowidget_grab_set_data(grab, "view", view);
+                } else if (!strcmp(id, "player")) {
+                    grab = nemowidget_create_grab(widget, event,
+                            _overlay_player_grab_event, one);
+                    nemowidget_grab_set_data(grab, "view", view);
+                }
+            }
         }
     }
 }
@@ -596,9 +611,10 @@ static void _playerview_overlay_timeout(struct nemotimer *timer, void *userdata)
 static void _sketch_event(NemoWidget *widget, const char *id, void *event, void *userdata)
 {
     PlayerView *view = userdata;
-    if (view->sketch->enable) return;
+    if (sketch_is_enable(view->sketch)) return;
 
     struct nemoshow *show = nemowidget_get_show(widget);
+
     if (nemoshow_event_is_down(show, event)) {
         playerview_overlay_down(view);
     } else if (nemoshow_event_is_up(show, event)) {
@@ -698,15 +714,13 @@ static void _video_update(struct nemoplay *play, void *data)
 {
     PlayerView *view = data;
 
-    // Progress bar
     if (view->overlay->show) {
         _progressbar_update(view);
     }
 
-    // XXX: DONE here
-    if (view->fin) {
-        ERR("DONE");
-        playerview_stop(view);
+    if (view->need_stop) {
+        view->need_stop = false;
+        nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
     }
 
     nemowidget_dirty(view->video_widget);
@@ -717,11 +731,18 @@ static void _video_done(struct nemoplay *play, void *data)
 {
     PlayerView *view = data;
 
+    ERR("DONE");
     view->fin = true;
     if (view->repeat != 0) {
         if (view->repeat > 0) view->repeat--;
         playerview_play(view);
+    } else {
+        playerview_stop(view);
     }
+
+    _progressbar_update(view);
+    nemowidget_dirty(view->video_widget);
+	nemoshow_dispatch_frame(view->show);
 }
 
 PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool is_audio, int repeat)
@@ -754,6 +775,8 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 			view);
 
     struct nemoplay *play = nemoplay_create();
+    // XXX: it's state is PLAY as default
+    view->is_playing = true;
     nemoplay_load_media(play, path);
     if (!is_audio) nemoplay_revoke_audio(play);
     view->play = play;
@@ -767,7 +790,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     struct showone *one;
     struct showone *group;
-    struct nemotimer *timer;
     NemoWidget *widget;
 
     int video_gap = 2;
@@ -813,7 +835,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     frame_append_widget_group(view->frame, widget, group);
 
     struct showone *top;
-    view->top = top = GROUP_CREATE(group);
+    view->overlay_top = top = GROUP_CREATE(group);
 
     int fontsize = height/30;
 
@@ -841,7 +863,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
 
     struct showone *bottom;
-    view->bottom = bottom = GROUP_CREATE(group);
+    view->overlay_bottom = bottom = GROUP_CREATE(group);
 
     // Play bar
     int r, rx, ry;
@@ -992,6 +1014,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/fr.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, width/2 - ww/2 - gap/2, pos_y);
+    button_set_userdata(btn, view);
     view->fr = btn;
 
     btn = button_create(bottom, "player", 3);
@@ -999,6 +1022,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/ff.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, width/2 + ww/2 + gap/2, pos_y);
+    button_set_userdata(btn, view);
     view->ff = btn;
 
     btn = button_create(bottom, "player", 0);
@@ -1006,6 +1030,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/pf.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, GRAY);
     button_translate(btn, 0, 0, 0, width/2 - ww/2 - ww - gap, pos_y);
+    button_set_userdata(btn, view);
     view->pf = btn;
 
     btn = button_create(bottom, "player", 0);
@@ -1013,6 +1038,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/nf.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, GRAY);
     button_translate(btn, 0, 0, 0, width/2 + ww/2 + ww + gap, pos_y);
+    button_set_userdata(btn, view);
     view->nf = btn;
 
     // Voume
@@ -1021,6 +1047,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/volume_up.svg", ww * 0.75, hh * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2, pos_y);
+    button_set_userdata(btn, view);
     view->vol_up = btn;
 
     int www, hhh;
@@ -1031,6 +1058,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/volume.svg", www * 0.75, www * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2 - ww * 1.5, pos_y);
+    button_set_userdata(btn, view);
     view->vol_mute = btn;
 
     view->vol_cnt = 50;
@@ -1048,6 +1076,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_add_svg_path(btn, PLAYER_ICON_DIR"/volume_down.svg", ww * 0.75, hh * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2 - ww * 3, pos_y);
+    button_set_userdata(btn, view);
     view->vol_down = btn;
 
     r = 20;
@@ -1102,7 +1131,6 @@ static void playerview_hide(PlayerView *view)
 
 static void playerview_destroy(PlayerView *view)
 {
-    //nemoplay_shader_destroy(view->shader);
     nemoplay_destroy(view->play);
 
     // XXX: remove from frame to destroy
