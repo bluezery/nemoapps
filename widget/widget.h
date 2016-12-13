@@ -220,7 +220,7 @@ struct _NemoWidget {
     struct showone *canvas; // NULL if win
 
     List *grabs;
-    bool show;
+    bool is_show;
     bool event_enable;
     bool event_repeat_enable;
     bool event_grab_enable;

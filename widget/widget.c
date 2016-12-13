@@ -500,7 +500,7 @@ void nemowidget_show(NemoWidget *widget, uint32_t easetype, int duration, int de
 {
     NEMOWIDGET_CHECK(widget);
 
-    widget->show = true;
+    widget->is_show = true;
     if (widget->klass->show) {
         widget->klass->show(widget, easetype, duration, delay);
     }
@@ -510,7 +510,7 @@ void nemowidget_hide(NemoWidget *widget, uint32_t easetype, int duration, int de
 {
     NEMOWIDGET_CHECK(widget);
 
-    widget->show = false;
+    widget->is_show = false;
     if (widget->klass->hide) {
         widget->klass->hide(widget, easetype, duration, delay);
     }
@@ -1501,7 +1501,7 @@ static void _nemowidget_win_dispatch_show_event(struct nemoshow *show, struct sh
             NemoWidget *widget = nemoshow_one_get_userdata(one);
             if (!widget) continue;
             if (widget->klass->type == NEMOWIDGET_TYPE_WIN) break;
-            if (!widget->show) continue;
+            if (!widget->is_show) continue;
             if (nemoshow_event_is_keyboard_enter(show, event) ||
                     nemoshow_event_is_keyboard_leave(show, event) ||
                     nemoshow_event_is_keyboard_down(show, event) ||

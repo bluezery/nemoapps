@@ -44,8 +44,6 @@ struct _PlayerView
     struct nemoshow *show;
 
     bool fin;
-    bool need_stop;
-    bool is_playing;
     int repeat;  // -1, 0, 1
     char *path;
 
@@ -53,12 +51,8 @@ struct _PlayerView
 
     Frame *frame;
 
-    NemoWidget *video_widget;
-
-    struct nemoplay *play;
-    struct playvideo *video;
-    struct playdecoder *decoder;
-    struct playaudio *audio;
+    PlayerUI *player;
+    int duration;
 
     struct nemotimer *frame_timer;
     Sketch *sketch;
@@ -104,28 +98,11 @@ struct _PlayerView
     Text *cur_time;
     Text *total_time_back;
     Text *total_time;
-    int32_t duration;
 
     DrawingBox *dbox;
     double dbox_grab_diff_x, dbox_grab_diff_y;
 };
 
-
-static void _playerview_resize(NemoWidget *widget, const char *id, void *info, void *data)
-{
-    //NemoWidgetInfo_Resize *resize = info;
-    PlayerView *view = data;
-
-    struct showone *canvas;
-    canvas = nemowidget_get_canvas(widget);
-
-	nemoplay_video_set_texture(view->video,
-			nemoshow_canvas_get_texture(canvas),
-			nemoshow_canvas_get_viewport_width(canvas),
-			nemoshow_canvas_get_viewport_height(canvas));
-
-    nemowidget_dirty(widget);
-}
 
 static void _drawingbox_adjust(PlayerView *view, double tx, double ty)
 {
@@ -189,7 +166,6 @@ static void playerview_overlay_up(PlayerView *view)
 
 void playerview_play(PlayerView *view)
 {
-    struct nemoplay *play = view->play;
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
     _nemoshow_item_motion(view->ss0,
@@ -199,15 +175,7 @@ void playerview_play(PlayerView *view)
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 0.0, NULL);
 
-    view->is_playing = true;
-    if (view->fin) {
-        ERR("RESET");
-        nemoplay_decoder_seek(view->decoder, 0.0f);
-        view->fin = false;
-    } else {
-        ERR("PLAY");
-    }
-    nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
+    nemoui_player_play(view->player);
 }
 
 void playerview_stop(PlayerView *view)
@@ -222,9 +190,7 @@ void playerview_stop(PlayerView *view)
             NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 1.0, NULL);
 
-    view->is_playing = false;
-    nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
-
+    nemoui_player_stop(view->player);
 }
 
 void playerview_fr(PlayerView *view)
@@ -232,17 +198,12 @@ void playerview_fr(PlayerView *view)
     ERR("FR");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    double cts = nemoplay_get_cts(view->play);
+    double cts = nemoui_player_get_cts(view->player);
     if (cts - 10 > view->duration) {
         cts = view->duration;
     } else
         cts = cts - 10;
-    nemoplay_decoder_seek(view->decoder, cts);
-
-    if (!view->is_playing) {
-        view->need_stop = true;
-        nemoplay_set_state(view->play, NEMOPLAY_PLAY_STATE);
-    }
+    nemoui_player_seek(view->player, cts);
 }
 
 void playerview_ff(PlayerView *view)
@@ -250,17 +211,12 @@ void playerview_ff(PlayerView *view)
     ERR("FF");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
-    double cts = nemoplay_get_cts(view->play);
+    double cts = nemoui_player_get_cts(view->player);
     if (cts + 10 > view->duration) {
         cts = view->duration;
     } else
         cts = cts + 10;
-    nemoplay_decoder_seek(view->decoder, cts);
-
-    if (!view->is_playing) {
-        view->need_stop = true;
-        nemoplay_set_state(view->play, NEMOPLAY_PLAY_STATE);
-    }
+    nemoui_player_seek(view->player, cts);
 }
 
 void playerview_volume_up(PlayerView *view)
@@ -319,7 +275,8 @@ void playerview_volume_disable(PlayerView *view)
 
 static void _progressbar_update(PlayerView *view)
 {
-    double cts = nemoplay_get_cts(view->play);
+    double cts = nemoui_player_get_cts(view->player);
+
     char buf[16];
     int hour, min, sec;
     parse_seconds_to_hms(cts, &hour, &min, &sec);
@@ -335,7 +292,7 @@ static void _progressbar_update(PlayerView *view)
     graph_bar_update(view->progress, 0, 0, 0);
 }
 
-static void _playerview_event(NemoWidget *widget, const char *id, void *event, void *userdata)
+static void _player_event(NemoWidget *widget, const char *id, void *event, void *userdata)
 {
     PlayerView *view = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -516,7 +473,14 @@ static void _overlay_player_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
 
         if (nemoshow_event_is_single_click(show, event)) {
             if (tag == 1) {
+                /*
                 if (view->play->state == NEMOPLAY_WAIT_STATE) {
+                    playerview_stop(view);
+                } else {
+                    playerview_play(view);
+                }
+                */
+                if (nemoui_player_is_playing(view->player)) {
                     playerview_stop(view);
                 } else {
                     playerview_play(view);
@@ -546,7 +510,7 @@ static void _overlay_player_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
                 ERR("POS: %lf", ((ex - x)/w) * view->duration);
 
                 double cts = ((ex - x)/w) * view->duration;
-                nemoplay_decoder_seek(view->decoder, cts);
+                nemoui_player_seek(view->player, cts);
             }
         }
     }
@@ -660,7 +624,7 @@ static void _bus_callback(void *data, const char *events)
             nemobus_msg_set_attr(msg, "from", view->objpath);
             nemobus_msg_set_attr(msg, "filename", view->filename);
             nemobus_msg_set_attr_format(msg, "isplaying", "%s",
-                    view->is_playing ? "true" : "false");
+                    nemoui_player_is_playing(view->player) ? "true" : "false");
             nemobus_msg_set_attr_format(msg, "ismute", "%s",
                     view->is_mute ? "true" : "false");
             nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
@@ -672,7 +636,7 @@ static void _bus_callback(void *data, const char *events)
             ERR("%s", type);
             if (!type) continue;
             if (!strcmp(type, "exit")) {
-                NemoWidget *win = nemowidget_get_top_widget(view->video_widget);
+                NemoWidget *win = nemowidget_get_top_widget(view->overlay);
                 nemowidget_callback_dispatch(win, "exit", NULL);
             } else if (!strcmp(type, "play")) {
                 playerview_play(view);
@@ -698,7 +662,7 @@ static void _bus_callback(void *data, const char *events)
             nemobus_msg_set_attr(msg, "from", view->objpath);
             nemobus_msg_set_attr(msg, "filename", view->filename);
             nemobus_msg_set_attr_format(msg, "isplaying", "%s",
-                    view->is_playing ? "true" : "false");
+                    nemoui_player_is_playing(view->player) ? "true" : "false");
             nemobus_msg_set_attr_format(msg, "ismute", "%s",
                     view->is_mute ? "true" : "false");
             nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
@@ -710,42 +674,29 @@ static void _bus_callback(void *data, const char *events)
 	nemoitem_destroy(it);
 }
 
-static void _video_update(struct nemoplay *play, void *data)
+static void _player_update(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
-    PlayerView *view = data;
+    PlayerView *view = userdata;
 
-    if (view->overlay->show) {
+    if (view->overlay->is_show) {
         _progressbar_update(view);
     }
-
-    if (view->need_stop) {
-        view->need_stop = false;
-        nemoplay_set_state(view->play, NEMOPLAY_STOP_STATE);
-    }
-
-    nemowidget_dirty(view->video_widget);
-	nemoshow_dispatch_frame(view->show);
 }
 
-static void _video_done(struct nemoplay *play, void *data)
+static void _player_done(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
-    PlayerView *view = data;
+    PlayerView *view = userdata;
 
-    ERR("DONE");
-    view->fin = true;
     if (view->repeat != 0) {
         if (view->repeat > 0) view->repeat--;
         playerview_play(view);
     } else {
         playerview_stop(view);
     }
-
     _progressbar_update(view);
-    nemowidget_dirty(view->video_widget);
-	nemoshow_dispatch_frame(view->show);
 }
 
-PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool is_audio, int repeat)
+PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool enable_audio, int repeat)
 {
     struct nemotool *tool;
     struct nemoshow *show;
@@ -774,47 +725,25 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
             _bus_callback,
 			view);
 
-    struct nemoplay *play = nemoplay_create();
-    // XXX: it's state is PLAY as default
-    view->is_playing = true;
-    nemoplay_load_media(play, path);
-    if (!is_audio) nemoplay_revoke_audio(play);
-    view->play = play;
-
-    NemoWidget *win = nemowidget_get_top_widget(parent);
-    if (nemoplay_get_video_framerate(play) <= 30) {
-        nemowidget_set_framerate(win, 30);
-    } else {
-        nemowidget_set_framerate(win, nemoplay_get_video_framerate(play));
-    }
-
     struct showone *one;
     struct showone *group;
     NemoWidget *widget;
 
     int video_gap = 2;
 
+    // Frame
     view->frame = frame_create(parent, width, height, video_gap);
+
     int cw, ch;
     cw = view->frame->content_width;
     ch = view->frame->content_height;
 
     // Video
-    view->video_widget = widget = nemowidget_create_opengl(parent, cw, ch);
-    nemowidget_append_callback(widget, "event", _playerview_event, view);
-    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
-    nemowidget_scale(widget, 0, 0, 0, 0.0, 0.0);
-    nemowidget_append_callback(widget, "resize", _playerview_resize, view);
-    frame_append_widget(view->frame, widget);
-
-    struct playvideo *video;
-    view->decoder = nemoplay_decoder_create(play);
-    view->audio = nemoplay_audio_create_by_ao(play);
-    view->video = video = nemoplay_video_create_by_timer(play, view->tool);
-	nemoplay_video_set_texture(video, nemowidget_get_texture(widget), vw, vh);
-	nemoplay_video_set_update(video, _video_update);
-	nemoplay_video_set_done(video, _video_done);
-	nemoplay_video_set_data(video, view);
+    view->player = nemoui_player_create(parent, cw, ch, path, enable_audio);
+    nemoui_player_append_callback(view->player, "event", _player_event, view);
+    nemoui_player_append_callback(view->player, "player,update", _player_update, view);
+    nemoui_player_append_callback(view->player, "player,done", _player_done, view);
+    view->duration = nemoui_player_get_duration(view->player);
 
     // Sketch
     view->frame_timer = TOOL_ADD_TIMER(view->tool, 0, _playerview_frame_timeout, view);
@@ -976,12 +905,11 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_show(text, 0, 0, 0);
     view->cur_time = text;
 
-    int32_t duration = nemoplay_get_duration(play);
+    int duration = nemoui_player_get_duration(view->player);
     char buf[16];
     int hour, min, sec;
     parse_seconds_to_hms(duration, &hour, &min, &sec);
     snprintf(buf, 16, "%02d:%02d:%02d", hour, min, sec);
-    view->duration = duration;
 
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
     text_set_stroke_color(text, 0, 0, 0, COLORBACK, 1);
@@ -1089,6 +1017,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
 static void playerview_show(PlayerView *view)
 {
+    nemoui_player_show(view->player, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
     sketch_show(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
@@ -1111,6 +1040,7 @@ static void playerview_show(PlayerView *view)
 
 static void playerview_hide(PlayerView *view)
 {
+    nemoui_player_hide(view->player, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
     playerview_overlay_hide(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
     sketch_hide(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
@@ -1131,7 +1061,7 @@ static void playerview_hide(PlayerView *view)
 
 static void playerview_destroy(PlayerView *view)
 {
-    nemoplay_destroy(view->play);
+    nemoui_player_destroy(view->player);
 
     // XXX: remove from frame to destroy
     frame_remove_widget(view->frame, view->sketch->widget);
@@ -1186,14 +1116,9 @@ static void _win_fullscreen_callback(NemoWidget *win, const char *id, void *info
         frame_go_normal(view->frame);
     }
 
-	nemoplay_video_redraw(view->video);
-    nemoshow_dispatch_frame(view->show);
+    nemoui_player_redraw(view->player);
 
-    /*
-	if (nemoplay_get_frame(view->play) != 0) {
-		nemoplay_shader_dispatch(view->shader);
-	}
-    */
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
@@ -1210,14 +1135,14 @@ typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
     Config *config;
     char *path;
-    bool is_audio;
+    bool enable_audio;
     int repeat;
 };
 
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->is_audio = true;
+    app->enable_audio = true;
     app->repeat = -1;
     app->config = config_load(domain, appname, filename, argc, argv);
 
@@ -1255,7 +1180,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
                 app->path = strdup(optarg);
                 break;
             case 'a':
-                app->is_audio = !strcmp(optarg, "off") ? false : true;
+                app->enable_audio = !strcmp(optarg, "off") ? false : true;
                 break;
             case 'p':
                 app->repeat = atoi(optarg);
@@ -1295,8 +1220,9 @@ int main(int argc, char *argv[])
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
     nemowidget_win_enable_fullscreen(win, true);
 
-    PlayerView *view = playerview_create(win, app->config->width, app->config->height, vw, vh,
-            app->path, app->is_audio, app->repeat);
+    PlayerView *view = playerview_create(win,
+            app->config->width, app->config->height, vw, vh,
+            app->path, app->enable_audio, app->repeat);
     nemowidget_append_callback(win, "fullscreen", _win_fullscreen_callback, view);
     nemowidget_append_callback(win, "exit", _win_exit, view);
     playerview_show(view);
