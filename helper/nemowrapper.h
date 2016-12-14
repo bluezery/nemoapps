@@ -715,13 +715,14 @@ static inline void _nemomotion_run_done(void *userdata)
     free(m);
 }
 
-static inline void _nemomotion_frame(void *userdata, uint32_t time, double t)
+static inline int _nemomotion_frame(void *userdata, uint32_t time, double t)
 {
     NemoMotion *m = (NemoMotion *)userdata;
 
     if (m->frame.callback) {
         m->frame.callback(m, time, t, m->frame.userdata);
     }
+    return 0;
 }
 
 static inline void nemomotion_set_frame_callback(NemoMotion *m, NemoMotion_FrameCallback callback, void *userdata)
