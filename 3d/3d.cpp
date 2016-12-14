@@ -118,8 +118,8 @@ static GLuint nemomesh_create_shader(const char *fshader, const char *vshader)
 	GLuint program;
 	GLint status;
 
-	frag = glshader_compile(GL_FRAGMENT_SHADER, 1, &fshader);
-	vert = glshader_compile(GL_VERTEX_SHADER, 1, &vshader);
+	frag = gl_compile_shader(GL_FRAGMENT_SHADER, 1, &fshader);
+	vert = gl_compile_shader(GL_VERTEX_SHADER, 1, &vshader);
 
 	program = glCreateProgram();
 	glAttachShader(program, frag);

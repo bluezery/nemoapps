@@ -3,11 +3,11 @@
 #    gsthelper.h
 #    )
 #
-ADD_LIBRARY(glhelper OBJECT
-    glhelper.c
-    glhelper.h
-    )
-
+#ADD_LIBRARY(glhelper OBJECT
+#    glhelper.c
+#    glhelper.h
+#    )
+#
 ADD_LIBRARY(meshhelper OBJECT
     meshhelper.cpp
     meshhelper.h
