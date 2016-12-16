@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
 <size width="3840" height="2160" col="4" row="4"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
+    <!--
+    <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
+    <file path="rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov"/>
+    <file path="rtsp://mpv.cdn3.bigCDN.com:554/bigCDN/definst/mp4:bigbuckbunnyiphone_400.mp4"/>    
+    <file path="rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov"/>    
+    <file path="rtsp://mm2.pcslab.com/mm/7h800.mp4"/>    
+    <file path="rtmp://65.23.154.147:80/live/channel1"/>
+    <file path="rtmp://65.23.154.147:80/vod/mediaroot/TechTVDSL.mp4"/>
+    <file path="rtmp://65.23.154.147:80/live/Axis"/>    
+    <file path="rtmp://65.23.154.147:80/vod/mediaroot/animusic.mkv"/>
+    <file path="rtmp://65.23.154.147:80/vod/mediaroot/bigbuckbunny_450.mp4"/>    
+    -->
     <!--
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
@@ -19,6 +37,7 @@
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     -->
+    <!--
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
@@ -35,6 +54,7 @@
     <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
+    -->
     <!--
     <file path="/home/root/FUTURE/MS 2011.mp4"/>
     <file path="/home/root/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
