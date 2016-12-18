@@ -338,7 +338,7 @@ static void _animator_rewind_timeout(struct nemotimer *timer, void *userdata)
     AnimatorScene *scene = anim->scene;
     RET_IF(!scene);
 
-    int box_cnt = nemoplay_box_get_count(scene->box);
+    //int box_cnt = nemoplay_box_get_count(scene->box);
 
     struct playone *one;
 	one = nemoplay_box_get_one(scene->box, anim->box_idx);
@@ -374,7 +374,7 @@ static void _animator_rewind_reverse_timeout(struct nemotimer *timer, void *user
     AnimatorScene *scene = anim->scene;
     RET_IF(!scene);
 
-    int box_cnt = nemoplay_box_get_count(scene->box);
+    //int box_cnt = nemoplay_box_get_count(scene->box);
 
     struct playone *one;
 	one = nemoplay_box_get_one(scene->box, anim->box_idx);
@@ -630,6 +630,35 @@ static void _menu_icon_event(NemoWidget *widget, const char *id, void *info, voi
 }
 #endif
 
+static void _menuview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+{
+    struct nemoshow *show = nemowidget_get_show(widget);
+    double ex, ey;
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+    MenuView *view = userdata;
+
+    if (nemoshow_event_is_motion(show, event)) {
+    } else if (nemoshow_event_is_motion(show, event)) {
+    }
+}
+
+static void _menuview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    struct showevent *event = info;
+    struct nemoshow *show = nemowidget_get_show(widget);
+    double ex, ey;
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+    MenuView *view = userdata;
+
+    if (nemoshow_event_is_down(show, event)) {
+        nemowidget_create_grab(widget, event, _menuview_grab_event, view);
+    }
+}
+
 MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
     MenuView *view = calloc(sizeof(MenuView), 1);
@@ -643,6 +672,7 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
     struct showone *group;
 
     view->widget = widget = nemowidget_create_vector(parent, width, height);
+    nemowidget_append_callback(widget, "event", _menuview_event, view);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
@@ -700,13 +730,11 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    /*
     nemowidget_win_set_anchor(win, 0, 0);
     nemowidget_win_set_layer(win, "background");
     nemowidget_win_enable_move(win, 0);
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
-    */
 
     MenuView *view = menuview_create(win, app->config->width, app->config->height, app);
     menuview_show(view);
