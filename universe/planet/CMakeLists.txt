@@ -1,5 +1,5 @@
 SET(APPNAME "nemouniverse-planet")
-SET(CONFXML "nemouniverse-planet.conf")
+SET(CONFXML "universe-planet.conf")
 ADD_DEFINITIONS(-DAPPNAME="${APPNAME}")
 ADD_DEFINITIONS(-DCONFXML="${CONFXML}")
 

@@ -1,4 +1,4 @@
-SET(CONFXML "nemocard.conf")
+SET(CONFXML "card.conf")
 SET(APPNAME "nemocard")
 SET(CARD_ICON_DIR "${ICON_DIR}/${APPNAME}")
 SET(CARD_SOUND_DIR "${SOUND_DIR}/${APPNAME}")

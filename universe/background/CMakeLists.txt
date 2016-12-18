@@ -1,5 +1,5 @@
 SET(APPNAME "nemouniverse-background")
-SET(CONFXML "nemouniverse-background.conf")
+SET(CONFXML "universe-background.conf")
 ADD_DEFINITIONS(-DAPPNAME="${APPNAME}")
 ADD_DEFINITIONS(-DCONFXML="${CONFXML}")
 

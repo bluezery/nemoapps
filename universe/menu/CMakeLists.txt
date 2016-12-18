@@ -1,5 +1,5 @@
 SET(APPNAME "nemouniverse-menu")
-SET(CONFXML "nemouniverse-menu.conf")
+SET(CONFXML "universe-menu.conf")
 ADD_DEFINITIONS(-DAPPNAME="${APPNAME}")
 ADD_DEFINITIONS(-DCONFXML="${CONFXML}")
 
