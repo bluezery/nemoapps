@@ -67,7 +67,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         height = atoi(temp);
     }
     if (width > 0) sx = (double)app->config->width/width;
-    if (width > 0) sy = (double)app->config->height/height;
+    if (height > 0) sy = (double)app->config->height/height;
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
 
@@ -84,6 +84,7 @@ static void _config_unload(ConfigApp *app)
 
 typedef struct _AnimatorScene AnimatorScene;
 struct _AnimatorScene {
+    char *path;
     bool repeat;
     struct nemoplay *play;
     struct playbox *box;
@@ -120,11 +121,9 @@ struct _Animator {
     struct playshader *shader;
     NemoWidget *widget;
 
+    bool reverse;
+    bool rewind;
     struct nemotimer *timer;
-    struct nemotimer *timer_reverse;
-    struct nemotimer *timer_rewind;
-    struct nemotimer *timer_rewind_reverse;
-
     int box_idx;
     List *scenes;
     AnimatorScene *scene;
@@ -133,42 +132,65 @@ struct _Animator {
 
 void animator_play(Animator *anim)
 {
+    /*
     nemotimer_set_timeout(anim->timer, 10);
     nemotimer_set_timeout(anim->timer_reverse, 0);
     nemotimer_set_timeout(anim->timer_rewind, 0);
     nemotimer_set_timeout(anim->timer_rewind_reverse, 0);
+    */
+    anim->reverse = false;
+    anim->rewind = false;
+    nemotimer_set_timeout(anim->timer, 10);
 }
 
 void animator_play_reverse(Animator *anim)
 {
+    /*
     nemotimer_set_timeout(anim->timer, 0);
     nemotimer_set_timeout(anim->timer_reverse, 10);
     nemotimer_set_timeout(anim->timer_rewind, 0);
     nemotimer_set_timeout(anim->timer_rewind_reverse, 0);
+    */
+    anim->reverse = true;
+    anim->rewind = false;
+    nemotimer_set_timeout(anim->timer, 10);
 }
 
 void animator_play_rewind(Animator *anim)
 {
+    /*
     nemotimer_set_timeout(anim->timer, 0);
     nemotimer_set_timeout(anim->timer_reverse, 0);
     nemotimer_set_timeout(anim->timer_rewind, 10);
     nemotimer_set_timeout(anim->timer_rewind_reverse, 0);
+    */
+    anim->reverse = false;
+    anim->rewind = true;
+    nemotimer_set_timeout(anim->timer, 10);
 }
 
 void animator_play_rewind_reverse(Animator *anim)
 {
+    /*
     nemotimer_set_timeout(anim->timer, 0);
     nemotimer_set_timeout(anim->timer_reverse, 0);
     nemotimer_set_timeout(anim->timer_rewind, 0);
     nemotimer_set_timeout(anim->timer_rewind_reverse, 10);
+    */
+    anim->reverse = true;
+    anim->rewind = true;
+    nemotimer_set_timeout(anim->timer, 10);
 }
 
 void animator_stop(Animator *anim)
 {
+    /*
     nemotimer_set_timeout(anim->timer, 0);
     nemotimer_set_timeout(anim->timer_reverse, 0);
     nemotimer_set_timeout(anim->timer_rewind, 0);
     nemotimer_set_timeout(anim->timer_rewind_reverse, 0);
+    */
+    nemotimer_set_timeout(anim->timer, 0);
 }
 
 void animator_play_scene(Animator *anim, AnimatorScene *scene)
@@ -267,143 +289,90 @@ static void _animator_timeout(struct nemotimer *timer, void *userdata)
     nemowidget_dirty(anim->widget);
     nemoshow_dispatch_frame(anim->show);
 
-    anim->box_idx++;
-    if (anim->box_idx >= box_cnt) {
-        if (anim->scene_next) {
-            anim->box_idx = 0;
-            anim->scene = anim->scene_next;
-            anim->scene_next = NULL;
-            nemotimer_set_timeout(timer, FPS_TIMEOUT);
-        } else {
-            if (scene->repeat) {
-                anim->box_idx = 0;
-                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+    if (!anim->rewind) {
+        if (!anim->reverse) {
+            anim->box_idx++;
+            if (anim->box_idx >= box_cnt) {
+                if (anim->scene_next) {
+                    anim->box_idx = 0;
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    if (scene->repeat) {
+                        anim->box_idx = 0;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    } else {
+                        anim->box_idx--;
+                        nemotimer_set_timeout(timer, 0);
+                    }
+                }
             } else {
-                anim->box_idx--;
-                nemotimer_set_timeout(timer, 0);
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        } else {
+            anim->box_idx--;
+            if (anim->box_idx < 0 ) {
+                if (anim->scene_next) {
+                    anim->box_idx = 0;
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->reverse = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    if (scene->repeat) {
+                        anim->box_idx = box_cnt - 1;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    } else {
+                        // XXX: repeat first scene
+                        anim->box_idx = 0;
+                        anim->scene = LIST_DATA(list_get_nth(anim->scenes, 0));
+                        anim->reverse = false;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    }
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
             }
         }
     } else {
-        nemotimer_set_timeout(timer, FPS_TIMEOUT);
-    }
-}
+        if (!anim->reverse) {
+            int speed = 15;
+            anim->box_idx-= speed;
 
-static void _animator_reverse_timeout(struct nemotimer *timer, void *userdata)
-{
-    Animator *anim = userdata;
-    AnimatorScene *scene = anim->scene;
-    RET_IF(!scene);
-
-    int box_cnt = nemoplay_box_get_count(scene->box);
-
-    struct playone *one;
-	one = nemoplay_box_get_one(scene->box, anim->box_idx);
-	if (one) {
-		nemoplay_shader_update(anim->shader, one);
-		nemoplay_shader_dispatch(anim->shader);
-	}
-    //ERR("[scene: %d][box: %d/%d][%p]", list_get_idx(anim->scenes, scene), anim->box_idx, box_cnt, one);
-
-    nemowidget_dirty(anim->widget);
-    nemoshow_dispatch_frame(anim->show);
-
-    anim->box_idx--;
-    if (anim->box_idx < 0 ) {
-        if (anim->scene_next) {
-            anim->box_idx = 0;
-            anim->scene = anim->scene_next;
-            anim->scene_next = NULL;
-            nemotimer_set_timeout(anim->timer, FPS_TIMEOUT);
-        } else {
-            if (scene->repeat) {
-                anim->box_idx = box_cnt - 1;
-                nemotimer_set_timeout(timer, FPS_TIMEOUT);
-            } else {
-                // XXX: repeat first scene
+            if (anim->box_idx < 0 ) {
                 anim->box_idx = 0;
-                anim->scene = LIST_DATA(list_get_nth(anim->scenes, 0));
-                nemotimer_set_timeout(anim->timer, FPS_TIMEOUT);
-                //anim->box_idx++;
-                //nemotimer_set_timeout(timer, 0);
+                if (anim->scene_next) {
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->rewind = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    nemotimer_set_timeout(timer, 0);
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        } else {
+            int speed = 5;
+            anim->box_idx-= speed;
+
+            if (anim->box_idx < 0 ) {
+                anim->box_idx = 0;
+                if (anim->scene_next) {
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->rewind = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    nemotimer_set_timeout(timer, 0);
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
             }
         }
-    } else {
-        nemotimer_set_timeout(timer, FPS_TIMEOUT);
     }
 }
-
-static void _animator_rewind_timeout(struct nemotimer *timer, void *userdata)
-{
-    Animator *anim = userdata;
-    AnimatorScene *scene = anim->scene;
-    RET_IF(!scene);
-
-    //int box_cnt = nemoplay_box_get_count(scene->box);
-
-    struct playone *one;
-	one = nemoplay_box_get_one(scene->box, anim->box_idx);
-	if (one) {
-		nemoplay_shader_update(anim->shader, one);
-		nemoplay_shader_dispatch(anim->shader);
-	}
-    //ERR("[scene: %d][box: %d/%d]", list_get_idx(anim->scenes, scene), anim->box_idx, box_cnt);
-
-    nemowidget_dirty(anim->widget);
-    nemoshow_dispatch_frame(anim->show);
-
-    int speed = 15;
-    anim->box_idx-= speed;
-
-    if (anim->box_idx < 0 ) {
-        anim->box_idx = 0;
-        if (anim->scene_next) {
-            anim->scene = anim->scene_next;
-            anim->scene_next = NULL;
-            nemotimer_set_timeout(anim->timer, FPS_TIMEOUT);
-        } else {
-            nemotimer_set_timeout(timer, 0);
-        }
-    } else {
-        nemotimer_set_timeout(timer, FPS_TIMEOUT);
-    }
-}
-
-static void _animator_rewind_reverse_timeout(struct nemotimer *timer, void *userdata)
-{
-    Animator *anim = userdata;
-    AnimatorScene *scene = anim->scene;
-    RET_IF(!scene);
-
-    //int box_cnt = nemoplay_box_get_count(scene->box);
-
-    struct playone *one;
-	one = nemoplay_box_get_one(scene->box, anim->box_idx);
-	if (one) {
-		nemoplay_shader_update(anim->shader, one);
-		nemoplay_shader_dispatch(anim->shader);
-	}
-    //ERR("[scene: %d][box: %d/%d]", list_get_idx(anim->scenes, scene), anim->box_idx, box_cnt);
-
-    nemowidget_dirty(anim->widget);
-    nemoshow_dispatch_frame(anim->show);
-
-    int speed = 5;
-    anim->box_idx-= speed;
-
-    if (anim->box_idx < 0 ) {
-        anim->box_idx = 0;
-        if (anim->scene_next) {
-            anim->scene = anim->scene_next;
-            anim->scene_next = NULL;
-            nemotimer_set_timeout(anim->timer_reverse, FPS_TIMEOUT);
-        } else {
-            nemotimer_set_timeout(timer, 0);
-        }
-    } else {
-        nemotimer_set_timeout(timer, FPS_TIMEOUT);
-    }
-}
-
 
 void animator_append_callback(Animator *anim, const char *id, NemoWidget_Func func, void *userdata)
 {
@@ -424,21 +393,30 @@ Animator *animator_create(NemoWidget *parent, int width, int height)
     nemowidget_append_callback(widget, "resize", _animator_resize, anim);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
-    anim->timer = TOOL_ADD_TIMER(anim->tool, 0,
-            _animator_timeout, anim);
-    anim->timer_reverse = TOOL_ADD_TIMER(anim->tool, 0,
-            _animator_reverse_timeout, anim);
-    anim->timer_rewind = TOOL_ADD_TIMER(anim->tool, 0,
-            _animator_rewind_timeout, anim);
-    anim->timer_rewind_reverse = TOOL_ADD_TIMER(anim->tool, 0,
-            _animator_rewind_reverse_timeout, anim);
+    anim->timer = TOOL_ADD_TIMER(anim->tool, 0, _animator_timeout, anim);
 
     return anim;
 }
 
-AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repeat)
+List *__animator_scene_caches;
+AnimatorScene *animator_scene_cache_pop(const char *path, bool repeat)
 {
+    List *l;
+    AnimatorScene *cache;
+    LIST_FOR_EACH(__animator_scene_caches, l, cache) {
+        if (!strcmp(path, cache->path)) {
+            AnimatorScene *scene = calloc(sizeof(AnimatorScene), 1);
+            scene->path = strdup(path);
+            scene->repeat = repeat;
+            scene->play = cache->play;
+            scene->box = cache->box;
+            return scene;
+        }
+    }
+
+    ERR("path: %s", path);
     AnimatorScene *scene = calloc(sizeof(AnimatorScene), 1);
+    scene->path = strdup(path);
     scene->repeat = repeat;
 
     struct nemoplay *play;
@@ -448,6 +426,28 @@ AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repe
     struct playbox *box;
     scene->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
 	nemoplay_extract_video(play, box);
+
+    __animator_scene_caches = list_append(__animator_scene_caches, scene);
+    return scene;
+}
+
+AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repeat)
+{
+    /*
+    AnimatorScene *scene = calloc(sizeof(AnimatorScene), 1);
+    scene->path = strdup(path);
+    scene->repeat = repeat;
+
+    struct nemoplay *play;
+    scene->play = play = nemoplay_create();
+    nemoplay_load_media(play, path);
+
+    struct playbox *box;
+    scene->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
+	nemoplay_extract_video(play, box);
+    */
+
+    AnimatorScene *scene = animator_scene_cache_pop(path, repeat);
 
     if (list_count(anim->scenes) == 0) {
         nemoplay_shader_set_format(anim->shader,
@@ -472,6 +472,8 @@ struct _MenuView {
     struct showone *group;
     struct showone *bg;
 
+    int menu_w, menu_h;
+    int menu_iw, menu_ih;
     List *menus;
 };
 
@@ -488,8 +490,12 @@ struct _MenuItem {
 };
 
 struct _Menu {
+    int x, y;
     int width, height;
     NemoWidget *parent;
+    NemoWidget *widget;
+    struct showone *group;
+
     Animator *bg;
     AnimatorScene *bg_scene;
     List *items;
@@ -528,7 +534,7 @@ static void _menu_item_event(NemoWidget *widget, const char *id, void *info, voi
 
 void menu_item_translate(MenuItem *it, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
-    animator_translate(it->anim, easetype, duration, delay, tx, ty);
+    animator_translate(it->anim, easetype, duration, delay, tx , ty);
 }
 
 MenuItem *menu_append_item(Menu *menu, int w, int h)
@@ -565,10 +571,25 @@ Menu *menu_create(NemoWidget *parent, int w, int h)
     menu->height = h;
     menu->parent = parent;
 
+    NemoWidget *widget;
+    struct showone *group;
+    struct showone *one;
+    menu->widget = widget = nemowidget_create_vector(parent, w, h);
+    menu->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+
     Animator *anim;
     menu->bg = anim = animator_create(parent, w, h);
     menu->bg_scene = animator_append_scene(anim, MENU_ANIM_DIR"/menu_back.mov", false);
+
     return menu;
+}
+
+void menu_translate(Menu *menu, uint32_t easetype, int duration, int delay, int tx, int ty)
+{
+    menu->x = tx;
+    menu->y = ty;
+    nemowidget_translate(menu->widget, easetype, duration, delay, tx, ty);
+    animator_translate(menu->bg, easetype, duration, delay, tx, ty);
 }
 
 void menu_show(Menu *menu, uint32_t easetype, int duration, int delay)
@@ -589,9 +610,9 @@ void menu_show(Menu *menu, uint32_t easetype, int duration, int delay)
 
     int start = (menu->height - (cnt * ih + (cnt - 1) * gap))/2;
     LIST_FOR_EACH(menu->items, l, it) {
+        menu_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                menu->x, menu->y + start);
         menu_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-        menu_item_translate(it, 0, 0, 0, 0, start);
-        ERR("%d", start);
         start += ih + gap;
     }
 }
@@ -639,8 +660,30 @@ static void _menuview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
             nemoshow_event_get_y(event), &ex, &ey);
     MenuView *view = userdata;
 
-    if (nemoshow_event_is_motion(show, event)) {
-    } else if (nemoshow_event_is_motion(show, event)) {
+    if (nemoshow_event_get_grab_time(event) + 1000 < nemoshow_event_get_time(event)) {
+        if (!nemowidget_grab_get_data(grab, "longpress")) {
+            nemowidget_grab_set_data(grab, "longpress", "1");
+            ERR("LONG PRESS");
+
+            Menu *menu;
+            MenuItem *it;
+            menu = menu_create(widget, view->menu_w, view->menu_h);
+            view->menus = list_append(view->menus, menu);
+
+            int i = 0;
+            for (i = 0 ; i < 10 ; i++) {
+                menu_append_item(menu, view->menu_iw, view->menu_ih);
+            }
+            menu_translate(menu, 0, 0, 0, ex - view->menu_w/2, 0);
+            menu_show(menu, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+
+        }
+    }
+
+    if (nemoshow_event_is_down(show, event)) {
+        ERR("DOWN");
+    } else if (nemoshow_event_is_up(show, event)) {
+        ERR("UP");
     }
 }
 
@@ -682,22 +725,10 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
     int w, h, iw, ih;
     nemoplay_get_video_info(MENU_ANIM_DIR"/menu_back.mov", &w, &h);
     nemoplay_get_video_info(MENU_ANIM_DIR"/menu_norm.mov", &iw, &ih);
-    w *= app->sxy;
-    h *= app->sxy;
-    iw *= app->sxy;
-    ih *= app->sxy;
-
-    Menu *menu;
-    MenuItem *it;
-    menu = menu_create(widget, w, h);
-    menu_append_item(menu, iw, ih);
-
-    view->menus = list_append(view->menus, menu);
-
-    int i = 0;
-    for (i = 0 ; i < 10 ; i++) {
-        menu_append_item(menu, iw, ih);
-    }
+    view->menu_w = w * app->sxy;
+    view->menu_h = h * app->sxy;
+    view->menu_iw = iw * app->sxy;
+    view->menu_ih = ih * app->sxy;
 
     return view;
 }
@@ -707,11 +738,6 @@ void menuview_show(MenuView *view)
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 1.0);
 
-    List *l;
-    Menu *menu;
-    LIST_FOR_EACH(view->menus, l, menu) {
-        menu_show(menu, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    }
 
     nemoshow_dispatch_frame(view->show);
 }
