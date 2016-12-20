@@ -49,7 +49,9 @@ LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 
 PKG_CHECK_MODULES(COMMON REQUIRED expat pixman-1 json-c libcurl MagickWand sqlite3 ao libudev mount libprocps dbus-1 
     libcrypto
-    libavutil libavcodec)
+    libavutil libavcodec
+    sndfile
+    )
 INCLUDE_DIRECTORIES(${COMMON_INCLUDE_DIRS})
 LINK_DIRECTORIES(${COMMON_LIBRARY_DIRS})
 
