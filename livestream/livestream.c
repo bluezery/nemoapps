@@ -200,6 +200,13 @@ void item_destroy(Item *it)
     free(it);
 }
 
+static void _player_done(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    PlayerUI *ui = userdata;
+    nemoui_player_play(ui);
+}
+
+
 Item *item_create(NemoWidget *widget, struct showone *pgroup,
         int x, int y, int w, int h, const char *uri, bool enable_audio)
 {
@@ -209,6 +216,7 @@ Item *item_create(NemoWidget *widget, struct showone *pgroup,
 
     PlayerUI *ui;
     it->ui = ui = nemoui_player_create(widget, w, h, uri, enable_audio);
+    nemoui_player_append_callback(ui, "player,done", _player_done, ui);
     if (!ui) {
         ERR("ui is NULL");
         free(it);
@@ -220,7 +228,9 @@ Item *item_create(NemoWidget *widget, struct showone *pgroup,
     struct showone *font;
     struct showone *one;
     it->font = font = FONT_CREATE("NanumGothic", "Regular");
-    it->text = one = TEXT_CREATE(group, font, 10, uri);
+    char *temp = strdup(uri);
+    it->text = one = TEXT_CREATE(group, font, 10, basename(temp));
+    free(temp);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
     nemoshow_item_translate(one, w/2.0, h + 30);
