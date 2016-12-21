@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-<size width="1920" height="1080" col="4" row="4"/>    
+<size width="1920" height="1080" col="4" row="4"/>
     <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
     <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
@@ -17,6 +17,7 @@
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
     <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
     <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
+    -->
     <!--
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov"/>
