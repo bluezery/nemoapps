@@ -1654,11 +1654,21 @@ static void _nemowidget_win_event(NemoWidget *win, struct showevent *event)
                     (nemoshow_event_get_tapcount(event) >= ctx->enable_move)) {
                 picktype |= NEMOSHOW_VIEW_PICK_TRANSLATE_TYPE;
             }
-            uint32_t serial0, serial1;
-            nemoshow_event_get_distant_tapserials(show, event,
-                    &serial0, &serial1);
-            if (picktype != 0)
+
+            if (picktype != 0) {
+                /*
+                int idx0, idx1;
+                nemoshow_event_get_distant_tapindices(show, event, &idx0, &idx1);
+                nemoshow_event_set_done_on(event, idx0);
+                nemoshow_event_set_done_on(event, idx1);
+                */
+                // Do not handle all events inside window.
+                nemoshow_event_set_done_all(event);
+
+                uint32_t serial0, serial1;
+                nemoshow_event_get_distant_tapserials(show, event, &serial0, &serial1);
                 nemoshow_view_pick(show, serial0, serial1, picktype);
+            }
         }
     }
 }
