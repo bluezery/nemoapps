@@ -19,10 +19,12 @@ typedef void (*GestureRotate)(NemouiGesture *gesture, NemoWidget *widget, void *
 typedef void (*GestureRotateStart)(NemouiGesture *gesture, NemoWidget *widget, void *event,void *userdata);
 typedef void (*GestureRotateStop)(NemouiGesture *gesture, NemoWidget *widget, void *event, void *userdata);
 
+void nemoui_gesture_destroy(NemouiGesture *gesture);
 NemouiGesture *nemoui_gesture_create(NemoWidget *parent, int width, int height);
 void nemoui_gesture_show(NemouiGesture *gesture);
 void nemoui_gesture_hide(NemouiGesture *gesture);
 void nemoui_gesture_translate(NemouiGesture *gesture, int tx, int ty);
+void nemoui_gesture_set_max_taps(NemouiGesture *gesture, int tab);
 void nemoui_gesture_set_move(NemouiGesture *gesture, GestureMove move, GestureMoveStart start, GestureMoveStop stop, void *userdata);
 void nemoui_gesture_set_throw(NemouiGesture *gesture, GestureThrow callback, void *userdata);
 void nemoui_gesture_set_scale(NemouiGesture *gesture, GestureScale scale, GestureScaleStart start, GestureScaleStop stop, void *userdata);

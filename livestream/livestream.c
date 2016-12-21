@@ -35,15 +35,6 @@ struct _ConfigApp {
     int col, row;
 };
 
-static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
-{
-    PlayerUI *ui = userdata;
-
-    nemoui_player_stop(ui);
-
-    nemowidget_win_exit_after(win, 500);
-}
-
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
@@ -199,6 +190,16 @@ void item_below(Item *it, NemoWidget *below)
     nemoui_player_below(it->ui, below);
 }
 
+void item_destroy(Item *it)
+{
+    nemoshow_one_destroy(it->event);
+    nemoshow_one_destroy(it->text);
+    nemoshow_one_destroy(it->font);
+    nemoshow_one_destroy(it->group);
+    nemoui_player_destroy(it->ui);
+    free(it);
+}
+
 Item *item_create(NemoWidget *widget, struct showone *pgroup,
         int x, int y, int w, int h, const char *uri, bool enable_audio)
 {
@@ -219,7 +220,7 @@ Item *item_create(NemoWidget *widget, struct showone *pgroup,
     struct showone *font;
     struct showone *one;
     it->font = font = FONT_CREATE("NanumGothic", "Regular");
-    it->text = one = TEXT_CREATE(group, font, 15, uri);
+    it->text = one = TEXT_CREATE(group, font, 10, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
     nemoshow_item_translate(one, w/2.0, h + 30);
@@ -477,6 +478,7 @@ static void _view_scale(NemouiGesture *gesture, NemoWidget *widget, void *event,
 
     view_zoom(view, zoom, ix, iy, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     view->show_item = NULL;
+
     nemoshow_event_set_done_all(event);
 }
 
@@ -488,6 +490,36 @@ static void _view_scale_start(NemouiGesture *gesture, NemoWidget *widget, void *
 
 static void _view_scale_stop(NemouiGesture *gesture, NemoWidget *widget, void *event, void *userdata)
 {
+}
+
+void view_hide(View *view, uint32_t easetype, int duration, int delay)
+{
+    nemoui_gesture_hide(view->gesture);
+    nemowidget_hide(view->event_widget, easetype, duration, delay);
+
+    List *l;
+    Item *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        item_hide(it, easetype, duration, delay);
+    }
+    _nemoshow_item_motion(view->item_group, easetype, duration, delay,
+            "alpha", 0.0, NULL);
+    nemowidget_hide(view->widget, easetype, duration, delay);
+}
+
+void view_destroy(View *view)
+{
+    nemoui_gesture_destroy(view->gesture);
+    nemowidget_destroy(view->event_widget);
+    List *l;
+    Item *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        item_destroy(it);
+    }
+    nemoshow_one_destroy(view->bg);
+    nemoshow_one_destroy(view->item_group);
+    nemowidget_destroy(view->widget);
+    free(view);
 }
 
 View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
@@ -542,8 +574,29 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     NemouiGesture *gesture;
     gesture = view->gesture = nemoui_gesture_create(parent, width, height);
     nemoui_gesture_set_scale(gesture, _view_scale, _view_scale_start, _view_scale_stop, view);
+    nemoui_gesture_set_max_taps(gesture, 2);
 
     return view;
+}
+
+static void _win_fullscreen_callback(NemoWidget *win, const char *id, void *info, void *userdata)
+{
+    NemoWidgetInfo_Fullscreen *fs = info;
+    View *view = userdata;
+
+    // FIXME: scaling all textures for fitting in the fullscreen
+	if (fs->id) {
+    } else {
+    }
+
+    nemoshow_dispatch_frame(view->show);
+}
+
+static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
+{
+    View *view = userdata;
+    view_hide(view, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    nemowidget_win_exit_after(win, 1000);
 }
 
 int main(int argc, char *argv[])
@@ -559,13 +612,18 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    nemowidget_win_enable_fullscreen(win, true);
+    nemowidget_win_enable_move(win, 3);
+    nemowidget_win_enable_rotate(win, 3);
+    nemowidget_win_enable_scale(win, 3);
+    /*
     nemowidget_win_set_anchor(win, 0, 0);
     nemowidget_win_set_layer(win, "underlay");
-    nemowidget_win_enable_move(win, 0);
-    nemowidget_win_enable_rotate(win, 0);
-    nemowidget_win_enable_scale(win, 0);
+    */
 
     View *view = view_create(win, app->config->width, app->config->height, app);
+    nemowidget_append_callback(win, "fullscreen", _win_fullscreen_callback, view);
+    nemowidget_append_callback(win, "exit", _win_exit, view);
     view_show(view, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
     nemowidget_show(win, 0, 0, 0);
