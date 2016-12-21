@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-<size width="1920" height="1080" col="4" row="4"/>
+<size width="1920" height="1080" col="4" row="4"/>    
     <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
+    <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
+    <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
+    <file path="/opt/contents/skt/livestream/AVIGILON image analysis.wmv"/>
+    <file path="/opt/contents/skt/livestream/image analysis.wmv"/>
     <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
+    <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
+    <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
+    <file path="/opt/contents/skt/livestream/AVIGILON image analysis.wmv"/>
+    <file path="/opt/contents/skt/livestream/image analysis.wmv"/>
     <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
+    <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
+    <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
     <!--
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov"/>
@@ -16,6 +29,8 @@
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/animusic.mkv"/>
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/bigbuckbunny_450.mp4"/>    
     -->
+
+    <!--
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
@@ -28,8 +43,7 @@
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
     <file path="/opt/contents/nemoux/DEMO SKT Table Top Device (with SM Town).mp4"/>
-    <file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>
-    <!--
+    <file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>    
     <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
