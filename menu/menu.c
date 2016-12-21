@@ -179,6 +179,7 @@ void animator_play_rewind_reverse(Animator *anim)
     */
     anim->reverse = true;
     anim->rewind = true;
+
     nemotimer_set_timeout(anim->timer, 10);
 }
 
@@ -379,6 +380,112 @@ void animator_append_callback(Animator *anim, const char *id, NemoWidget_Func fu
     nemowidget_append_callback(anim->widget, id, func, userdata);
 }
 
+#if 0
+void _animator_frame(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    Animator *anim = userdata;
+    AnimatorScene *scene = anim->scene;
+    RET_IF(!scene);
+
+    int box_cnt = nemoplay_box_get_count(scene->box);
+
+    struct playone *one;
+	one = nemoplay_box_get_one(scene->box, anim->box_idx);
+	if (one) {
+		nemoplay_shader_update(anim->shader, one);
+		nemoplay_shader_dispatch(anim->shader);
+	}
+    ERR("[scene: %d][box: %d/%d][%p]", list_get_idx(anim->scenes, scene), anim->box_idx, box_cnt, one);
+
+    nemowidget_dirty(anim->widget);
+    nemoshow_dispatch_frame(anim->show);
+
+    if (!anim->rewind) {
+        if (!anim->reverse) {
+            anim->box_idx++;
+            if (anim->box_idx >= box_cnt) {
+                if (anim->scene_next) {
+                    anim->box_idx = 0;
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    if (scene->repeat) {
+                        anim->box_idx = 0;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    } else {
+                        anim->box_idx--;
+                        nemotimer_set_timeout(timer, 0);
+                    }
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        } else {
+            anim->box_idx--;
+            if (anim->box_idx < 0 ) {
+                if (anim->scene_next) {
+                    anim->box_idx = 0;
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->reverse = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    if (scene->repeat) {
+                        anim->box_idx = box_cnt - 1;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    } else {
+                        // XXX: repeat first scene
+                        anim->box_idx = 0;
+                        anim->scene = LIST_DATA(list_get_nth(anim->scenes, 0));
+                        anim->reverse = false;
+                        nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                    }
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        }
+    } else {
+        if (!anim->reverse) {
+            int speed = 15;
+            anim->box_idx-= speed;
+
+            if (anim->box_idx < 0 ) {
+                anim->box_idx = 0;
+                if (anim->scene_next) {
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->rewind = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    nemotimer_set_timeout(timer, 0);
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        } else {
+            int speed = 5;
+            anim->box_idx-= speed;
+
+            if (anim->box_idx < 0 ) {
+                anim->box_idx = 0;
+                if (anim->scene_next) {
+                    anim->scene = anim->scene_next;
+                    anim->scene_next = NULL;
+                    anim->rewind = false;
+                    nemotimer_set_timeout(timer, FPS_TIMEOUT);
+                } else {
+                    nemotimer_set_timeout(timer, 0);
+                }
+            } else {
+                nemotimer_set_timeout(timer, FPS_TIMEOUT);
+            }
+        }
+    }
+}
+#endif
+
 Animator *animator_create(NemoWidget *parent, int width, int height)
 {
     Animator *anim = calloc(sizeof(Animator), 1);
@@ -390,6 +497,7 @@ Animator *animator_create(NemoWidget *parent, int width, int height)
 
     NemoWidget *widget;
     anim->widget = widget = nemowidget_create_opengl(parent, width, height);
+    //nemowidget_append_callback(widget, "frame", _animator_frame, anim);
     nemowidget_append_callback(widget, "resize", _animator_resize, anim);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
@@ -720,7 +828,7 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
 
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     view->bg = one = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(one, RGBA(RED));
+    nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
     int w, h, iw, ih;
     nemoplay_get_video_info(MENU_ANIM_DIR"/menu_back.mov", &w, &h);
