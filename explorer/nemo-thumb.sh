@@ -24,11 +24,6 @@ if [[ -z $(which convert 2> /dev/null) ]]; then
     fi
 fi
 
-if [ ! -e "/usr/lib64/libbz2.so.1.0" ]; then
-    echo "Make symbolic link for libbz2"
-    ln -s /usr/lib64/libbz2.so.0.0.0 /usr/lib64/libbz2.so.1.0
-fi
-
 MVSIZE=384
 IMGSIZE=384
 
