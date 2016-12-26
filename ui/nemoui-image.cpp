@@ -37,8 +37,8 @@ static SkBitmap *_image_decode_skbitmap(const char *path)
 {
     SkBitmap *bitmap = new SkBitmap;
 
-    SkAutoTUnref<SkData> data(SkData::NewFromFileName(path));
-    SkAutoTDelete<SkCodec> codec(SkCodec::NewFromData(data, NULL));
+	sk_sp<SkData> data(SkData::MakeFromFileName(path));
+	SkCodec *codec(SkCodec::NewFromData(data));
     if (!codec) {
         ERR("No codec from data: %s", path);
         return NULL;

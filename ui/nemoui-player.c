@@ -252,7 +252,7 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     struct playvideo *video;
     ui->decoder = nemoplay_decoder_create(play);
     ui->audio = nemoplay_audio_create_by_ao(play);
-    ui->video = video = nemoplay_video_create_by_timer(play, ui->tool);
+    ui->video = video = nemoplay_video_create_by_timer(play);
 	nemoplay_video_set_texture(video, nemowidget_get_texture(widget), w, h);
 	nemoplay_video_set_update(video, _video_update);
 	nemoplay_video_set_done(video, _video_done);

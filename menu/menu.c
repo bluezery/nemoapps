@@ -533,7 +533,7 @@ AnimatorScene *animator_scene_cache_pop(const char *path, bool repeat)
 
     struct playbox *box;
     scene->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
-	nemoplay_extract_video(play, box);
+    nemoplay_extract_video(play, box, nemoplay_get_video_framecount(play));
 
     __animator_scene_caches = list_append(__animator_scene_caches, scene);
     return scene;
@@ -560,7 +560,7 @@ AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repe
     if (list_count(anim->scenes) == 0) {
         nemoplay_shader_set_format(anim->shader,
                 nemoplay_get_pixel_format(scene->play));
-        nemoplay_shader_set_texture(anim->shader,
+        nemoplay_shader_resize(anim->shader,
                 nemoplay_get_video_width(scene->play),
                 nemoplay_get_video_height(scene->play));
     }
