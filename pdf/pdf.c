@@ -53,7 +53,7 @@ void  nemopdf_calculate_size(NemoPdf *pdf)
     fz_rect rect;
     fz_irect bbox;
 
-    page = fz_load_page(pdf->doc, 0);
+    page = fz_load_page(pdf->ctx, pdf->doc, 0);
     if (!page) {
         ERR("fz_load_page failed");
         return;
@@ -62,7 +62,7 @@ void  nemopdf_calculate_size(NemoPdf *pdf)
     fz_rotate(&matrix, 0);
     fz_pre_scale(&matrix, 1.0, 1.0);
 
-    fz_bound_page(pdf->doc, page, &rect);
+    fz_bound_page(pdf->ctx, page, &rect);
     fz_transform_rect(&rect, &matrix);
 
     fz_round_rect(&bbox, &rect);
@@ -81,13 +81,13 @@ NemoPdfPage *nemopdf_load_page(NemoPdf *pdf, int idx, double sx, double sy)
     fz_rect rect;
     fz_irect bbox;
 
-    page = fz_load_page(pdf->doc, idx);
+    page = fz_load_page(pdf->ctx, pdf->doc, idx);
     if (!page) return NULL;
 
     fz_rotate(&matrix, 0);
     fz_pre_scale(&matrix, sx, sy);
 
-    fz_bound_page(pdf->doc, page, &rect);
+    fz_bound_page(pdf->ctx, page, &rect);
     fz_transform_rect(&rect, &matrix);
 
     fz_round_rect(&bbox, &rect);
@@ -97,8 +97,8 @@ NemoPdfPage *nemopdf_load_page(NemoPdf *pdf, int idx, double sx, double sy)
 
     fz_device *dev;
     dev = fz_new_draw_device(pdf->ctx, pixmap);
-    fz_run_page(pdf->doc, page, dev, &matrix, NULL);
-    fz_free_device(dev);
+    fz_run_page(pdf->ctx, page, dev, &matrix, NULL);
+    fz_drop_device(pdf->ctx, dev);
 
     pixman_image_t *pixman;
     pixman = pixman_image_create_bits(PIXMAN_a8b8g8r8, pixmap->w, pixmap->h,
@@ -137,12 +137,12 @@ NemoPdf *nemopdf_create(const char *filepath)
 
     pdf->doc = fz_open_document(pdf->ctx, filepath);
     if (!pdf->doc) {
-        fz_free_context(pdf->ctx);
+        fz_drop_context(pdf->ctx);
         free(pdf);
         return NULL;
     }
 
-    pdf->cnt = fz_count_pages(pdf->doc);
+    pdf->cnt = fz_count_pages(pdf->ctx, pdf->doc);
     nemopdf_calculate_size(pdf);
 
     return pdf;
@@ -150,8 +150,8 @@ NemoPdf *nemopdf_create(const char *filepath)
 
 void nemopdf_destroy(NemoPdf *pdf)
 {
-    fz_close_document(pdf->doc);
-    fz_free_context(pdf->ctx);
+    fz_drop_document(pdf->ctx, pdf->doc);
+    fz_drop_context(pdf->ctx);
     free(pdf);
 }
 
