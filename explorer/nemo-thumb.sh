@@ -3,7 +3,7 @@ RED='\033[0;31m'
 GRN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
-DIR=.nemoexplorer_thumb
+DIR=.nemo-thumbnail
 
 if [[ -z $1 ]]; then
     echo -e "${RED}Usage: ./thumb.sh [directory]${NC}" 
