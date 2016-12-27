@@ -1641,21 +1641,28 @@ static void _nemowidget_win_event(NemoWidget *win, struct showevent *event)
                         nemoshow_event_get_serial_on(event, 0));
             }
         } else if (nemoshow_event_is_many_taps(show, event)) {
-            uint32_t picktype = 0;
+            char picktype[64];
+            memset(picktype, 0, 64);
             if ((ctx->enable_rotate > 0) &&
                     (nemoshow_event_get_tapcount(event) >= ctx->enable_rotate)) {
-                picktype |= NEMOSHOW_VIEW_PICK_ROTATE_TYPE;
+                strcat(picktype, "rotate");
             }
             if ((ctx->enable_scale > 0) &&
                     (nemoshow_event_get_tapcount(event) >= ctx->enable_scale)) {
-                picktype |= NEMOSHOW_VIEW_PICK_SCALE_TYPE;
+                if (strlen(picktype) > 0)
+                    strcat(picktype, ";scale");
+                else
+                    strcat(picktype, "scale");
             }
             if ((ctx->enable_move > 0) &&
                     (nemoshow_event_get_tapcount(event) >= ctx->enable_move)) {
-                picktype |= NEMOSHOW_VIEW_PICK_TRANSLATE_TYPE;
+                if (strlen(picktype) > 0)
+                    strcat(picktype, ";translate");
+                else
+                    strcat(picktype, "translate");
             }
 
-            if (picktype != 0) {
+            if (strlen(picktype) > 0) {
                 /*
                 int idx0, idx1;
                 nemoshow_event_get_distant_tapindices(show, event, &idx0, &idx1);
