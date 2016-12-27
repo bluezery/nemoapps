@@ -40,5 +40,9 @@
     <filetype type="video" icon="@EXP_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="MPEG sequence"/>
     <filetype type="video" icon="@EXP_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Macromedia Flash Video"/>
     <filetype type="video" icon="@EXP_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Macromedia Flash Data, version 6"/>
+
+    <!-- nemopdf -->
+    <filetype type="pdf" icon="@EXP_ICON_DIR@/pdf.svg" exec="@BIN_DIR@/nemopdf;-f" ext="pdf"/>
+    <filetype type="pdf" icon="@EXP_ICON_DIR@/pdf.svg" exec="@BIN_DIR@/nemopdf;-f" magic="PDF document"/>
 </@APPNAME@>
 
