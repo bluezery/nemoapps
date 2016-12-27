@@ -846,14 +846,13 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
         if (!svg_get_wh(icon_uri, &ww, &hh)) {
             ERR("svg get wh failed: %s", icon_uri);
         }
-        one = SVG_PATH_CREATE(group, ww, hh, icon_uri);
-        nemoshow_item_set_anchor(one, 0.5, 0.5);
+        one = SVG_PATH_GROUP_CREATE(group, ww, hh, icon_uri);
         nemoshow_item_translate(one, 1,1);
         nemoshow_item_set_fill_color(one, RGBA(BLACK));
         nemoshow_item_set_filter(one, blur);
         it->icon_bg = one;
 
-        one = SVG_PATH_CREATE(group, ww, hh, icon_uri);
+        one = SVG_PATH_GROUP_CREATE(group, ww, hh, icon_uri);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
         nemoshow_item_set_fill_color(one, RGBA(COLOR_ICON));
         it->icon = one;
