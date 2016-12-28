@@ -7,11 +7,11 @@
     <guide duration="5000"/>
     <item count="8" area_width="2160" area_height="1080" duration="10000" width="431" height="731" grab_min_time="500"/>
     <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_wifihome.svg" txt="@SGE_ICON_DIR@/name/wifihouse_smarthome.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/SKT SmartHome.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_LHlogo.svg" txt="@SGE_ICON_DIR@/name/LHlogo_promotion.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH 홍보영상.mp4"/>
+    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_LHlogo.svg" txt="@SGE_ICON_DIR@/name/LHlogo_promotion.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Promotional Video.mp4"/>
     <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_city.svg" txt="@SGE_ICON_DIR@/name/city_smartcity.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Smart City.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_house.svg" txt="@SGE_ICON_DIR@/name/house_myhome2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/마이홈동영상.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_map.svg" txt="@SGE_ICON_DIR@/name/worldmap2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/온나라동영상.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_car.svg" txt="@SGE_ICON_DIR@/name/car_autonomous.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/자율협력주행 도로시스템 홍보영상.mp4"/>
+    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_house.svg" txt="@SGE_ICON_DIR@/name/house_myhome2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/My Home.mp4"/>
+    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_map.svg" txt="@SGE_ICON_DIR@/name/worldmap2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Onnara.mp4"/>
+    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_car.svg" txt="@SGE_ICON_DIR@/name/car_autonomous.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Autonomous Cooperative Vehicle Highway System.mp4"/>
     <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_map.svg" txt="@SGE_ICON_DIR@/name/worldmap.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/7" resize="off" sxy="1.0"/>
     <items bg="@SGE_IMG_DIR@/back-08.png" icon="@SGE_ICON_DIR@/icon_house.svg" txt="@SGE_ICON_DIR@/name/house_myhome.svg" type="app" exec="/usr/bin/nemobrowser;--no-sandbox;--url;https://www.myhome.go.kr/hws/portal/dgn/selectSelfDiagnosisIntroView.do#"/>
     <items bg="@SGE_IMG_DIR@/back-09.png" icon="@SGE_ICON_DIR@/icon_building.svg" txt="@SGE_ICON_DIR@/name/building_seumter.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/9" resize="off" sxy="1.0"/>
