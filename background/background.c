@@ -707,7 +707,6 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
         }
     }
 
-    ERR("");
     struct showone *one;
     if (nemoshow_event_is_pointer_enter(show, event)) {
         one = CIRCLE_CREATE(nemowidget_get_canvas(widget), 100);
