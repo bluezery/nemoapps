@@ -196,7 +196,7 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
         {"width", required_argument, NULL, 'w'},
         {"height", required_argument, NULL, 'h'},
         {"framerate", required_argument, NULL, 'r'},
-        {"layer", required_argument, NULL, 'l'},
+        {"layer", required_argument, NULL, 'y'},
         { NULL }
     };
 
@@ -209,7 +209,7 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
     optind = 1;
     opterr = 0;
     int opt;
-    while ((opt = getopt_long(argc, _argv, "i:w:h:r:l:", options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, _argv, "i:w:h:r:y:", options, NULL)) != -1) {
         switch(opt) {
             case 'i':
                 if (config->id) free(config->id);
@@ -224,7 +224,7 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
             case 'r':
                 config->framerate = atoi(optarg);
                 break;
-            case 'l':
+            case 'y':
                 if (config->layer) free(config->layer);
                 config->layer = strdup(optarg);
                 break;

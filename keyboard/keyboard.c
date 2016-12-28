@@ -987,14 +987,14 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
 
     struct option options[] = {
-        {"layout", required_argument, NULL, 'y'},
+        {"layout", required_argument, NULL, 'l'},
         { NULL }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "y:", options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "l:", options, NULL)) != -1) {
         switch(opt) {
-            case 'y':
+            case 'l':
                 if (app->layout) free(app->layout);
                 app->layout = strdup(optarg);
                 break;
