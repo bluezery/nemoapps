@@ -1,24 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
 <size width="1920" height="1080" col="4" row="4"/>
-    <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:556/002"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:557/003"/>
+    <!--
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:558/004"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:559/005"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:560/006"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:561/007"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:562/008"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:563/009"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:564/010"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:565/011"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:566/012"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:567/013"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:568/014"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:569/015"/>
+    -->
+    <!-- CCTV Demo
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
     <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
     <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
     <file path="/opt/contents/skt/livestream/AVIGILON image analysis.wmv"/>
     <file path="/opt/contents/skt/livestream/image analysis.wmv"/>
-    <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
     <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
     <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
     <file path="/opt/contents/skt/livestream/AVIGILON image analysis.wmv"/>
     <file path="/opt/contents/skt/livestream/image analysis.wmv"/>
-    <file path="rtsp://nemoux:nemoux!1234@180.67.220.155"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
     <file path="/opt/contents/skt/livestream/assault detection night.avi"/>
     <file path="/opt/contents/skt/livestream/assault dtection and fast search.avi"/>
     -->
-    <!--
+    <!-- RTMP Internet samples
     <file path="rtmp://dev.wowza.longtailvideo.com/vod/__defist__/sintel/640.mp4"/>
     <file path="rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov"/>
     <file path="rtsp://mpv.cdn3.bigCDN.com:554/bigCDN/definst/mp4:bigbuckbunnyiphone_400.mp4"/>    
@@ -30,8 +49,7 @@
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/animusic.mkv"/>
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/bigbuckbunny_450.mp4"/>    
     -->
-
-    <!--
+    <!-- Nemoux samples
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
@@ -49,7 +67,7 @@
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
     -->
-    <!--
+    <!-- Futuristic samples
     <file path="/home/root/FUTURE/MS 2011.mp4"/>
     <file path="/home/root/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
     <file path="/home/root/FUTURE/Expected future for the Deaf.mp4"/>
