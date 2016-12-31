@@ -655,11 +655,11 @@ MenuItem *menu_append_item(Menu *menu, int w, int h)
     Animator *anim;
     it->anim = anim = animator_create(menu->parent, w, h);
     animator_append_callback(anim, "event", _menu_item_event, it);
-    it->scene_norm = animator_append_scene(anim, MENU_ANIM_DIR"/menu_norm.mov", true);
-    it->scene_hide = animator_append_scene(anim, MENU_ANIM_DIR"/menu_show.mov", false);
+    it->scene_norm = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_norm.mov", true);
+    it->scene_hide = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_show.mov", false);
     // FIXME: revrese
     animator_scene_make_reverse(it->scene_hide);
-    it->scene_down = animator_append_scene(anim, MENU_ANIM_DIR"/menu_down.mov", false);
+    it->scene_down = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_down.mov", false);
 
     menu->items = list_append(menu->items, it);
 
@@ -687,7 +687,7 @@ Menu *menu_create(NemoWidget *parent, int w, int h)
 
     Animator *anim;
     menu->bg = anim = animator_create(parent, w, h);
-    menu->bg_scene = animator_append_scene(anim, MENU_ANIM_DIR"/menu_back.mov", false);
+    menu->bg_scene = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_back.mov", false);
 
     return menu;
 }
@@ -833,8 +833,8 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
     int w, h, iw, ih;
-    nemoplay_get_video_info(MENU_ANIM_DIR"/menu_back.mov", &w, &h);
-    nemoplay_get_video_info(MENU_ANIM_DIR"/menu_norm.mov", &iw, &ih);
+    nemoplay_get_video_info(COMMANDER_MOV_DIR"/menu_back.mov", &w, &h);
+    nemoplay_get_video_info(COMMANDER_MOV_DIR"/menu_norm.mov", &iw, &ih);
     view->menu_w = w * app->sxy;
     view->menu_h = h * app->sxy;
     view->menu_iw = iw * app->sxy;
