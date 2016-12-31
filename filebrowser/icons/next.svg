@@ -3,10 +3,6 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
 	 y="0px" width="45px" height="53px" viewBox="0 0 45 53" enable-background="new 0 0 45 53" xml:space="preserve">
-<g>
-	<polygon fill="#FFFFFF" stroke="#000000" stroke-linejoin="bevel" stroke-miterlimit="10" points="1.125,27.076 26.275,52.453 
-		42.907,52.453 17.761,27.076 	"/>
-	<polygon fill="#FFFFFF" stroke="#000000" stroke-linejoin="bevel" stroke-miterlimit="10" points="27.292,0.657 1.125,27.076 
-		17.761,27.076 43.941,0.657 	"/>
-</g>
+<polygon fill="#25B4CC" points="43.941,26.034 18.791,0.657 2.159,0.657 27.305,26.034 "/>
+<polygon fill="#0782C1" points="17.774,52.453 43.941,26.034 27.307,26.034 1.125,52.453 "/>
 </svg>
