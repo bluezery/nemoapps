@@ -28,6 +28,7 @@ struct _ConfigApp {
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
+    app->config = config_load(domain, appname, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -37,24 +38,36 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         xml = xml_load_from_domain(domain, filename);
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
-    if (!xml) {
-        config_unload(app->config);
-        free(app);
-        return NULL;
+    if (xml) {
+        char buf[PATH_MAX];
+        const char *temp;
+
+        snprintf(buf, PATH_MAX, "%s/background", appname);
+        temp = xml_get_value(xml, buf, "path");
+        if (!temp) {
+            ERR("No background path in %s", appname);
+        } else {
+            app->bgpath = strdup(temp);
+        }
+
+        xml_unload(xml);
     }
 
-    char buf[PATH_MAX];
-    const char *temp;
+    struct option options[] = {
+        {"file", required_argument, NULL, 'f'},
+        { NULL }
+    };
 
-    snprintf(buf, PATH_MAX, "%s/background", appname);
-    temp = xml_get_value(xml, buf, "path");
-    if (!temp) {
-        ERR("No background path in %s", appname);
-    } else {
-        app->bgpath = strdup(temp);
+    int opt;
+    while ((opt = getopt_long(argc, argv, "f:", options, NULL)) != -1) {
+        switch(opt) {
+            case 'f':
+                if (app->bgpath) free(app->bgpath);
+                app->bgpath = strdup(optarg);
+            default:
+                break;
+        }
     }
-
-    xml_unload(xml);
 
     return app;
 }
