@@ -91,22 +91,6 @@ struct _Ground {
     struct showone *bg;
 };
 
-static void _ground_event(NemoWidget *widget, const char *id, void *info, void *userdata)
-{
-    Ground *ground = userdata;
-    struct showevent *event = info;
-    struct nemoshow *show = nemowidget_get_show(widget);
-
-    double ex, ey;
-    nemowidget_transform_from_global(widget,
-            nemoshow_event_get_x(event),
-            nemoshow_event_get_y(event), &ex, &ey);
-
-    if (nemoshow_event_is_down(show, event)) {
-    }
-}
-
-
 Ground *ground_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
     Ground *ground = calloc(sizeof(Ground), 1);
