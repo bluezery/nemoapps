@@ -570,8 +570,8 @@ AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repe
     return scene;
 }
 
-typedef struct _MenuView MenuView;
-struct _MenuView {
+typedef struct _CommanderView CommanderView;
+struct _CommanderView {
     int width, height;
     struct nemoshow *show;
     struct nemotool *tool;
@@ -580,24 +580,24 @@ struct _MenuView {
     struct showone *group;
     struct showone *bg;
 
-    int menu_w, menu_h;
-    int menu_iw, menu_ih;
-    List *menus;
+    int comd_w, comd_h;
+    int comd_iw, comd_ih;
+    List *comds;
 };
 
-typedef struct _MenuItem MenuItem;
-typedef struct _Menu Menu;
+typedef struct _CommanderItem CommanderItem;
+typedef struct _Commander Commander;
 
-struct _MenuItem {
+struct _CommanderItem {
     int width, height;
-    Menu *menu;
+    Commander *comd;
     Animator *anim;
     AnimatorScene *scene_norm;
     AnimatorScene *scene_hide;
     AnimatorScene *scene_down;
 };
 
-struct _Menu {
+struct _Commander {
     int x, y;
     int width, height;
     NemoWidget *parent;
@@ -609,11 +609,11 @@ struct _Menu {
     List *items;
 };
 
-static void _menu_item_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _comd_item_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
-    MenuItem *it = userdata;
+    CommanderItem *it = userdata;
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -629,108 +629,108 @@ static void _menu_item_event(NemoWidget *widget, const char *id, void *info, voi
         if (nemoshow_event_is_single_click(show, event)) {
             ERR("click");
             /*
-            animator_set_box_idx(it->menu_item, 59);
-            animator_set_scene(it->menu_item, 0);
-            animator_play_reverse(it->menu_item);
+            animator_set_box_idx(it->comd_item, 59);
+            animator_set_scene(it->comd_item, 0);
+            animator_play_reverse(it->comd_item);
             */
         } else {
             ERR("up");
-            //animator_play_reverse(it->menu_item);
+            //animator_play_reverse(it->comd_item);
         }
     }
 }
 
-void menu_item_translate(MenuItem *it, uint32_t easetype, int duration, int delay, int tx, int ty)
+void comd_item_translate(CommanderItem *it, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
     animator_translate(it->anim, easetype, duration, delay, tx , ty);
 }
 
-MenuItem *menu_append_item(Menu *menu, int w, int h)
+CommanderItem *comd_append_item(Commander *comd, int w, int h)
 {
-    MenuItem *it = calloc(sizeof(MenuItem), 1);
-    it->menu = menu;
+    CommanderItem *it = calloc(sizeof(CommanderItem), 1);
+    it->comd = comd;
     it->width = w;
     it->height = h;
 
     Animator *anim;
-    it->anim = anim = animator_create(menu->parent, w, h);
-    animator_append_callback(anim, "event", _menu_item_event, it);
-    it->scene_norm = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_norm.mov", true);
-    it->scene_hide = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_show.mov", false);
+    it->anim = anim = animator_create(comd->parent, w, h);
+    animator_append_callback(anim, "event", _comd_item_event, it);
+    it->scene_norm = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_norm.mov", true);
+    it->scene_hide = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_show.mov", false);
     // FIXME: revrese
     animator_scene_make_reverse(it->scene_hide);
-    it->scene_down = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_down.mov", false);
+    it->scene_down = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_down.mov", false);
 
-    menu->items = list_append(menu->items, it);
+    comd->items = list_append(comd->items, it);
 
     return it;
 }
 
-void menu_item_show(MenuItem *it, uint32_t easetype, int duration, int delay)
+void comd_item_show(CommanderItem *it, uint32_t easetype, int duration, int delay)
 {
     animator_show(it->anim, easetype, duration, delay);
     animator_play_scene_reverse(it->anim, it->scene_hide);
 }
 
-Menu *menu_create(NemoWidget *parent, int w, int h)
+Commander *comd_create(NemoWidget *parent, int w, int h)
 {
-    Menu *menu = calloc(sizeof(Menu), 1);
-    menu->width = w;
-    menu->height = h;
-    menu->parent = parent;
+    Commander *comd = calloc(sizeof(Commander), 1);
+    comd->width = w;
+    comd->height = h;
+    comd->parent = parent;
 
     NemoWidget *widget;
     struct showone *group;
     struct showone *one;
-    menu->widget = widget = nemowidget_create_vector(parent, w, h);
-    menu->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    comd->widget = widget = nemowidget_create_vector(parent, w, h);
+    comd->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
     Animator *anim;
-    menu->bg = anim = animator_create(parent, w, h);
-    menu->bg_scene = animator_append_scene(anim, COMMANDER_MOV_DIR"/menu_back.mov", false);
+    comd->bg = anim = animator_create(parent, w, h);
+    comd->bg_scene = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_back.mov", false);
 
-    return menu;
+    return comd;
 }
 
-void menu_translate(Menu *menu, uint32_t easetype, int duration, int delay, int tx, int ty)
+void comd_translate(Commander *comd, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
-    menu->x = tx;
-    menu->y = ty;
-    nemowidget_translate(menu->widget, easetype, duration, delay, tx, ty);
-    animator_translate(menu->bg, easetype, duration, delay, tx, ty);
+    comd->x = tx;
+    comd->y = ty;
+    nemowidget_translate(comd->widget, easetype, duration, delay, tx, ty);
+    animator_translate(comd->bg, easetype, duration, delay, tx, ty);
 }
 
-void menu_show(Menu *menu, uint32_t easetype, int duration, int delay)
+void comd_show(Commander *comd, uint32_t easetype, int duration, int delay)
 {
-    animator_show(menu->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    animator_play_scene(menu->bg, menu->bg_scene);
+    animator_show(comd->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+    animator_play_scene(comd->bg, comd->bg_scene);
 
 
     List *l;
-    MenuItem *it;
+    CommanderItem *it;
 
-    it = LIST_DATA(LIST_FIRST(menu->items));
+    it = LIST_DATA(LIST_FIRST(comd->items));
     RET_IF(!it);
 
     int ih = it->height;
     int gap = ih/4;
-    int cnt = list_count(menu->items);
+    int cnt = list_count(comd->items);
 
-    int start = (menu->height - (cnt * ih + (cnt - 1) * gap))/2;
-    LIST_FOR_EACH(menu->items, l, it) {
-        menu_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                menu->x, menu->y + start);
-        menu_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+    int start = (comd->height - (cnt * ih + (cnt - 1) * gap))/2;
+    LIST_FOR_EACH(comd->items, l, it) {
+        comd_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                comd->x, comd->y + start);
+        comd_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
         start += ih + gap;
     }
 }
 
 #if 0
-static void _menu_icon_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _comd_icon_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
-    MenuView *view = userdata;
+    CommanderView *view = userdata;
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -738,20 +738,20 @@ static void _menu_icon_event(NemoWidget *widget, const char *id, void *info, voi
             nemoshow_event_get_y(event), &ex, &ey);
 
     if (nemoshow_event_is_down(show, event)) {
-        animator_set_scene(view->menu_item0, 0);
-        animator_set_reverse(view->menu_item0, false);
-        animator_play(view->menu_item0);
-        animator_show(view->menu_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->menu_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->menu_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_set_scene(view->comd_item0, 0);
+        animator_set_reverse(view->comd_item0, false);
+        animator_play(view->comd_item0);
+        animator_show(view->comd_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->comd_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->comd_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
 
     } else if (nemoshow_event_is_up(show, event)) {
-        animator_set_scene(view->menu_item1, 0);
-        animator_set_reverse(view->menu_item1, true);
-        animator_play(view->menu_item1);
-        animator_hide(view->menu_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_show(view->menu_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->menu_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_set_scene(view->comd_item1, 0);
+        animator_set_reverse(view->comd_item1, true);
+        animator_play(view->comd_item1);
+        animator_hide(view->comd_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_show(view->comd_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->comd_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
 
         if (nemoshow_event_is_single_click(show, event)) {
         }
@@ -759,32 +759,32 @@ static void _menu_icon_event(NemoWidget *widget, const char *id, void *info, voi
 }
 #endif
 
-static void _menuview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+static void _comdview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
     double ex, ey;
     nemowidget_transform_from_global(widget,
             nemoshow_event_get_x(event),
             nemoshow_event_get_y(event), &ex, &ey);
-    MenuView *view = userdata;
+    CommanderView *view = userdata;
 
     if (nemoshow_event_get_grab_time(event) + 1000 < nemoshow_event_get_time(event)) {
         if (!nemowidget_grab_get_data(grab, "longpress")) {
             nemowidget_grab_set_data(grab, "longpress", "1");
             ERR("LONG PRESS");
 
-            Menu *menu;
-            MenuItem *it;
-            menu = menu_create(widget, view->menu_w, view->menu_h);
-            view->menus = list_append(view->menus, menu);
+            Commander *comd;
+            CommanderItem *it;
+            comd = comd_create(widget, view->comd_w, view->comd_h);
+            view->comds = list_append(view->comds, comd);
 
             /*
             int i = 0;
             for (i = 0 ; i < 10 ; i++) {
-                menu_append_item(menu, view->menu_iw, view->menu_ih);
+                comd_append_item(comd, view->comd_iw, view->comd_ih);
             }
-            menu_translate(menu, 0, 0, 0, ex - view->menu_w/2, 0);
-            menu_show(menu, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+            comd_translate(comd, 0, 0, 0, ex - view->comd_w/2, 0);
+            comd_show(comd, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
             */
 
         }
@@ -797,7 +797,7 @@ static void _menuview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
     }
 }
 
-static void _menuview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _comdview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -805,16 +805,16 @@ static void _menuview_event(NemoWidget *widget, const char *id, void *info, void
     nemowidget_transform_from_global(widget,
             nemoshow_event_get_x(event),
             nemoshow_event_get_y(event), &ex, &ey);
-    MenuView *view = userdata;
+    CommanderView *view = userdata;
 
     if (nemoshow_event_is_down(show, event)) {
-        nemowidget_create_grab(widget, event, _menuview_grab_event, view);
+        nemowidget_create_grab(widget, event, _comdview_grab_event, view);
     }
 }
 
-MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *app)
+CommanderView *comdview_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
-    MenuView *view = calloc(sizeof(MenuView), 1);
+    CommanderView *view = calloc(sizeof(CommanderView), 1);
     view->show = nemowidget_get_show(parent);
     view->tool = nemowidget_get_tool(parent);
     view->width = width;
@@ -825,7 +825,7 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
     struct showone *group;
 
     view->widget = widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_append_callback(widget, "event", _menuview_event, view);
+    nemowidget_append_callback(widget, "event", _comdview_event, view);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
@@ -833,24 +833,24 @@ MenuView *menuview_create(NemoWidget *parent, int width, int height, ConfigApp *
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
     int w, h, iw, ih;
-    nemoplay_get_video_info(COMMANDER_MOV_DIR"/menu_back.mov", &w, &h);
-    nemoplay_get_video_info(COMMANDER_MOV_DIR"/menu_norm.mov", &iw, &ih);
-    view->menu_w = w * app->sxy;
-    view->menu_h = h * app->sxy;
-    view->menu_iw = iw * app->sxy;
-    view->menu_ih = ih * app->sxy;
+    nemoplay_get_video_info(COMMANDER_MOV_DIR"/comd_back.mov", &w, &h);
+    nemoplay_get_video_info(COMMANDER_MOV_DIR"/comd_norm.mov", &iw, &ih);
+    view->comd_w = w * app->sxy;
+    view->comd_h = h * app->sxy;
+    view->comd_iw = iw * app->sxy;
+    view->comd_ih = ih * app->sxy;
 
     return view;
 }
 
-void menuview_show(MenuView *view)
+void comdview_show(CommanderView *view)
 {
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 1.0);
     nemoshow_dispatch_frame(view->show);
 }
 
-void menuview_hide(MenuView *view)
+void comdview_hide(CommanderView *view)
 {
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 0.0);
@@ -870,8 +870,8 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
-    MenuView *view = menuview_create(win, app->config->width, app->config->height, app);
-    menuview_show(view);
+    CommanderView *view = comdview_create(win, app->config->width, app->config->height, app);
+    comdview_show(view);
 
     nemoshow_dispatch_frame(view->show);
 
