@@ -24,6 +24,7 @@
 
 typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
+    char *type;
     Config *config;
     double sxy;
 };
@@ -73,12 +74,30 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
     xml_unload(xml);
 
+
+    struct option options[] = {
+        {"type", required_argument, NULL, 't'},
+        { NULL }
+    };
+    int opt;
+    while ((opt = getopt_long(argc, argv, "t:", options, NULL)) != -1) {
+        switch(opt) {
+            case 't':
+                app->type = strdup(optarg);
+                break;
+            default:
+                break;
+        }
+    }
+    if (!app->type) app->type = strdup("table");
+
     return app;
 }
 
 static void _config_unload(ConfigApp *app)
 {
     config_unload(app->config);
+    free(app->type);
     free(app);
 }
 
@@ -581,6 +600,7 @@ struct _CommanderView {
     struct showone *bg;
 
     int comd_w, comd_h;
+    int comd_w_sub, comd_h_sub;
     int comd_iw, comd_ih;
     List *comds;
 };
@@ -832,13 +852,26 @@ CommanderView *comdview_create(NemoWidget *parent, int width, int height, Config
     view->bg = one = RECT_CREATE(group, width, height);
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
-    int w, h, iw, ih;
-    nemoplay_get_video_info(COMMANDER_MOV_DIR"/comd_back.mov", &w, &h);
-    nemoplay_get_video_info(COMMANDER_MOV_DIR"/comd_norm.mov", &iw, &ih);
-    view->comd_w = w * app->sxy;
-    view->comd_h = h * app->sxy;
-    view->comd_iw = iw * app->sxy;
-    view->comd_ih = ih * app->sxy;
+    const char *main_path, *sub_path;
+    if (!strcmp(app->type, "wall")) {
+        if (width == 2160) {
+            main_path = COMMANDER_MOV_DIR"/bg/wall/4k/main.mov";
+            sub_path = COMMANDER_MOV_DIR"/bg/wall/4k/sub.mov";
+        } else {
+            main_path = COMMANDER_MOV_DIR"/bg/wall/1k/main.mov";
+            sub_path = COMMANDER_MOV_DIR"/bg/wall/1k/sub.mov";
+        }
+    } else {
+        if (width == 2160) {
+            main_path = COMMANDER_MOV_DIR"/bg/table/4k/main.mov";
+            sub_path = COMMANDER_MOV_DIR"/bg/table/4k/sub.mov";
+        } else {
+            main_path = COMMANDER_MOV_DIR"/bg/table/1k/main.mov";
+            sub_path = COMMANDER_MOV_DIR"/bg/table/1k/sub.mov";
+        }
+    }
+    nemoplay_get_video_info(main_path, &view->comd_w, &view->comd_h);
+    nemoplay_get_video_info(sub_path, &view->comd_w_sub, &view->comd_h_sub);
 
     return view;
 }
