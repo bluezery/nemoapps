@@ -707,6 +707,7 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
         }
     }
 
+#if 0
     struct showone *one;
     if (nemoshow_event_is_pointer_enter(show, event)) {
         one = CIRCLE_CREATE(nemowidget_get_canvas(widget), 100);
@@ -717,6 +718,7 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
     } else if (nemoshow_event_is_pointer_leave(show, event)) {
         nemoshow_item_set_alpha(one, 0.0);
     }
+#endif
 }
 
 static void _sketch_timeout(struct nemotimer *timer, void *userdata)
