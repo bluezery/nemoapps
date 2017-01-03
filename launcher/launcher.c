@@ -101,6 +101,111 @@ static void _config_unload(ConfigApp *app)
     free(app);
 }
 
+typedef struct _MovieBox MovieBox;
+struct _MovieBox {
+    int width, height;
+    char *path;
+    struct playbox *box;
+    int cnt;
+    int pixel_format;
+};
+
+List *__movie_boxes;
+
+// FIXME: consider asynchronous
+MovieBox *movie_box_create(const char *path)
+{
+    MovieBox *mbox = calloc(sizeof(MovieBox), 1);
+    mbox->path = strdup(path);
+
+    // XXX: caches
+    List *l;
+    MovieBox *_mbox;
+    LIST_FOR_EACH(__movie_boxes, l, _mbox) {
+        if (!strcmp(path, _mbox->path)) {
+            break;
+        }
+    }
+    if (_mbox) {
+        mbox->box = _mbox->box;
+        mbox->pixel_format = _mbox->pixel_format;
+        mbox->width = _mbox->width;
+        mbox->height = _mbox->height;
+    } else {
+        struct nemoplay *play;
+        play = nemoplay_create();
+        nemoplay_load_media(play, path);
+
+        struct playbox *box;
+        mbox->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
+        nemoplay_extract_video(play, box, nemoplay_get_video_framecount(play));
+
+        mbox->cnt = nemoplay_box_get_count(box);
+
+        mbox->pixel_format = nemoplay_get_pixel_format(play);
+        mbox->width = nemoplay_get_video_width(play);
+        mbox->height = nemoplay_get_video_height(play);
+        nemoplay_destroy(play);
+    }
+}
+
+void movie_box_destroy(MovieBox *mbox)
+{
+    nemoplay_box_destroy(mbox->box);
+    free(mbox->path);
+    free(mbox);
+}
+
+typedef struct _Movie Movie;
+struct _Movie {
+    int width, height;
+    NemoWidget *widget;
+    struct playshader *shader;
+    struct playbox *box;
+    int idx;
+    int repeat;
+};
+
+static void _movie_resize(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    NemoWidgetInfo_Resize *resize = info;
+    Movie *movie = userdata;
+
+    nemoplay_shader_set_viewport(movie->shader,
+            nemowidget_get_texture(movie->widget),
+            resize->width, resize->height);
+
+    if (movie->box) {
+        struct playone *one;
+        one = nemoplay_box_get_one(movie->box, movie->idx);
+        if (!one) {
+            ERR("nemobox does not have one!");
+        } else {
+            nemoplay_shader_update(movie->shader, one);
+            nemoplay_shader_dispatch(movie->shader);
+        }
+    }
+}
+
+Movie *movie_create(NemoWidget *parent, int width, int height)
+{
+    Movie *movie = calloc(sizeof(Movie), 1);
+    movie->width = width;
+    movie->height = height;
+
+    NemoWidget *widget = nemowidget_create_opengl(parent, width, height);
+    nemowidget_append_callback(widget, "resize", _movie_resize, movie);
+    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
+
+    return movie;
+}
+
+void movie_play(Movie *movie, struct playbox *box, int repeat)
+{
+    movie->box = box;
+    movie->repeat = repeat;
+}
+
 typedef struct _AnimatorScene AnimatorScene;
 struct _AnimatorScene {
     char *path;
@@ -548,7 +653,7 @@ AnimatorScene *animator_scene_cache_pop(const char *path, bool repeat)
 
     struct nemoplay *play;
     scene->play = play = nemoplay_create();
-    nemoplay_load_media(play, path);
+    nemoplay_load_media(scene->play, path);
 
     struct playbox *box;
     scene->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
@@ -589,8 +694,8 @@ AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repe
     return scene;
 }
 
-typedef struct _CommanderView CommanderView;
-struct _CommanderView {
+typedef struct _LauncherView LauncherView;
+struct _LauncherView {
     int width, height;
     struct nemoshow *show;
     struct nemotool *tool;
@@ -599,25 +704,25 @@ struct _CommanderView {
     struct showone *group;
     struct showone *bg;
 
-    int comd_w, comd_h;
-    int comd_w_sub, comd_h_sub;
-    int comd_iw, comd_ih;
-    List *comds;
+    int launcher_w, launcher_h;
+    int launcher_w_sub, launcher_h_sub;
+    int launcher_iw, launcher_ih;
+    List *launchers;
 };
 
-typedef struct _CommanderItem CommanderItem;
-typedef struct _Commander Commander;
+typedef struct _LauncherItem LauncherItem;
+typedef struct _Launcher Launcher;
 
-struct _CommanderItem {
+struct _LauncherItem {
     int width, height;
-    Commander *comd;
+    Launcher *launcher;
     Animator *anim;
     AnimatorScene *scene_norm;
     AnimatorScene *scene_hide;
     AnimatorScene *scene_down;
 };
 
-struct _Commander {
+struct _Launcher {
     int x, y;
     int width, height;
     NemoWidget *parent;
@@ -629,11 +734,11 @@ struct _Commander {
     List *items;
 };
 
-static void _comd_item_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _launcher_item_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
-    CommanderItem *it = userdata;
+    LauncherItem *it = userdata;
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -649,108 +754,108 @@ static void _comd_item_event(NemoWidget *widget, const char *id, void *info, voi
         if (nemoshow_event_is_single_click(show, event)) {
             ERR("click");
             /*
-            animator_set_box_idx(it->comd_item, 59);
-            animator_set_scene(it->comd_item, 0);
-            animator_play_reverse(it->comd_item);
+            animator_set_box_idx(it->launcher_item, 59);
+            animator_set_scene(it->launcher_item, 0);
+            animator_play_reverse(it->launcher_item);
             */
         } else {
             ERR("up");
-            //animator_play_reverse(it->comd_item);
+            //animator_play_reverse(it->launcher_item);
         }
     }
 }
 
-void comd_item_translate(CommanderItem *it, uint32_t easetype, int duration, int delay, int tx, int ty)
+void launcher_item_translate(LauncherItem *it, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
     animator_translate(it->anim, easetype, duration, delay, tx , ty);
 }
 
-CommanderItem *comd_append_item(Commander *comd, int w, int h)
+LauncherItem *launcher_append_item(Launcher *launcher, int w, int h)
 {
-    CommanderItem *it = calloc(sizeof(CommanderItem), 1);
-    it->comd = comd;
+    LauncherItem *it = calloc(sizeof(LauncherItem), 1);
+    it->launcher = launcher;
     it->width = w;
     it->height = h;
 
     Animator *anim;
-    it->anim = anim = animator_create(comd->parent, w, h);
-    animator_append_callback(anim, "event", _comd_item_event, it);
-    it->scene_norm = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_norm.mov", true);
-    it->scene_hide = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_show.mov", false);
+    it->anim = anim = animator_create(launcher->parent, w, h);
+    animator_append_callback(anim, "event", _launcher_item_event, it);
+    it->scene_norm = animator_append_scene(anim, LAUNCHER_MOV_DIR"/launcher_norm.mov", true);
+    it->scene_hide = animator_append_scene(anim, LAUNCHER_MOV_DIR"/launcher_show.mov", false);
     // FIXME: revrese
     animator_scene_make_reverse(it->scene_hide);
-    it->scene_down = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_down.mov", false);
+    it->scene_down = animator_append_scene(anim, LAUNCHER_MOV_DIR"/launcher_down.mov", false);
 
-    comd->items = list_append(comd->items, it);
+    launcher->items = list_append(launcher->items, it);
 
     return it;
 }
 
-void comd_item_show(CommanderItem *it, uint32_t easetype, int duration, int delay)
+void launcher_item_show(LauncherItem *it, uint32_t easetype, int duration, int delay)
 {
     animator_show(it->anim, easetype, duration, delay);
     animator_play_scene_reverse(it->anim, it->scene_hide);
 }
 
-Commander *comd_create(NemoWidget *parent, int w, int h)
+Launcher *launcher_create(NemoWidget *parent, int w, int h)
 {
-    Commander *comd = calloc(sizeof(Commander), 1);
-    comd->width = w;
-    comd->height = h;
-    comd->parent = parent;
+    Launcher *launcher = calloc(sizeof(Launcher), 1);
+    launcher->width = w;
+    launcher->height = h;
+    launcher->parent = parent;
 
     NemoWidget *widget;
     struct showone *group;
     struct showone *one;
-    comd->widget = widget = nemowidget_create_vector(parent, w, h);
-    comd->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    launcher->widget = widget = nemowidget_create_vector(parent, w, h);
+    launcher->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
     Animator *anim;
-    comd->bg = anim = animator_create(parent, w, h);
-    comd->bg_scene = animator_append_scene(anim, COMMANDER_MOV_DIR"/comd_back.mov", false);
+    launcher->bg = anim = animator_create(parent, w, h);
+    launcher->bg_scene = animator_append_scene(anim, LAUNCHER_MOV_DIR"/launcher_back.mov", false);
 
-    return comd;
+    return launcher;
 }
 
-void comd_translate(Commander *comd, uint32_t easetype, int duration, int delay, int tx, int ty)
+void launcher_translate(Launcher *launcher, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
-    comd->x = tx;
-    comd->y = ty;
-    nemowidget_translate(comd->widget, easetype, duration, delay, tx, ty);
-    animator_translate(comd->bg, easetype, duration, delay, tx, ty);
+    launcher->x = tx;
+    launcher->y = ty;
+    nemowidget_translate(launcher->widget, easetype, duration, delay, tx, ty);
+    animator_translate(launcher->bg, easetype, duration, delay, tx, ty);
 }
 
-void comd_show(Commander *comd, uint32_t easetype, int duration, int delay)
+void launcher_show(Launcher *launcher, uint32_t easetype, int duration, int delay)
 {
-    animator_show(comd->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-    animator_play_scene(comd->bg, comd->bg_scene);
+    animator_show(launcher->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+    animator_play_scene(launcher->bg, launcher->bg_scene);
 
 
     List *l;
-    CommanderItem *it;
+    LauncherItem *it;
 
-    it = LIST_DATA(LIST_FIRST(comd->items));
+    it = LIST_DATA(LIST_FIRST(launcher->items));
     RET_IF(!it);
 
     int ih = it->height;
     int gap = ih/4;
-    int cnt = list_count(comd->items);
+    int cnt = list_count(launcher->items);
 
-    int start = (comd->height - (cnt * ih + (cnt - 1) * gap))/2;
-    LIST_FOR_EACH(comd->items, l, it) {
-        comd_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                comd->x, comd->y + start);
-        comd_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+    int start = (launcher->height - (cnt * ih + (cnt - 1) * gap))/2;
+    LIST_FOR_EACH(launcher->items, l, it) {
+        launcher_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                launcher->x, launcher->y + start);
+        launcher_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
         start += ih + gap;
     }
 }
 
 #if 0
-static void _comd_icon_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _launcher_icon_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
-    CommanderView *view = userdata;
+    LauncherView *view = userdata;
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -758,20 +863,20 @@ static void _comd_icon_event(NemoWidget *widget, const char *id, void *info, voi
             nemoshow_event_get_y(event), &ex, &ey);
 
     if (nemoshow_event_is_down(show, event)) {
-        animator_set_scene(view->comd_item0, 0);
-        animator_set_reverse(view->comd_item0, false);
-        animator_play(view->comd_item0);
-        animator_show(view->comd_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->comd_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->comd_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_set_scene(view->launcher_item0, 0);
+        animator_set_reverse(view->launcher_item0, false);
+        animator_play(view->launcher_item0);
+        animator_show(view->launcher_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->launcher_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->launcher_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
 
     } else if (nemoshow_event_is_up(show, event)) {
-        animator_set_scene(view->comd_item1, 0);
-        animator_set_reverse(view->comd_item1, true);
-        animator_play(view->comd_item1);
-        animator_hide(view->comd_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_show(view->comd_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
-        animator_hide(view->comd_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_set_scene(view->launcher_item1, 0);
+        animator_set_reverse(view->launcher_item1, true);
+        animator_play(view->launcher_item1);
+        animator_hide(view->launcher_item0, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_show(view->launcher_item1, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
+        animator_hide(view->launcher_item, NEMOEASE_CUBIC_OUT_TYPE, 150, 0);
 
         if (nemoshow_event_is_single_click(show, event)) {
         }
@@ -779,32 +884,32 @@ static void _comd_icon_event(NemoWidget *widget, const char *id, void *info, voi
 }
 #endif
 
-static void _comdview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
     double ex, ey;
     nemowidget_transform_from_global(widget,
             nemoshow_event_get_x(event),
             nemoshow_event_get_y(event), &ex, &ey);
-    CommanderView *view = userdata;
+    LauncherView *view = userdata;
 
     if (nemoshow_event_get_grab_time(event) + 1000 < nemoshow_event_get_time(event)) {
         if (!nemowidget_grab_get_data(grab, "longpress")) {
             nemowidget_grab_set_data(grab, "longpress", "1");
             ERR("LONG PRESS");
 
-            Commander *comd;
-            CommanderItem *it;
-            comd = comd_create(widget, view->comd_w, view->comd_h);
-            view->comds = list_append(view->comds, comd);
+            Launcher *launcher;
+            LauncherItem *it;
+            launcher = launcher_create(widget, view->launcher_w, view->launcher_h);
+            view->launchers = list_append(view->launchers, launcher);
 
             /*
             int i = 0;
             for (i = 0 ; i < 10 ; i++) {
-                comd_append_item(comd, view->comd_iw, view->comd_ih);
+                launcher_append_item(launcher, view->launcher_iw, view->launcher_ih);
             }
-            comd_translate(comd, 0, 0, 0, ex - view->comd_w/2, 0);
-            comd_show(comd, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+            launcher_translate(launcher, 0, 0, 0, ex - view->launcher_w/2, 0);
+            launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
             */
 
         }
@@ -817,7 +922,7 @@ static void _comdview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
     }
 }
 
-static void _comdview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+static void _launcherview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -825,16 +930,16 @@ static void _comdview_event(NemoWidget *widget, const char *id, void *info, void
     nemowidget_transform_from_global(widget,
             nemoshow_event_get_x(event),
             nemoshow_event_get_y(event), &ex, &ey);
-    CommanderView *view = userdata;
+    LauncherView *view = userdata;
 
     if (nemoshow_event_is_down(show, event)) {
-        nemowidget_create_grab(widget, event, _comdview_grab_event, view);
+        nemowidget_create_grab(widget, event, _launcherview_grab_event, view);
     }
 }
 
-CommanderView *comdview_create(NemoWidget *parent, int width, int height, ConfigApp *app)
+LauncherView *launcherview_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
-    CommanderView *view = calloc(sizeof(CommanderView), 1);
+    LauncherView *view = calloc(sizeof(LauncherView), 1);
     view->show = nemowidget_get_show(parent);
     view->tool = nemowidget_get_tool(parent);
     view->width = width;
@@ -845,7 +950,7 @@ CommanderView *comdview_create(NemoWidget *parent, int width, int height, Config
     struct showone *group;
 
     view->widget = widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_append_callback(widget, "event", _comdview_event, view);
+    nemowidget_append_callback(widget, "event", _launcherview_event, view);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
@@ -855,35 +960,35 @@ CommanderView *comdview_create(NemoWidget *parent, int width, int height, Config
     const char *main_path, *sub_path;
     if (!strcmp(app->type, "wall")) {
         if (width == 2160) {
-            main_path = COMMANDER_MOV_DIR"/bg/wall/4k/main.mov";
-            sub_path = COMMANDER_MOV_DIR"/bg/wall/4k/sub.mov";
+            main_path = LAUNCHER_MOV_DIR"/bg/wall/4k/main.mov";
+            sub_path = LAUNCHER_MOV_DIR"/bg/wall/4k/sub.mov";
         } else {
-            main_path = COMMANDER_MOV_DIR"/bg/wall/1k/main.mov";
-            sub_path = COMMANDER_MOV_DIR"/bg/wall/1k/sub.mov";
+            main_path = LAUNCHER_MOV_DIR"/bg/wall/1k/main.mov";
+            sub_path = LAUNCHER_MOV_DIR"/bg/wall/1k/sub.mov";
         }
     } else {
         if (width == 2160) {
-            main_path = COMMANDER_MOV_DIR"/bg/table/4k/main.mov";
-            sub_path = COMMANDER_MOV_DIR"/bg/table/4k/sub.mov";
+            main_path = LAUNCHER_MOV_DIR"/bg/table/4k/main.mov";
+            sub_path = LAUNCHER_MOV_DIR"/bg/table/4k/sub.mov";
         } else {
-            main_path = COMMANDER_MOV_DIR"/bg/table/1k/main.mov";
-            sub_path = COMMANDER_MOV_DIR"/bg/table/1k/sub.mov";
+            main_path = LAUNCHER_MOV_DIR"/bg/table/1k/main.mov";
+            sub_path = LAUNCHER_MOV_DIR"/bg/table/1k/sub.mov";
         }
     }
-    nemoplay_get_video_info(main_path, &view->comd_w, &view->comd_h);
-    nemoplay_get_video_info(sub_path, &view->comd_w_sub, &view->comd_h_sub);
+    nemoplay_get_video_info(main_path, &view->launcher_w, &view->launcher_h);
+    nemoplay_get_video_info(sub_path, &view->launcher_w_sub, &view->launcher_h_sub);
 
     return view;
 }
 
-void comdview_show(CommanderView *view)
+void launcherview_show(LauncherView *view)
 {
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 1.0);
     nemoshow_dispatch_frame(view->show);
 }
 
-void comdview_hide(CommanderView *view)
+void launcherview_hide(LauncherView *view)
 {
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 0.0);
@@ -903,8 +1008,8 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
-    CommanderView *view = comdview_create(win, app->config->width, app->config->height, app);
-    comdview_show(view);
+    LauncherView *view = launcherview_create(win, app->config->width, app->config->height, app);
+    launcherview_show(view);
 
     nemoshow_dispatch_frame(view->show);
 
