@@ -765,7 +765,7 @@ void nemowidget_append_callback(NemoWidget *widget, const char *id, NemoWidget_F
     call->callbacks = list_append(call->callbacks, callback);
 }
 
-void nemowidget_callback_remove(NemoWidget *widget, const char *id, NemoWidget_Func func, void *userdata)
+void nemowidget_remove_callback(NemoWidget *widget, const char *id, NemoWidget_Func func, void *userdata)
 {
     NemoWidgetCall *call;
     call = _nemowidget_find_call(widget, id);

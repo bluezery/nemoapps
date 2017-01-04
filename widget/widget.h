@@ -316,7 +316,7 @@ double nemowidget_get_alpha(NemoWidget *widget);
 void nemowidget_set_event_callback(NemoWidget *widget, NemoWidget_Func func, void *userdata);
 void nemowidget_set_frame_callback(NemoWidget *widget, NemoWidget_Func func, void *userdata);
 void nemowidget_append_callback(NemoWidget *widget, const char *id, NemoWidget_Func func, void *userdata);
-void nemowidget_callback_remove(NemoWidget *widget, const char *id, NemoWidget_Func func, void *userdata);
+void nemowidget_remove_callback(NemoWidget *widget, const char *id, NemoWidget_Func func, void *userdata);
 void nemowidget_call_register(NemoWidget *widget, const char *id);
 void nemowidget_call_unregister(NemoWidget *widget, const char *id);
 bool nemowidget_callback_dispatch(NemoWidget *widget, const char *id, void *info);
