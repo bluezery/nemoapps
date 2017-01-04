@@ -135,8 +135,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    WELLRNG512_INIT();
-
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
     nemowidget_win_set_anchor(win, 0, 0);
@@ -147,8 +145,6 @@ int main(int argc, char *argv[])
 
     Ground *ground = ground_create(win, app->config->width, app->config->height, app);
     ground_show(ground);
-
-    nemoshow_dispatch_frame(ground->show);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
