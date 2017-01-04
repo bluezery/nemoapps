@@ -110,11 +110,13 @@ struct _MovieBox {
     int pixel_format;
 };
 
-List *__movie_boxes;
+List *__movie_boxes = NULL;
 
-// FIXME: consider asynchronous
+// FIXME: consider asynchronous later
 MovieBox *movie_box_create(const char *path)
 {
+    RET_IF(!file_is_exist(path), NULL);
+
     MovieBox *mbox = calloc(sizeof(MovieBox), 1);
     mbox->path = strdup(path);
 
@@ -138,6 +140,12 @@ MovieBox *movie_box_create(const char *path)
 
         struct playbox *box;
         mbox->box = box = nemoplay_box_create(nemoplay_get_video_framecount(play));
+        if (!box) {
+            ERR("No box!!: %s", path);
+            nemoplay_destroy(play);
+            free(mbox);
+            return NULL;
+        }
         nemoplay_extract_video(play, box, nemoplay_get_video_framecount(play));
 
         mbox->cnt = nemoplay_box_get_count(box);
@@ -145,8 +153,11 @@ MovieBox *movie_box_create(const char *path)
         mbox->pixel_format = nemoplay_get_pixel_format(play);
         mbox->width = nemoplay_get_video_width(play);
         mbox->height = nemoplay_get_video_height(play);
+        ERR("%d %d (%s) %d", mbox->width, mbox->height, path, mbox->cnt);
         nemoplay_destroy(play);
     }
+
+    return mbox;
 }
 
 void movie_box_destroy(MovieBox *mbox)
@@ -161,9 +172,11 @@ struct _Movie {
     int width, height;
     NemoWidget *widget;
     struct playshader *shader;
-    struct playbox *box;
+
+    MovieBox *mbox;
+    bool repeat;
     int idx;
-    int repeat;
+    struct showtransition *trans;
 };
 
 static void _movie_resize(NemoWidget *widget, const char *id, void *info, void *userdata)
@@ -175,16 +188,86 @@ static void _movie_resize(NemoWidget *widget, const char *id, void *info, void *
             nemowidget_get_texture(movie->widget),
             resize->width, resize->height);
 
-    if (movie->box) {
+    if (movie->mbox) {
         struct playone *one;
-        one = nemoplay_box_get_one(movie->box, movie->idx);
+        ERR("%d", movie->idx);
+        one = nemoplay_box_get_one(movie->mbox->box, movie->idx);
         if (!one) {
-            ERR("nemobox does not have one!");
+            ERR("nemoplay_box_get_one failed: %d", movie->idx);
         } else {
             nemoplay_shader_update(movie->shader, one);
             nemoplay_shader_dispatch(movie->shader);
+            nemowidget_dirty(movie->widget);
+            struct nemoshow *show = nemowidget_get_show(widget);
+            nemoshow_dispatch_frame(show);
         }
     }
+}
+
+static int _movie_frame(void *userdata, uint32_t time, double t)
+{
+    Movie *movie = userdata;
+    struct playone *one;
+	one = nemoplay_box_get_one(movie->mbox->box, movie->idx);
+    if (!one) {
+        ERR("nemoplay_box_get_one failed: %d", movie->idx);
+        movie->trans = NULL;
+        return 1;
+    }
+
+    //ERR("%s, %d, %lf, (%d)", movie->mbox->path, time, t, movie->idx);
+    nemoplay_shader_update(movie->shader, one);
+    nemoplay_shader_dispatch(movie->shader);
+    nemowidget_dirty(movie->widget);
+    struct nemoshow *show = nemowidget_get_show(movie->widget);
+    nemoshow_dispatch_frame(show);
+
+    if (movie->idx >= 0) {
+        movie->idx++;
+        if (movie->idx >= movie->mbox->cnt) {
+            if (movie->repeat) {
+                movie->idx = 0;
+            } else {
+                movie->trans = NULL;
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int _movie_frame_rewind(void *userdata, uint32_t time, double t)
+{
+    Movie *movie = userdata;
+    struct playone *one;
+	one = nemoplay_box_get_one(movie->mbox->box, movie->idx);
+    if (!one) {
+        ERR("nemoplay_box_get_one failed: %d", movie->idx);
+        movie->trans = NULL;
+        return 1;
+    }
+
+    //ERR("%s, %d, %lf, (%d)", movie->mbox->path, time, t, movie->idx);
+    nemoplay_shader_update(movie->shader, one);
+    nemoplay_shader_dispatch(movie->shader);
+    nemowidget_dirty(movie->widget);
+    struct nemoshow *show = nemowidget_get_show(movie->widget);
+    nemoshow_dispatch_frame(show);
+
+    if (movie->idx > 0) {
+        movie->idx--;
+    } else {
+        movie->trans = NULL;
+        return 1;
+    }
+
+    return 0;
+}
+
+void movie_translate(Movie *movie, uint32_t easetype, int duration, int delay, int tx, int ty)
+{
+    nemowidget_translate(movie->widget, easetype, duration, delay, tx, ty);
 }
 
 Movie *movie_create(NemoWidget *parent, int width, int height)
@@ -193,17 +276,52 @@ Movie *movie_create(NemoWidget *parent, int width, int height)
     movie->width = width;
     movie->height = height;
 
-    NemoWidget *widget = nemowidget_create_opengl(parent, width, height);
+    movie->shader = nemoplay_shader_create();
+
+    NemoWidget *widget;
+    movie->widget = widget = nemowidget_create_opengl(parent, width, height);
     nemowidget_append_callback(widget, "resize", _movie_resize, movie);
-    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
+    nemowidget_show(movie->widget, 0, 0, 0);
 
     return movie;
 }
 
-void movie_play(Movie *movie, struct playbox *box, int repeat)
+void movie_rewind(Movie *movie)
 {
-    movie->box = box;
+    movie->repeat = false;
+
+    struct nemoshow *show = nemowidget_get_show(movie->widget);
+
+    if (movie->trans) nemoshow_transition_destroy(movie->trans);
+
+    struct showtransition *trans;
+    movie->trans = trans = nemoshow_transition_create(NEMOEASE_LINEAR_TYPE, 0, 0);
+    nemoshow_transition_set_dispatch_frame(trans, _movie_frame_rewind);
+    nemoshow_transition_set_repeat(trans, 0);
+    nemoshow_transition_set_userdata(trans, movie);
+    nemoshow_attach_transition(show, trans);
+}
+
+void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
+{
+    movie->mbox = mbox;
     movie->repeat = repeat;
+    movie->idx = 0;
+
+    struct nemoshow *show = nemowidget_get_show(movie->widget);
+
+    struct showtransition *trans;
+    movie->trans = trans = nemoshow_transition_create(NEMOEASE_LINEAR_TYPE, 0, 0);
+    nemoshow_transition_set_dispatch_frame(trans, _movie_frame);
+    nemoshow_transition_set_repeat(trans, 0);
+    nemoshow_transition_set_userdata(trans, movie);
+    nemoshow_attach_transition(show, trans);
+
+    nemoplay_shader_set_format(movie->shader,
+            mbox->pixel_format);
+    nemoplay_shader_resize(movie->shader,
+            mbox->width, mbox->height);
+    ERR("%d %d %d", mbox->pixel_format, mbox->width, mbox->height);
 }
 
 typedef struct _AnimatorScene AnimatorScene;
@@ -695,6 +813,14 @@ AnimatorScene *animator_append_scene(Animator *anim, const char *path, bool repe
 }
 
 typedef struct _LauncherView LauncherView;
+typedef struct _LauncherGrab LauncherGrab;
+struct _LauncherGrab
+{
+    bool is_longpress;
+    Movie *movie;
+    LauncherView *view;
+};
+
 struct _LauncherView {
     int width, height;
     struct nemoshow *show;
@@ -704,9 +830,16 @@ struct _LauncherView {
     struct showone *group;
     struct showone *bg;
 
-    int launcher_w, launcher_h;
-    int launcher_w_sub, launcher_h_sub;
-    int launcher_iw, launcher_ih;
+    MovieBox *box_main_bg;
+    MovieBox *box_sub_bg;
+    MovieBox *box_feedback0;
+    MovieBox *box_feedback1;
+    MovieBox *box_feedback2;
+    MovieBox *box_feedback3;
+    MovieBox *box_longpress;
+
+    List *grabs;
+
     List *launchers;
 };
 
@@ -716,24 +849,28 @@ typedef struct _Launcher Launcher;
 struct _LauncherItem {
     int width, height;
     Launcher *launcher;
-    Animator *anim;
-    AnimatorScene *scene_norm;
-    AnimatorScene *scene_hide;
-    AnimatorScene *scene_down;
+
+    Movie *main_bg;
+    Movie *sub_bg;
 };
 
 struct _Launcher {
+    LauncherView *view;
     int x, y;
     int width, height;
     NemoWidget *parent;
     NemoWidget *widget;
     struct showone *group;
 
-    Animator *bg;
+    Movie *main_bg;
+    Movie *sub_bg;
+
+    // Animator *bg;
     AnimatorScene *bg_scene;
     List *items;
 };
 
+#if 0
 static void _launcher_item_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     struct showevent *event = info;
@@ -796,41 +933,44 @@ void launcher_item_show(LauncherItem *it, uint32_t easetype, int duration, int d
     animator_show(it->anim, easetype, duration, delay);
     animator_play_scene_reverse(it->anim, it->scene_hide);
 }
+#endif
 
-Launcher *launcher_create(NemoWidget *parent, int w, int h)
+Launcher *launcher_create(LauncherView *view)
 {
+    int w, h;
     Launcher *launcher = calloc(sizeof(Launcher), 1);
-    launcher->width = w;
-    launcher->height = h;
-    launcher->parent = parent;
+    launcher->view = view;
+    launcher->width = w = view->box_main_bg->width;
+    launcher->height = h = view->box_main_bg->height;
 
-    NemoWidget *widget;
-    struct showone *group;
-    struct showone *one;
-    launcher->widget = widget = nemowidget_create_vector(parent, w, h);
-    launcher->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-
-    Animator *anim;
-    launcher->bg = anim = animator_create(parent, w, h);
-    launcher->bg_scene = animator_append_scene(anim, LAUNCHER_MOV_DIR"/launcher_back.mov", false);
+    ERR("%d %d", w, h);
+    launcher->main_bg = movie_create(view->widget, w, h);
+    launcher->sub_bg = movie_create(view->widget, w, h);
 
     return launcher;
 }
 
 void launcher_translate(Launcher *launcher, uint32_t easetype, int duration, int delay, int tx, int ty)
 {
+    movie_translate(launcher->main_bg, easetype, duration, delay, tx, ty);
+    /*
     launcher->x = tx;
     launcher->y = ty;
     nemowidget_translate(launcher->widget, easetype, duration, delay, tx, ty);
-    animator_translate(launcher->bg, easetype, duration, delay, tx, ty);
+    movie_translate(launcher->sub_bg, easetype, duration, delay, tx, ty);
+    */
+    //animator_translate(launcher->bg, easetype, duration, delay, tx, ty);
 }
 
 void launcher_show(Launcher *launcher, uint32_t easetype, int duration, int delay)
 {
+    movie_play(launcher->main_bg, launcher->view->box_main_bg, true);
+    /*
     animator_show(launcher->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
     animator_play_scene(launcher->bg, launcher->bg_scene);
+    */
 
-
+#if 0
     List *l;
     LauncherItem *it;
 
@@ -848,6 +988,7 @@ void launcher_show(Launcher *launcher, uint32_t easetype, int duration, int dela
         launcher_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
         start += ih + gap;
     }
+#endif
 }
 
 #if 0
@@ -891,16 +1032,19 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
     nemowidget_transform_from_global(widget,
             nemoshow_event_get_x(event),
             nemoshow_event_get_y(event), &ex, &ey);
-    LauncherView *view = userdata;
+    LauncherGrab *lgrab = userdata;
+    Movie *movie = lgrab->movie;
+    LauncherView *view = lgrab->view;
 
     if (nemoshow_event_get_grab_time(event) + 1000 < nemoshow_event_get_time(event)) {
-        if (!nemowidget_grab_get_data(grab, "longpress")) {
-            nemowidget_grab_set_data(grab, "longpress", "1");
-            ERR("LONG PRESS");
+        if (!lgrab->is_longpress) {
+            lgrab->is_longpress = true;
 
             Launcher *launcher;
             LauncherItem *it;
-            launcher = launcher_create(widget, view->launcher_w, view->launcher_h);
+            launcher = launcher_create(view);
+            launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+            launcher_translate(launcher, 0, 0, 0, ex - view->box_main_bg->width/2, 0);
             view->launchers = list_append(view->launchers, launcher);
 
             /*
@@ -916,9 +1060,23 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
     }
 
     if (nemoshow_event_is_down(show, event)) {
-        ERR("DOWN");
+        int r = rand()%4;
+        if (r == 0) {
+            movie_play(movie, view->box_feedback0, true);
+        } else if (r == 1) {
+            movie_play(movie, view->box_feedback1, true);
+        } else if (r == 2) {
+            movie_play(movie, view->box_feedback2, true);
+        } else {
+            movie_play(movie, view->box_feedback3, true);
+        }
+        movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
+    } else if (nemoshow_event_is_motion(show, event)) {
+        movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
     } else if (nemoshow_event_is_up(show, event)) {
-        ERR("UP");
+        movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
+        movie_rewind(movie);
+        view->grabs = list_remove(view->grabs, lgrab);
     }
 }
 
@@ -933,7 +1091,13 @@ static void _launcherview_event(NemoWidget *widget, const char *id, void *info, 
     LauncherView *view = userdata;
 
     if (nemoshow_event_is_down(show, event)) {
-        nemowidget_create_grab(widget, event, _launcherview_grab_event, view);
+        LauncherGrab *lgrab = calloc(sizeof(LauncherGrab), 1);
+        lgrab->movie = movie_create(widget,
+                view->box_feedback0->width,
+                view->box_feedback0->height);
+        lgrab->view = view;
+        nemowidget_create_grab(widget, event, _launcherview_grab_event, lgrab);
+        view->grabs = list_append(view->grabs, lgrab);
     }
 }
 
@@ -951,32 +1115,57 @@ LauncherView *launcherview_create(NemoWidget *parent, int width, int height, Con
 
     view->widget = widget = nemowidget_create_vector(parent, width, height);
     nemowidget_append_callback(widget, "event", _launcherview_event, view);
-    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
+    nemowidget_set_alpha(widget, 0, 0, 0, 1.0);
 
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-    view->bg = one = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
-    const char *main_path, *sub_path;
+    const char *main_bg_path, *sub_bg_path;
+    const char *feedback0, *feedback1, *feedback2, *feedback3, *longpress;
     if (!strcmp(app->type, "wall")) {
         if (width == 2160) {
-            main_path = LAUNCHER_MOV_DIR"/bg/wall/4k/main.mov";
-            sub_path = LAUNCHER_MOV_DIR"/bg/wall/4k/sub.mov";
+            main_bg_path = LAUNCHER_MOV_DIR"/bg/wall/4k/main.mov";
+            sub_bg_path = LAUNCHER_MOV_DIR"/bg/wall/4k/sub.mov";
+            feedback0 = LAUNCHER_MOV_DIR"/effect/4k/feedback0.mov";
+            feedback1 = LAUNCHER_MOV_DIR"/effect/4k/feedback1.mov";
+            feedback2 = LAUNCHER_MOV_DIR"/effect/4k/feedback2.mov";
+            feedback3 = LAUNCHER_MOV_DIR"/effect/4k/feedback3.mov";
+            longpress = LAUNCHER_MOV_DIR"/effect/4k/longpress.mov";
         } else {
-            main_path = LAUNCHER_MOV_DIR"/bg/wall/1k/main.mov";
-            sub_path = LAUNCHER_MOV_DIR"/bg/wall/1k/sub.mov";
+            main_bg_path = LAUNCHER_MOV_DIR"/bg/wall/1k/main.mov";
+            sub_bg_path = LAUNCHER_MOV_DIR"/bg/wa1l/1k/sub.mov";
+            feedback0 = LAUNCHER_MOV_DIR"/effect/1k/feedback0.mov";
+            feedback1 = LAUNCHER_MOV_DIR"/effect/1k/feedback1.mov";
+            feedback2 = LAUNCHER_MOV_DIR"/effect/1k/feedback2.mov";
+            feedback3 = LAUNCHER_MOV_DIR"/effect/1k/feedback3.mov";
+            longpress = LAUNCHER_MOV_DIR"/effect/1k/longpress.mov";
         }
     } else {
         if (width == 2160) {
-            main_path = LAUNCHER_MOV_DIR"/bg/table/4k/main.mov";
-            sub_path = LAUNCHER_MOV_DIR"/bg/table/4k/sub.mov";
+            main_bg_path = LAUNCHER_MOV_DIR"/bg/table/4k/main.mov";
+            sub_bg_path = LAUNCHER_MOV_DIR"/bg/table/4k/sub.mov";
+            feedback0 = LAUNCHER_MOV_DIR"/effect/4k/feedback0.mov";
+            feedback1 = LAUNCHER_MOV_DIR"/effect/4k/feedback1.mov";
+            feedback2 = LAUNCHER_MOV_DIR"/effect/4k/feedback2.mov";
+            feedback3 = LAUNCHER_MOV_DIR"/effect/4k/feedback3.mov";
+            longpress = LAUNCHER_MOV_DIR"/effect/4k/longpress.mov";
         } else {
-            main_path = LAUNCHER_MOV_DIR"/bg/table/1k/main.mov";
-            sub_path = LAUNCHER_MOV_DIR"/bg/table/1k/sub.mov";
+            main_bg_path = LAUNCHER_MOV_DIR"/bg/table/1k/main.mov";
+            sub_bg_path = LAUNCHER_MOV_DIR"/bg/table/1k/sub.mov";
+            feedback0 = LAUNCHER_MOV_DIR"/effect/1k/feedback0.mov";
+            feedback1 = LAUNCHER_MOV_DIR"/effect/1k/feedback1.mov";
+            feedback2 = LAUNCHER_MOV_DIR"/effect/1k/feedback2.mov";
+            feedback3 = LAUNCHER_MOV_DIR"/effect/1k/feedback3.mov";
+            longpress = LAUNCHER_MOV_DIR"/effect/1k/longpress.mov";
         }
     }
-    nemoplay_get_video_info(main_path, &view->launcher_w, &view->launcher_h);
-    nemoplay_get_video_info(sub_path, &view->launcher_w_sub, &view->launcher_h_sub);
+
+    view->box_main_bg = movie_box_create(main_bg_path);
+    view->box_sub_bg = movie_box_create(sub_bg_path);
+    view->box_feedback0 = movie_box_create(feedback0);
+    view->box_feedback1 = movie_box_create(feedback1);
+    view->box_feedback2 = movie_box_create(feedback2);
+    view->box_feedback3 = movie_box_create(feedback3);
+    view->box_longpress = movie_box_create(longpress);
 
     return view;
 }
@@ -1003,15 +1192,13 @@ int main(int argc, char *argv[])
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
     nemowidget_win_set_anchor(win, 0, 0);
-    nemowidget_win_set_layer(win, "background");
+    nemowidget_win_set_layer(win, "underlay");
     nemowidget_win_enable_move(win, 0);
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
     LauncherView *view = launcherview_create(win, app->config->width, app->config->height, app);
     launcherview_show(view);
-
-    nemoshow_dispatch_frame(view->show);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
