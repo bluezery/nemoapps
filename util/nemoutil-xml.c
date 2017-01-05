@@ -434,7 +434,7 @@ List *xml_search_tags(Xml *xml, const char *xpath)
     tok = strtok(_name, "/");
     while (tok) {
         names = list_append(names, strdup(tok));
-        tok = strtok(NULL, " ");
+        tok = strtok(NULL, "/");
     }
     free(_name);
 
