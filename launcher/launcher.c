@@ -440,6 +440,7 @@ void movie_destroy(Movie *movie)
 {
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
     if (movie->after_timer) nemotimer_destroy(movie->after_timer);
+    movie->after_timer = NULL;
     nemoplay_shader_destroy(movie->shader);
     nemowidget_destroy(movie->widget);
     free(movie);
@@ -449,6 +450,7 @@ static void _movie_after_timeout(struct nemotimer *timer, void *userdata)
 {
     Movie *movie = userdata;
     RET_IF(!movie->after);
+    RET_IF(!movie->after_timer);
 
     movie->after(movie, movie->after_userdata);
 
@@ -502,15 +504,20 @@ void movie_rewind(Movie *movie)
     nemoshow_dispatch_frame(show);
 }
 
-static void _movie_destroy(Movie *movie, void *userdata)
+static void _movie_destroy(struct nemotimer *timer, void *userdata)
 {
+    Movie *movie = userdata;
     movie_destroy(movie);
+    nemotimer_destroy(timer);
 }
 
 void movie_rewind_destroy(Movie *movie)
 {
     movie_rewind(movie);
-    movie_add_after(movie, _movie_destroy, movie);
+    // xxx: do not use movie_add_after
+    // it will be broken after callback call
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
 }
 
 void movie_play_rev(Movie *movie, MovieBox *mbox, bool repeat)
@@ -571,8 +578,13 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
 
 void movie_play_destroy(Movie *movie, MovieBox *mbox, bool repeat)
 {
+    ERR("");
     movie_play(movie, mbox, repeat);
-    movie_add_after(movie, _movie_destroy, movie);
+    // XXX: do not use movie_add_after
+    // it will be broken after callback call
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time,
+            _movie_destroy, movie);
 }
 
 typedef struct _LauncherView LauncherView;
@@ -647,7 +659,7 @@ void launcher_item_translate(LauncherItem *it, uint32_t easetype, int duration, 
     movie_translate(it->movie, easetype, duration, delay, tx , ty);
 }
 
-static void _launcher_item_up_done(Movie *movie, void *userdata)
+static void _launcher_item_grab_up_done(Movie *movie, void *userdata)
 {
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_effect1, true);
@@ -695,19 +707,60 @@ void launcher_item_sub_translate(LauncherItemSub *sub, uint32_t easetype, int du
     movie_translate(sub->movie, easetype, duration, delay, tx , ty);
 }
 
+static void _launcher_item_sub_grab_up_done(Movie *movie, void *userdata)
+{
+    LauncherItemSub *sub = userdata;
+    movie_play(sub->movie, sub->menu_it->box_effect, true);
+}
+
+static void _launcher_item_sub_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+{
+    struct nemoshow *show = nemowidget_get_show(widget);
+    LauncherItemSub *sub = userdata;
+
+    double ex, ey;
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+
+    if (nemoshow_event_is_down(show, event)) {
+        movie_play(sub->movie, sub->menu_it->box_down, false);
+    } else if (nemoshow_event_is_up(show, event)) {
+        movie_rewind(sub->movie);
+        movie_add_after(sub->movie, _launcher_item_sub_grab_up_done, sub);
+        if (nemoshow_event_is_single_click(show, event)) {
+        }
+    }
+}
+
+static void _launcher_item_sub_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    struct showevent *event = info;
+    struct nemoshow *show = nemowidget_get_show(widget);
+    LauncherItemSub *sub = userdata;
+
+    double ex, ey;
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+
+    if (nemoshow_event_is_down(show, event)) {
+        nemowidget_create_grab(widget, event, _launcher_item_sub_grab_event, sub);
+    }
+}
 LauncherItemSub *launcher_item_sub_create(Launcher *launcher, MenuItem *menu_it)
 {
     int w, h ;
-    LauncherItemSub *it = calloc(sizeof(LauncherItemSub), 1);
-    it->launcher = launcher;
-    it->width = w = menu_it->box_show->width;
-    it->height = h = menu_it->box_show->height;
-    it->movie = movie_create(launcher->view->widget, w, h);
-    it->menu_it = menu_it;
+    LauncherItemSub *sub = calloc(sizeof(LauncherItemSub), 1);
+    sub->launcher = launcher;
+    sub->width = w = menu_it->box_show->width;
+    sub->height = h = menu_it->box_show->height;
+    sub->movie = movie_create(launcher->view->widget, w, h);
+    sub->menu_it = menu_it;
 
-    //nemowidget_append_callback(it->movie->widget, "event", _launcher_item_event, it);
+    nemowidget_append_callback(sub->movie->widget, "event", _launcher_item_sub_event, sub);
 
-    return it;
+    return sub;
 }
 
 static void _launcher_item_show_done(Movie *movie, void *userdata)
@@ -826,7 +879,7 @@ static void _launcher_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
 
         } else {
             movie_rewind(it->movie);
-            movie_add_after(it->movie, _launcher_item_up_done, it);
+            movie_add_after(it->movie, _launcher_item_grab_up_done, it);
         }
     }
 }
@@ -976,12 +1029,14 @@ typedef struct _Longpress Longpress;
 struct _Longpress {
     LauncherView *view;
     float ex, ey;
+    Movie *del_movie;
 };
 
-static void _longpress_done(Movie *movie, void *userdata)
+static void _longpress_done(struct nemotimer *timer, void *userdata)
 {
     Longpress *longpress = userdata;
     LauncherView *view = longpress->view;
+    movie_destroy(longpress->del_movie);
 
     Launcher *launcher;
     LauncherItem *it;
@@ -992,7 +1047,6 @@ static void _longpress_done(Movie *movie, void *userdata)
     launcher_show(launcher);
 
     view->launchers = list_append(view->launchers, launcher);
-
     free(longpress);
 }
 
@@ -1005,14 +1059,17 @@ static void _longpress_timeout(struct nemotimer *timer, void *userdata)
     nemotimer_destroy(timer);
     lgrab->timer = NULL;
 
-    movie_play_destroy(movie, view->box_longpress, false);
-
     Longpress *longpress = calloc(sizeof(Longpress), 1);
     longpress->view = view;
     longpress->ex = lgrab->ex;
     longpress->ey = lgrab->ey;
+    longpress->del_movie = movie;
 
-    movie_add_after(movie, _longpress_done, longpress);
+    movie_play(movie, view->box_longpress, false);
+    // xxx: do not use movie_add_after
+    // it will be broken after callback call
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time, _longpress_done, longpress);
 }
 
 static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
@@ -1063,6 +1120,7 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
             }
         }
     }
+    nemoshow_dispatch_frame(show);
 }
 
 static void _launcherview_event(NemoWidget *widget, const char *id, void *info, void *userdata)
