@@ -3,44 +3,46 @@
     <size width="3240" height="2160"/>
     <group id="0" mov="@LAUNCHER_MOV_DIR@/bookmark/main">
         <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/ces/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/ces"/>
+        <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/nemoux/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/nemoux"/>
         <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/digitalsign/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/digitalsign"/>
         <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/multitouch/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/multitouch"/>
-        <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/nemoux/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/nemoux"/>
     </group>
 
     <group id="1" mov="@LAUNCHER_MOV_DIR@/contents/main/">
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/car"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/car"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/carvr"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/carvr"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/collaboration" exec="/usr/bin/nemoexplorer;-f;/opt/contents/collaboration"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/digitalsign" exec="/usr/bin/nemoexplorer;-f;/opt/contents/digitalsign"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/etc"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/etc"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/fine"        exec="/usr/bin/nemoexplorer;-f;/opt/contents/fine"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/iot"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/iot"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/promotion"   exec="/usr/bin/nemoexplorer;-f;/opt/contents/promotion"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sales"       exec="/usr/bin/nemoexplorer;-f;/opt/contents/sales"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/shell"       exec="/usr/bin/nemoexplorer;-f;/opt/contents/shell"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sk"          exec="/usr/bin/nemoexplorer;-f;/opt/contents/sk"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/vr"          exec="/usr/bin/nemoexplorer;-f;/opt/contents/vr"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/fine"          exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/fine"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/collaboration" exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/collaboration"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/digitalsign"   exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/digitalsign"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/promotion"     exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/promotion"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sales"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/sales"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/shell"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/shell"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sk"            exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/skt"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/etc"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/etc"/>
+        <!--
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/car"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/car"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/carvr"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/carvr"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/iot"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/iot"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/vr"            exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/vr"/>
+        -->
     </group>
     <group id="2" mov="@LAUNCHER_MOV_DIR@/entertainment/main/">
-        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/bird"     exec="/usr/bin/electron;-f;/opt/games/electron/3d/flxappy_bird"/>
+        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/bird"     exec="/usr/bin/electron;-f;/opt/games/electron/3d/flappy_bird"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/bmw"      exec="/usr/bin/electron;-f;/opt/games/electron/3d/bmwi8"/>
-        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/card"     exec="/usr/bin/electron;-f;/opt/games/electron/3d/solitaire"/>
-        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/car_game" exec="/usr/bin/electron;-f;/opt/games/electron/swerve_car"/>
+        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/card"     exec="/usr/bin/electron;-f;/opt/games/electron/2d/solitaire"/>
+        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/car_game" exec="/usr/bin/electron;-f;/opt/games/electron/3d/swerve_car"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/coin"     exec="/usr/bin/electron;-f;/opt/games/electron/3d/slotmachine"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/dungeon"  exec="/usr/bin/electron;-f;/opt/games/electron/3d/dungeon_fury"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/monopoly" exec="/usr/bin/electron;-f;/opt/games/electron/3d/monopoly"/>
-        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/orbital"  exec="/usr/bin/electron;-f;/opt/games/electron/3d/oribital_survival"/>
+        <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/orbital"  exec="/usr/bin/electron;-f;/opt/games/electron/3d/orbital_survival"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/robix"    exec="/usr/bin/electron;-f;/opt/games/electron/3d/roobix"/>
         <item group="2" type="xapp" mov="@LAUNCHER_MOV_DIR@/entertainment/swoop"    exec="/usr/bin/electron;-f;/opt/games/electron/3d/swoop"/>
     </group>
 
     <group id="3" mov="@LAUNCHER_MOV_DIR@/utility/main/">
-        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/clock" exec="/usr/bin/nemoclock"/>
-        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/keyboard" exec="/usr/bin/nemokeyboard"/>
-        <item group="3" type="xapp" mov="@LAUNCHER_MOV_DIR@/utility/map" exec="/usr/bin/electron;-f;/opt/games/electron/utility/melown"/>
+        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/clock"       exec="/usr/bin/nemoclock"/>
+        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/keyboard"    exec="/usr/bin/nemokeyboard"/>
+        <item group="3" type="xapp" mov="@LAUNCHER_MOV_DIR@/utility/map"        exec="/usr/bin/electron;-f;/opt/games/electron/utility/melown"/>
         <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/multiplayer" exec="/usr/bin/nemolivestream"/>
-        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/stat" exec="/usr/bin/nemostat"/>
-        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/weather" exec="/usr/bin/nemoweather"/>
+        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/stat"        exec="/usr/bin/nemostat"/>
+        <item group="3" type="app" mov="@LAUNCHER_MOV_DIR@/utility/weather"     exec="/usr/bin/nemoweather"/>
     </group>
 </@APPNAME@>
