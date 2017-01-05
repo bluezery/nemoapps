@@ -27,7 +27,88 @@ struct _ConfigApp {
     char *type;
     Config *config;
     double sxy;
+    List *groups;
 };
+
+typedef struct _MenuGroup MenuGroup;
+struct _MenuGroup {
+    int id;
+    char *mov_dir;
+    List *items;
+};
+
+typedef struct _MenuItem MenuItem;
+struct _MenuItem {
+    int group_id;
+    char *type;
+    char *mov_dir;
+    char *exec;
+    double sxy;
+    bool resize;
+};
+
+static MenuItem *parse_tag_item(XmlTag *tag)
+{
+    MenuItem *item = calloc(sizeof(MenuItem), 1);
+    item->sxy = 1.0;
+    item->resize = true;
+
+    List *l;
+    XmlAttr *attr;
+    LIST_FOR_EACH(tag->attrs, l, attr) {
+        if (!strcmp(attr->key, "group")) {
+            if (attr->val) {
+                 item->group_id = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "type")) {
+            if (attr->val) {
+                 item->type = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "mov")) {
+            if (attr->val) {
+                 item->mov_dir = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "exec")) {
+            if (attr->val) {
+                item->exec = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "sxy")) {
+            if (attr->val) {
+                item->sxy = atof(attr->val);
+            }
+        } else if (!strcmp(attr->key, "resize")) {
+            if (attr->val) {
+                if (!strcmp(attr->val, "on")) {
+                    item->resize = true;
+                } else {
+                    item->resize = false;
+                }
+            }
+        }
+    }
+    if (!item->type) item->type = strdup("xapp");
+    return item;
+}
+
+static MenuGroup *parse_tag_group(XmlTag *tag)
+{
+    MenuGroup *grp = calloc(sizeof(MenuItem), 1);
+
+    List *l;
+    XmlAttr *attr;
+    LIST_FOR_EACH(tag->attrs, l, attr) {
+        if (!strcmp(attr->key, "id")) {
+            if (attr->val) {
+                grp->id = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "mov")) {
+            if (attr->val) {
+                grp->mov_dir = strdup(attr->val);
+            }
+        }
+    }
+    return grp;
+}
 
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
 {
@@ -72,8 +153,31 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
 
-    xml_unload(xml);
+    List *tags;
+    tags = xml_search_tags(xml, APPNAME"/group");
+    List *l;
+    XmlTag *tag;
+    LIST_FOR_EACH(tags, l, tag) {
+        MenuGroup *grp = parse_tag_group(tag);
+        if (!grp) continue;
+        app->groups = list_append(app->groups, grp);
+    }
 
+    tags = xml_search_tags(xml, APPNAME"/group/item");
+    LIST_FOR_EACH(tags, l, tag) {
+        MenuItem *it = parse_tag_item(tag);
+        if (!it) continue;
+        List *ll;
+        MenuGroup *grp;
+        LIST_FOR_EACH(app->groups, ll, grp) {
+            if (grp->id == it->group_id) {
+                grp->items = list_append(grp->items, it);
+                break;
+            }
+        }
+    }
+
+    xml_unload(xml);
 
     struct option options[] = {
         {"type", required_argument, NULL, 't'},
@@ -96,6 +200,19 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
 static void _config_unload(ConfigApp *app)
 {
+    MenuGroup *grp;
+    LIST_FREE(app->groups, grp) {
+        free(grp->mov_dir);
+        free(grp);
+        MenuItem *it;
+        LIST_FREE(grp->items, it) {
+            free(it->type);
+            free(it->mov_dir);
+            free(it->exec);
+            free(it);
+        }
+    }
+
     config_unload(app->config);
     free(app->type);
     free(app);
@@ -153,7 +270,6 @@ MovieBox *movie_box_create(const char *path)
         mbox->pixel_format = nemoplay_get_pixel_format(play);
         mbox->width = nemoplay_get_video_width(play);
         mbox->height = nemoplay_get_video_height(play);
-        ERR("%d %d (%s) %d", mbox->width, mbox->height, path, mbox->cnt);
         nemoplay_destroy(play);
     }
 
@@ -173,6 +289,7 @@ struct _Movie {
     NemoWidget *widget;
     struct playshader *shader;
 
+    struct nemotool *tool;
     MovieBox *mbox;
     bool repeat;
     int idx;
@@ -190,7 +307,6 @@ static void _movie_resize(NemoWidget *widget, const char *id, void *info, void *
 
     if (movie->mbox) {
         struct playone *one;
-        ERR("%d", movie->idx);
         one = nemoplay_box_get_one(movie->mbox->box, movie->idx);
         if (!one) {
             ERR("nemoplay_box_get_one failed: %d", movie->idx);
@@ -270,9 +386,18 @@ void movie_translate(Movie *movie, uint32_t easetype, int duration, int delay, i
     nemowidget_translate(movie->widget, easetype, duration, delay, tx, ty);
 }
 
+void movie_destroy(Movie *movie)
+{
+    if (movie->trans) nemoshow_transition_destroy(movie->trans);
+    nemoplay_shader_destroy(movie->shader);
+    nemowidget_destroy(movie->widget);
+    free(movie);
+}
+
 Movie *movie_create(NemoWidget *parent, int width, int height)
 {
     Movie *movie = calloc(sizeof(Movie), 1);
+    movie->tool = nemowidget_get_tool(parent);
     movie->width = width;
     movie->height = height;
 
@@ -302,6 +427,21 @@ void movie_rewind(Movie *movie)
     nemoshow_attach_transition(show, trans);
 }
 
+static void _movie_destroy(struct nemotimer *timer, void *userdata)
+{
+    Movie *movie = userdata;
+    movie_destroy(movie);
+}
+
+void movie_rewind_destroy(Movie *movie)
+{
+    movie_rewind(movie);
+
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
+}
+
+
 void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
 {
     movie->mbox = mbox;
@@ -309,6 +449,8 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
     movie->idx = 0;
 
     struct nemoshow *show = nemowidget_get_show(movie->widget);
+
+    if (movie->trans) nemoshow_transition_destroy(movie->trans);
 
     struct showtransition *trans;
     movie->trans = trans = nemoshow_transition_create(NEMOEASE_LINEAR_TYPE, 0, 0);
@@ -321,8 +463,16 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
             mbox->pixel_format);
     nemoplay_shader_resize(movie->shader,
             mbox->width, mbox->height);
-    ERR("%d %d %d", mbox->pixel_format, mbox->width, mbox->height);
 }
+
+void movie_play_destroy(Movie *movie, MovieBox *mbox, bool repeat)
+{
+    movie_play(movie, mbox, repeat);
+
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
+}
+
 
 typedef struct _AnimatorScene AnimatorScene;
 struct _AnimatorScene {
@@ -816,12 +966,16 @@ typedef struct _LauncherView LauncherView;
 typedef struct _LauncherGrab LauncherGrab;
 struct _LauncherGrab
 {
-    bool is_longpress;
+    struct nemotool *tool;
     Movie *movie;
     LauncherView *view;
+    int ex, ey;
+
+    struct nemotimer *timer;
 };
 
 struct _LauncherView {
+    ConfigApp *app;
     int width, height;
     struct nemoshow *show;
     struct nemotool *tool;
@@ -943,9 +1097,17 @@ Launcher *launcher_create(LauncherView *view)
     launcher->width = w = view->box_main_bg->width;
     launcher->height = h = view->box_main_bg->height;
 
-    ERR("%d %d", w, h);
     launcher->main_bg = movie_create(view->widget, w, h);
     launcher->sub_bg = movie_create(view->widget, w, h);
+
+    /*
+    int i = 0;
+    for (i = 0 ; i < 10 ; i++) {
+        launcher_append_item(launcher, view->launcher_iw, view->launcher_ih);
+    }
+    launcher_translate(launcher, 0, 0, 0, ex - view->launcher_w/2, 0);
+    launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+    */
 
     return launcher;
 }
@@ -1025,6 +1187,59 @@ static void _launcher_icon_event(NemoWidget *widget, const char *id, void *info,
 }
 #endif
 
+typedef struct _Longpress Longpress;
+struct _Longpress {
+    LauncherView *view;
+    float ex, ey;
+};
+
+static void _longpress_done(struct nemotimer *timer, void *userdata)
+{
+    Longpress *longpress = userdata;
+    LauncherView *view = longpress->view;
+
+    Launcher *launcher;
+    LauncherItem *it;
+    launcher = launcher_create(view);
+    launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    launcher_translate(launcher, 0, 0, 0,
+            longpress->ex - view->box_main_bg->width/2,
+            longpress->ey - view->box_main_bg->height/2);
+
+    view->launchers = list_append(view->launchers, launcher);
+
+    free(longpress);
+
+    /*
+       int i = 0;
+       for (i = 0 ; i < 10 ; i++) {
+       launcher_append_item(launcher, view->launcher_iw, view->launcher_ih);
+       }
+       launcher_translate(launcher, 0, 0, 0, ex - view->launcher_w/2, 0);
+       launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+       */
+}
+
+static void _longpress_timeout(struct nemotimer *timer, void *userdata)
+{
+    LauncherGrab *lgrab = userdata;
+    Movie *movie = lgrab->movie;
+    LauncherView *view = lgrab->view;
+
+    nemotimer_destroy(timer);
+    lgrab->timer = NULL;
+
+    movie_play_destroy(movie, view->box_longpress, false);
+
+    Longpress *longpress = calloc(sizeof(Longpress), 1);
+    longpress->view = view;
+    longpress->ex = lgrab->ex;
+    longpress->ey = lgrab->ey;
+
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    TOOL_ADD_TIMER(movie->tool, time, _longpress_done, longpress);
+}
+
 static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -1036,28 +1251,9 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
     Movie *movie = lgrab->movie;
     LauncherView *view = lgrab->view;
 
-    if (nemoshow_event_get_grab_time(event) + 1000 < nemoshow_event_get_time(event)) {
-        if (!lgrab->is_longpress) {
-            lgrab->is_longpress = true;
+    double gx = nemoshow_event_get_grab_x(event);
+    double gy = nemoshow_event_get_grab_y(event);
 
-            Launcher *launcher;
-            LauncherItem *it;
-            launcher = launcher_create(view);
-            launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-            launcher_translate(launcher, 0, 0, 0, ex - view->box_main_bg->width/2, 0);
-            view->launchers = list_append(view->launchers, launcher);
-
-            /*
-            int i = 0;
-            for (i = 0 ; i < 10 ; i++) {
-                launcher_append_item(launcher, view->launcher_iw, view->launcher_ih);
-            }
-            launcher_translate(launcher, 0, 0, 0, ex - view->launcher_w/2, 0);
-            launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-            */
-
-        }
-    }
 
     if (nemoshow_event_is_down(show, event)) {
         int r = rand()%4;
@@ -1071,12 +1267,27 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
             movie_play(movie, view->box_feedback3, true);
         }
         movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
-    } else if (nemoshow_event_is_motion(show, event)) {
-        movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
-    } else if (nemoshow_event_is_up(show, event)) {
-        movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
-        movie_rewind(movie);
-        view->grabs = list_remove(view->grabs, lgrab);
+    } else {
+        if (lgrab->timer) {
+            if (nemoshow_event_is_motion(show, event)) {
+                if ((abs(gx - ex) > 10) || (abs(gy - ey) > 10)) {
+                    nemotimer_set_timeout(lgrab->timer, 500);
+                }
+                lgrab->ex = ex;
+                lgrab->ey = ey;
+                movie_translate(movie, 0, 0, 0, ex - movie->width/2, ey - movie->height/2);
+            } else if (nemoshow_event_is_up(show, event)) {
+                movie_rewind_destroy(movie);
+                nemotimer_destroy(lgrab->timer);
+                view->grabs = list_remove(view->grabs, lgrab);
+                free(lgrab);
+            }
+        } else {
+            if (nemoshow_event_is_up(show, event)) {
+                view->grabs = list_remove(view->grabs, lgrab);
+                free(lgrab);
+            }
+        }
     }
 }
 
@@ -1091,12 +1302,16 @@ static void _launcherview_event(NemoWidget *widget, const char *id, void *info, 
     LauncherView *view = userdata;
 
     if (nemoshow_event_is_down(show, event)) {
+        struct nemotool *tool = nemowidget_get_tool(widget);
+
         LauncherGrab *lgrab = calloc(sizeof(LauncherGrab), 1);
+        lgrab->tool = nemowidget_get_tool(widget);
         lgrab->movie = movie_create(widget,
                 view->box_feedback0->width,
                 view->box_feedback0->height);
         lgrab->view = view;
         nemowidget_create_grab(widget, event, _launcherview_grab_event, lgrab);
+        lgrab->timer = TOOL_ADD_TIMER(tool, 0, _longpress_timeout, lgrab);
         view->grabs = list_append(view->grabs, lgrab);
     }
 }
@@ -1108,6 +1323,18 @@ LauncherView *launcherview_create(NemoWidget *parent, int width, int height, Con
     view->tool = nemowidget_get_tool(parent);
     view->width = width;
     view->height = height;
+    view->app = app;
+
+    List *l;
+    MenuGroup *grp;
+    LIST_FOR_EACH(app->groups, l, grp) {
+        ERR("[%d] %s\n", grp->id, grp->mov_dir);
+        List *ll;
+        MenuItem *it;
+        LIST_FOR_EACH(grp->items, ll, it) {
+            ERR("\t[%d] %s %s %s", it->group_id, it->type, it->mov_dir, it->exec);
+        }
+    }
 
     NemoWidget *widget;
     struct showone *one;
