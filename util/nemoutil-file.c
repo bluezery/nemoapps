@@ -50,14 +50,18 @@ char *file_get_magic(const char *path, int flags)
 {
     magic_t __magic = magic_open(MAGIC_SYMLINK | flags);
     if (!__magic) {
-        ERR("magic open failed");
+        ERR("magic open failed: %s", path);
         return NULL;
     }
     if (magic_load(__magic, NULL) == -1) {
-        ERR("magic load failed");
+        ERR("magic load failed: %s", path);
         return NULL;
     }
     const char *str = magic_file(__magic, path);
+    if (!str) {
+        ERR("magic file failed: %s", path);
+        return NULL;
+    }
     char *magic_str = strdup(str);
     return magic_str;
 }
