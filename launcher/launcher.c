@@ -297,6 +297,7 @@ void movie_box_destroy(MovieBox *mbox)
 }
 
 typedef struct _Movie Movie;
+typedef void (*MovieAfter)(Movie *movie, void *userdata);
 struct _Movie {
     int width, height;
     NemoWidget *widget;
@@ -307,6 +308,10 @@ struct _Movie {
     bool repeat;
     int idx;
     struct showtransition *trans;
+
+    struct nemotimer *after_timer;
+    void *after_userdata;
+    MovieAfter after;
 };
 
 static void _movie_resize(NemoWidget *widget, const char *id, void *info, void *userdata)
@@ -434,9 +439,34 @@ void movie_translate(Movie *movie, uint32_t easetype, int duration, int delay, i
 void movie_destroy(Movie *movie)
 {
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
+    if (movie->after_timer) nemotimer_destroy(movie->after_timer);
     nemoplay_shader_destroy(movie->shader);
     nemowidget_destroy(movie->widget);
     free(movie);
+}
+
+static void _movie_after_timeout(struct nemotimer *timer, void *userdata)
+{
+    Movie *movie = userdata;
+    RET_IF(!movie->after);
+
+    movie->after(movie, movie->after_userdata);
+
+    nemotimer_destroy(timer);
+    movie->after = NULL;
+    movie->after_userdata = NULL;
+    movie->after_timer = NULL;
+}
+
+void movie_add_after(Movie *movie, MovieAfter after, void *userdata)
+{
+    movie->after = after;
+    movie->after_userdata = userdata;
+
+    if (movie->after_timer) nemotimer_destroy(movie->after_timer);
+    uint32_t time = movie->mbox->cnt * (1000/60);
+    movie->after_timer = TOOL_ADD_TIMER(movie->tool, time,
+            _movie_after_timeout, movie);
 }
 
 Movie *movie_create(NemoWidget *parent, int width, int height)
@@ -451,7 +481,7 @@ Movie *movie_create(NemoWidget *parent, int width, int height)
     NemoWidget *widget;
     movie->widget = widget = nemowidget_create_opengl(parent, width, height);
     nemowidget_append_callback(widget, "resize", _movie_resize, movie);
-    nemowidget_show(movie->widget, 0, 0, 0);
+    nemowidget_set_alpha(movie->widget, 0, 0, 0, 0.0);
 
     return movie;
 }
@@ -472,18 +502,15 @@ void movie_rewind(Movie *movie)
     nemoshow_dispatch_frame(show);
 }
 
-static void _movie_destroy(struct nemotimer *timer, void *userdata)
+static void _movie_destroy(Movie *movie, void *userdata)
 {
-    Movie *movie = userdata;
     movie_destroy(movie);
 }
 
 void movie_rewind_destroy(Movie *movie)
 {
     movie_rewind(movie);
-
-    uint32_t time = movie->mbox->cnt * (1000/60);
-    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
+    movie_add_after(movie, _movie_destroy, movie);
 }
 
 void movie_play_rev(Movie *movie, MovieBox *mbox, bool repeat)
@@ -506,6 +533,18 @@ void movie_play_rev(Movie *movie, MovieBox *mbox, bool repeat)
     nemoshow_attach_transition(show, trans);
 
     nemoshow_dispatch_frame(show);
+}
+
+void movie_show(Movie *movie)
+{
+    nemowidget_show(movie->widget, 0, 0, 0);
+    nemowidget_set_alpha(movie->widget, 0, 0, 0, 1.0);
+}
+
+void movie_hide(Movie *movie)
+{
+    nemowidget_hide(movie->widget, 0, 0, 0);
+    nemowidget_set_alpha(movie->widget, 0, 0, 0, 0.0);
 }
 
 void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
@@ -533,9 +572,7 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
 void movie_play_destroy(Movie *movie, MovieBox *mbox, bool repeat)
 {
     movie_play(movie, mbox, repeat);
-
-    uint32_t time = movie->mbox->cnt * (1000/60);
-    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
+    movie_add_after(movie, _movie_destroy, movie);
 }
 
 
@@ -1091,6 +1128,7 @@ struct _Launcher {
     Movie *main_bg;
     Movie *sub_bg;
     List *items;
+    LauncherItem *it_cur;
 };
 
 #if 0
@@ -1132,39 +1170,133 @@ void launcher_item_translate(LauncherItem *it, uint32_t easetype, int duration, 
     movie_translate(it->movie, easetype, duration, delay, tx , ty);
 }
 
-static void _launcher_item_up_done(struct nemotimer *timer, void *userdata)
+static void _launcher_item_up_done(Movie *movie, void *userdata)
 {
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_effect1, true);
 }
 
-static void _launcher_item_click_done(struct nemotimer *timer, void *userdata)
+static void _launcher_item_click_done(Movie *movie, void *userdata)
 {
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_click_effect, true);
 }
 
-static void _launcher_item_unclick_done(struct nemotimer *timer, void *userdata)
+static void _launcher_item_unclick_done(Movie *movie, void *userdata)
 {
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_effect1, true);
 }
 
-LauncherItemSub *launcher_item_sub_create(Launcher *launcher, MenuItem *menu_item)
+void _launcher_item_sub_show_done(Movie *movie, void *userdata)
+{
+    LauncherItemSub *sub = userdata;
+    movie_play(sub->movie, sub->menu_it->box_effect, true);
+}
+
+void launcher_item_sub_show(LauncherItemSub *sub)
+{
+    movie_show(sub->movie);
+    movie_play(sub->movie, sub->menu_it->box_show, false);
+    movie_add_after(sub->movie, _launcher_item_sub_show_done, sub);
+}
+
+void _launcher_item_sub_hide_done(Movie *movie, void *userdata)
+{
+    LauncherItemSub *sub = userdata;
+    movie_hide(sub->movie);
+}
+
+void launcher_item_sub_hide(LauncherItemSub *sub)
+{
+    movie_play_rev(sub->movie, sub->menu_it->box_show, false);
+    movie_add_after(sub->movie, _launcher_item_sub_hide_done, sub);
+}
+
+void launcher_item_sub_translate(LauncherItemSub *sub, uint32_t easetype, int duration, int delay, int tx, int ty)
+{
+    movie_translate(sub->movie, easetype, duration, delay, tx , ty);
+}
+
+LauncherItemSub *launcher_item_sub_create(Launcher *launcher, MenuItem *menu_it)
 {
     int w, h ;
     LauncherItemSub *it = calloc(sizeof(LauncherItemSub), 1);
     it->launcher = launcher;
-    it->width = w = menu_item->box_show->width;
-    it->height = h = menu_item->box_show->height;
+    it->width = w = menu_it->box_show->width;
+    it->height = h = menu_it->box_show->height;
     it->movie = movie_create(launcher->view->widget, w, h);
-    it->menu_it = menu_item;
+    it->menu_it = menu_it;
 
     //nemowidget_append_callback(it->movie->widget, "event", _launcher_item_event, it);
 
     return it;
 }
 
+static void _launcher_item_show_done(Movie *movie, void *userdata)
+{
+    LauncherItem *it = userdata;
+    movie_play(it->movie, it->grp->box_effect1, true);
+}
+
+void launcher_item_show(LauncherItem *it)
+{
+    movie_show(it->movie);
+    movie_play(it->movie, it->grp->box_show, false);
+    movie_add_after(it->movie, _launcher_item_show_done, it);
+}
+
+static void _launcher_sub_hide_done(Movie *moview, void *userdata)
+{
+    LauncherItem *it = userdata;
+    movie_hide(it->launcher->sub_bg);
+}
+
+void launcher_sub_hide(LauncherItem *it)
+{
+    Launcher *launcher = it->launcher;
+
+    movie_play_rev(launcher->sub_bg, launcher->view->box_sub_bg, false);
+    movie_add_after(launcher->sub_bg, _launcher_sub_hide_done, it);
+
+    int gap = launcher->width/(list_count(launcher->items) + 2);
+
+    List *l;
+    LauncherItemSub *sub;
+    LIST_FOR_EACH(it->items, l, sub) {
+        launcher_item_sub_hide(sub);
+    }
+
+}
+
+static void _launcher_sub_show_done(Movie *movie, void *userdata)
+{
+    LauncherItem *it = userdata;
+    Launcher *launcher = it->launcher;
+
+    int gap = launcher->width/(list_count(launcher->items) + 2);
+
+    int i = 1;
+    List *l;
+    LauncherItemSub *sub;
+    LIST_FOR_EACH(it->items, l, sub) {
+        int x, y;
+        x = launcher->x + gap * i;
+        y = launcher->y + launcher->height + (launcher->height - sub->height)/2;
+        launcher_item_sub_translate(sub, 0, 0, 0, x, y);
+        launcher_item_sub_show(sub);
+        i++;
+    }
+}
+
+void launcher_sub_show(LauncherItem *it)
+{
+    Launcher *launcher = it->launcher;
+
+    movie_show(launcher->sub_bg);
+    movie_play(launcher->sub_bg, launcher->view->box_sub_bg, false);
+    movie_add_after(launcher->sub_bg, _launcher_sub_show_done, it);
+}
 static void _launcher_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -1186,20 +1318,19 @@ static void _launcher_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
                 if (itt->movie->mbox == itt->grp->box_click ||
                     itt->movie->mbox == itt->grp->box_click_effect) {
                     movie_play_rev(itt->movie, itt->grp->box_click, false);
-                    uint32_t time = itt->movie->mbox->cnt * (1000/60);
-                    TOOL_ADD_TIMER(itt->movie->tool, time, _launcher_item_unclick_done, itt);
+                    movie_add_after(itt->movie, _launcher_item_unclick_done, itt);
                 }
             }
 
             movie_play(it->movie, it->grp->box_click, false);
-            uint32_t time = it->movie->mbox->cnt * (1000/60);
-            TOOL_ADD_TIMER(it->movie->tool, time, _launcher_item_click_done, it);
+            movie_add_after(it->movie, _launcher_item_click_done, it);
 
-            Launcher *launcher = it->launcher;
-
-            movie_play(launcher->sub_bg, launcher->view->box_sub_bg, false);
-
-                /*
+            if (it->launcher->it_cur) {
+                launcher_sub_hide(it->launcher->it_cur);
+            }
+            launcher_sub_show(it);
+            it->launcher->it_cur = it;
+            /*
             int i = 1;
             List *l;
             LauncherItemSub *sub;
@@ -1218,8 +1349,7 @@ static void _launcher_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
 
         } else {
             movie_rewind(it->movie);
-            uint32_t time = it->movie->mbox->cnt * (1000/60);
-            TOOL_ADD_TIMER(it->movie->tool, time, _launcher_item_up_done, it);
+            movie_add_after(it->movie, _launcher_item_up_done, it);
         }
     }
 }
@@ -1252,14 +1382,12 @@ LauncherItem *launcher_item_create(Launcher *launcher, MenuGroup *grp)
 
     nemowidget_append_callback(it->movie->widget, "event", _launcher_item_event, it);
 
-    /*
     List *l;
-    MenuItem *menu_item;
-    LIST_FOR_EACH(grp->items, l, menu_item) {
-        LauncherItemSub *sub = launcher_item_sub_create(launcher, menu_item);
+    MenuItem *menu_it;
+    LIST_FOR_EACH(grp->items, l, menu_it) {
+        LauncherItemSub *sub = launcher_item_sub_create(launcher, menu_it);
         it->items = list_append(it->items, sub);
     }
-    */
 
     return it;
 }
@@ -1273,14 +1401,9 @@ void launcher_translate(Launcher *launcher, uint32_t easetype, int duration, int
     launcher->y = ty;
 }
 
-void _launcher_item_show_done(struct nemotimer *timer, void *userdata)
+void launcher_show(Launcher *launcher)
 {
-    LauncherItem *it = userdata;
-    movie_play(it->movie, it->grp->box_effect1, true);
-}
-
-void launcher_show(Launcher *launcher, uint32_t easetype, int duration, int delay)
-{
+    movie_show(launcher->main_bg);
     movie_play(launcher->main_bg, launcher->view->box_main_bg, false);
 
     int gap = launcher->width/(list_count(launcher->items) + 2);
@@ -1293,10 +1416,7 @@ void launcher_show(Launcher *launcher, uint32_t easetype, int duration, int dela
         x = launcher->x + gap * i;
         y = launcher->y + (launcher->height - it->height)/2;
         launcher_item_translate(it, 0, 0, 0, x, y);
-        movie_play(it->movie, it->grp->box_show, false);
-
-        uint32_t time = it->movie->mbox->cnt * (1000/60);
-        TOOL_ADD_TIMER(it->movie->tool, time, _launcher_item_show_done, it);
+        launcher_item_show(it);
         i++;
     }
 #if 0
@@ -1381,7 +1501,7 @@ struct _Longpress {
     float ex, ey;
 };
 
-static void _longpress_done(struct nemotimer *timer, void *userdata)
+static void _longpress_done(Movie *movie, void *userdata)
 {
     Longpress *longpress = userdata;
     LauncherView *view = longpress->view;
@@ -1392,20 +1512,11 @@ static void _longpress_done(struct nemotimer *timer, void *userdata)
     launcher_translate(launcher, 0, 0, 0,
             longpress->ex - view->box_main_bg->width/2,
             longpress->ey - view->box_main_bg->height/2);
-    launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    launcher_show(launcher);
 
     view->launchers = list_append(view->launchers, launcher);
 
     free(longpress);
-
-    /*
-       int i = 0;
-       for (i = 0 ; i < 10 ; i++) {
-       launcher_append_item(launcher, view->launcher_iw, view->launcher_ih);
-       }
-       launcher_translate(launcher, 0, 0, 0, ex - view->launcher_w/2, 0);
-       launcher_show(launcher, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-       */
 }
 
 static void _longpress_timeout(struct nemotimer *timer, void *userdata)
@@ -1424,8 +1535,7 @@ static void _longpress_timeout(struct nemotimer *timer, void *userdata)
     longpress->ex = lgrab->ex;
     longpress->ey = lgrab->ey;
 
-    uint32_t time = movie->mbox->cnt * (1000/60);
-    TOOL_ADD_TIMER(movie->tool, time, _longpress_done, longpress);
+    movie_add_after(movie, _longpress_done, longpress);
 }
 
 static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
@@ -1441,7 +1551,6 @@ static void _launcherview_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, s
 
     double gx = nemoshow_event_get_grab_x(event);
     double gy = nemoshow_event_get_grab_y(event);
-
 
     if (nemoshow_event_is_down(show, event)) {
         int r = rand()%4;
@@ -1497,6 +1606,7 @@ static void _launcherview_event(NemoWidget *widget, const char *id, void *info, 
         lgrab->movie = movie_create(widget,
                 view->box_feedback0->width,
                 view->box_feedback0->height);
+        movie_show(lgrab->movie);
         lgrab->view = view;
         nemowidget_create_grab(widget, event, _launcherview_grab_event, lgrab);
         lgrab->timer = TOOL_ADD_TIMER(tool, 0, _longpress_timeout, lgrab);
