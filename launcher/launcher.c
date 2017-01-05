@@ -309,7 +309,6 @@ struct _Movie {
     int idx;
     struct showtransition *trans;
 
-    struct nemotimer *done_timer;
     void *done_userdata;
     MovieAfter done;
 };
@@ -334,8 +333,6 @@ void movie_translate(Movie *movie, uint32_t easetype, int duration, int delay, i
 void movie_destroy(Movie *movie)
 {
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
-    if (movie->done_timer) nemotimer_destroy(movie->done_timer);
-    movie->done_timer = NULL;
     nemoplay_shader_destroy(movie->shader);
     nemowidget_destroy(movie->widget);
     free(movie);
@@ -420,6 +417,9 @@ static int _movie_frame_rev(void *userdata, uint32_t time, double t)
             movie->idx = movie->mbox->cnt - 1;
         } else {
             movie->trans = NULL;
+            if (movie->done) {
+                movie->done(movie, movie->done_userdata);
+            }
             return 1;
         }
     }
@@ -452,6 +452,9 @@ static int _movie_frame(void *userdata, uint32_t time, double t)
             movie->idx = 0;
         } else {
             movie->trans = NULL;
+            if (movie->done) {
+                movie->done(movie, movie->done_userdata);
+            }
             return 1;
         }
     }
@@ -480,25 +483,13 @@ static int _movie_frame_rewind(void *userdata, uint32_t time, double t)
         movie->idx--;
     } else {
         movie->trans = NULL;
+        if (movie->done) {
+            movie->done(movie, movie->done_userdata);
+        }
         return 1;
     }
 
     return 0;
-}
-
-static void _movie_done_timeout(struct nemotimer *timer, void *userdata)
-{
-    Movie *movie = userdata;
-    RET_IF(!movie->done);
-    RET_IF(!movie->done_timer);
-
-    nemotimer_destroy(timer);
-    movie->done_timer = NULL;
-
-    movie->done(movie, movie->done_userdata);
-    movie->done = NULL;
-    movie->done_userdata = NULL;
-
 }
 
 void movie_set_done(Movie *movie, MovieAfter done, void *userdata)
@@ -507,31 +498,12 @@ void movie_set_done(Movie *movie, MovieAfter done, void *userdata)
 
     movie->done = done;
     movie->done_userdata = userdata;
-
-    if (movie->done_timer) nemotimer_destroy(movie->done_timer);
-    movie->done_timer = NULL;
-    uint32_t time = movie->mbox->cnt * (1000/60);
-
-    if (time > 0) {
-        movie->done_timer = TOOL_ADD_TIMER(movie->tool, time,
-                _movie_done_timeout, movie);
-    } else {
-        movie->done(movie, movie->done_userdata);
-        movie->done = NULL;
-        movie->done_userdata = NULL;
-    }
 }
 
 void movie_rewind(Movie *movie)
 {
     movie->repeat = false;
 
-    if (movie->done_timer) {
-        nemotimer_destroy(movie->done_timer);
-        movie->done_timer = NULL;
-        movie->done = NULL;
-        movie->done_userdata = NULL;
-    }
     struct nemoshow *show = nemowidget_get_show(movie->widget);
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
     struct showtransition *trans;
@@ -551,13 +523,6 @@ void movie_play_rev(Movie *movie, MovieBox *mbox, bool repeat)
     nemoplay_shader_set_format(movie->shader, mbox->pixel_format);
     nemoplay_shader_resize(movie->shader, mbox->width, mbox->height);
 
-    if (movie->done_timer) {
-        nemotimer_destroy(movie->done_timer);
-        movie->done_timer = NULL;
-        movie->done = NULL;
-        movie->done_userdata = NULL;
-    }
-
     struct nemoshow *show = nemowidget_get_show(movie->widget);
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
     struct showtransition *trans;
@@ -576,13 +541,6 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
     movie->idx = 0;
     nemoplay_shader_set_format(movie->shader, mbox->pixel_format);
     nemoplay_shader_resize(movie->shader, mbox->width, mbox->height);
-
-    if (movie->done_timer) {
-        nemotimer_destroy(movie->done_timer);
-        movie->done_timer = NULL;
-        movie->done = NULL;
-        movie->done_userdata = NULL;
-    }
 
     struct nemoshow *show = nemowidget_get_show(movie->widget);
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
@@ -694,24 +652,28 @@ void launcher_item_translate(LauncherItem *it, uint32_t easetype, int duration, 
 
 static void _launcher_item_grab_up_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_effect1, true);
 }
 
 static void _launcher_item_click_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_click_effect, true);
 }
 
 static void _launcher_item_unclick_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     movie_play(it->movie, it->grp->box_effect1, true);
 }
 
 void _launcher_item_sub_show_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItemSub *sub = userdata;
     movie_play(sub->movie, sub->menu_it->box_effect, true);
 }
@@ -758,6 +720,7 @@ void launcher_item_sub_translate(LauncherItemSub *sub, uint32_t easetype, int du
 
 static void _launcher_item_sub_grab_up_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItemSub *sub = userdata;
     movie_play(sub->movie, sub->menu_it->box_effect, true);
 }
@@ -874,6 +837,7 @@ LauncherItemSub *launcher_item_sub_create(Launcher *launcher, MenuItem *menu_it)
 
 static void _launcher_item_hide_done_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     movie_hide(it->movie);
 }
@@ -959,8 +923,9 @@ void launcher_item_show(LauncherItem *it, int delay)
     }
 }
 
-static void _launcher_sub_hide_done(Movie *moview, void *userdata)
+static void _launcher_sub_hide_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     movie_hide(it->launcher->sub_bg);
 }
@@ -982,6 +947,7 @@ void launcher_sub_hide(LauncherItem *it)
 
 static void _launcher_sub_show_done(Movie *movie, void *userdata)
 {
+    movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
     Launcher *launcher = it->launcher;
 
@@ -1126,6 +1092,8 @@ void launcher_translate(Launcher *launcher, uint32_t easetype, int duration, int
 
 static void _launcher_show_done(Movie *movie, void *userdata)
 {
+    ERR("");
+    movie_set_done(movie, NULL, NULL);
     Launcher *launcher = userdata;
     int gap = 10;
 
@@ -1144,6 +1112,7 @@ static void _launcher_show_done(Movie *movie, void *userdata)
 
 void launcher_show(Launcher *launcher)
 {
+    ERR("");
     movie_show(launcher->main_bg);
     movie_play(launcher->main_bg, launcher->view->box_main_bg, false);
     movie_set_done(launcher->main_bg, _launcher_show_done, launcher);
