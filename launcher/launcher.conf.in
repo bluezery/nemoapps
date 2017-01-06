@@ -8,20 +8,20 @@
         <item group="0" app="xapp" mov="@LAUNCHER_MOV_DIR@/bookmark/multitouch/" exec="/usr/bin/electron;-f;@LAUNCHER_DATA_DIR@/multitouch"/>
     </group>
 
-    <group id="1" mov="@LAUNCHER_MOV_DIR@/contents/main/">
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/fine"          exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/fine"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/collaboration" exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/collaboration"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/digitalsign"   exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/digitalsign"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/promotion"     exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/promotion"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sales"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/sales"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/shell"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/shell"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/sk"            exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/skt"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/etc"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/etc"/>
+    <group id="1" mov="@LAUNCHER_MOV_DIR@/content/main/">
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/fine"          exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/fine"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/collaboration" exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/collaboration"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/digitalsign"   exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/digitalsign"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/promotion"     exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/promotion"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/sales"         exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/sales"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/shell"         exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/shell"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/sk"            exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/skt"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/etc"           exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/etc"/>
         <!--
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/car"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/car"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/carvr"         exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/carvr"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/iot"           exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/iot"/>
-        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/contents/vr"            exec="/usr/bin/nemoexplorer;-f;/opt/contents/ces2017/vr"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/car"           exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/car"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/carvr"         exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/carvr"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/iot"           exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/iot"/>
+        <item group="1" type="app" mov="@LAUNCHER_MOV_DIR@/content/vr"            exec="/usr/bin/nemoexplorer;-f;/opt/content/ces2017/vr"/>
         -->
     </group>
     <group id="2" mov="@LAUNCHER_MOV_DIR@/entertainment/main/">
