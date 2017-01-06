@@ -1312,7 +1312,7 @@ LauncherView *launcherview_create(NemoWidget *parent, int width, int height, Con
     const char *feedback0, *feedback1, *feedback2, *feedback3, *longpress;
 
     if (!strcmp(app->type, "wall")) {
-        if (width == 2160) {
+        if (width == 3840) {
             main_bg_path = LAUNCHER_MOV_DIR"/bg/wall/4k/main.mov";
             sub_bg_path = LAUNCHER_MOV_DIR"/bg/wall/4k/sub.mov";
             feedback0 = LAUNCHER_MOV_DIR"/effect/4k/feedback0.mov";
@@ -1331,7 +1331,7 @@ LauncherView *launcherview_create(NemoWidget *parent, int width, int height, Con
             longpress = LAUNCHER_MOV_DIR"/effect/1k/longpress.mov";
         }
     } else {
-        if (width == 2160) {
+        if (width == 3840) {
             main_bg_path = LAUNCHER_MOV_DIR"/bg/table/4k/main.mov";
             sub_bg_path = LAUNCHER_MOV_DIR"/bg/table/4k/sub.mov";
             feedback0 = LAUNCHER_MOV_DIR"/effect/4k/feedback0.mov";
@@ -1350,7 +1350,7 @@ LauncherView *launcherview_create(NemoWidget *parent, int width, int height, Con
         }
     }
 
-    if (width == 2160) {
+    if (width == 3840) {
         List *l;
         MenuGroup *grp;
         LIST_FOR_EACH(app->groups, l, grp) {
