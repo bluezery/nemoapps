@@ -332,6 +332,7 @@ void movie_translate(Movie *movie, uint32_t easetype, int duration, int delay, i
 
 void movie_destroy(Movie *movie)
 {
+    ERR("%p", movie);
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
     nemoplay_shader_destroy(movie->shader);
     nemowidget_destroy(movie->widget);
@@ -385,11 +386,9 @@ Movie *movie_create(NemoWidget *parent, int width, int height, MovieBox *mbox)
     return movie;
 }
 
-static void _movie_destroy(struct nemotimer *timer, void *userdata)
+static void _movie_destroy(Movie *movie, void *userdata)
 {
-    Movie *movie = userdata;
     movie_destroy(movie);
-    nemotimer_destroy(timer);
 }
 
 static int _movie_frame_rev(void *userdata, uint32_t time, double t)
@@ -403,6 +402,7 @@ static int _movie_frame_rev(void *userdata, uint32_t time, double t)
         return 1;
     }
 
+    ERR("%p...", movie);
     //ERR("%s, %d, %lf, (%d)", movie->mbox->path, time, t, movie->idx);
     nemoplay_shader_update(movie->shader, one);
     nemoplay_shader_dispatch(movie->shader);
@@ -416,6 +416,7 @@ static int _movie_frame_rev(void *userdata, uint32_t time, double t)
         if (movie->repeat) {
             movie->idx = movie->mbox->cnt - 1;
         } else {
+            ERR("%p", movie);
             movie->trans = NULL;
             if (movie->done) {
                 movie->done(movie, movie->done_userdata);
@@ -523,8 +524,10 @@ void movie_play_rev(Movie *movie, MovieBox *mbox, bool repeat)
     nemoplay_shader_set_format(movie->shader, mbox->pixel_format);
     nemoplay_shader_resize(movie->shader, mbox->width, mbox->height);
 
+    ERR("(%p) %d %d", movie, movie->idx, mbox->cnt);
     struct nemoshow *show = nemowidget_get_show(movie->widget);
     if (movie->trans) nemoshow_transition_destroy(movie->trans);
+
     struct showtransition *trans;
     movie->trans = trans = nemoshow_transition_create(NEMOEASE_LINEAR_TYPE, 0, 0);
     nemoshow_transition_set_dispatch_frame(trans, _movie_frame_rev);
@@ -556,21 +559,14 @@ void movie_play(Movie *movie, MovieBox *mbox, bool repeat)
 void movie_rewind_destroy(Movie *movie)
 {
     movie_rewind(movie);
-    // xxx: do not use movie_set_done
-    // it will be broken done callback call
-    uint32_t time = movie->mbox->cnt * (1000/60);
-    TOOL_ADD_TIMER(movie->tool, time, _movie_destroy, movie);
+    movie_set_done(movie, _movie_destroy, movie);
 }
 
 void movie_play_destroy(Movie *movie, MovieBox *mbox, bool repeat)
 {
     ERR("");
     movie_play(movie, mbox, repeat);
-    // XXX: do not use movie_set_done
-    // it will be broken done callback call
-    uint32_t time = movie->mbox->cnt * (1000/60);
-    TOOL_ADD_TIMER(movie->tool, time,
-            _movie_destroy, movie);
+    movie_set_done(movie, _movie_destroy, movie);
 }
 
 typedef struct _LauncherView LauncherView;
@@ -853,7 +849,6 @@ static void _launcher_item_hide_done(Movie *movie, void *userdata)
 void _launcher_item_hide(LauncherItem *it)
 {
     ERR("");
-
     movie_play_rev(it->movie, it->grp->box_show, false);
 
     List *l;
@@ -879,12 +874,15 @@ void launcher_item_hide(LauncherItem *it, int delay)
         nemotimer_destroy(it->delay_timer);
         it->delay_timer = NULL;
     }
+        _launcher_item_hide(it);
+    /*
     if (delay > 0) {
         it->delay_timer = TOOL_ADD_TIMER(it->launcher->view->tool, delay,
                 _item_hide_delay_timeout, it);
     } else {
         _launcher_item_hide(it);
     }
+    */
 }
 
 static void _launcher_item_show_done(Movie *movie, void *userdata)
@@ -927,6 +925,7 @@ static void _launcher_sub_hide_done(Movie *movie, void *userdata)
 {
     movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
+    ERR("%p", it);
     movie_hide(it->launcher->sub_bg);
 }
 
@@ -934,6 +933,7 @@ void launcher_sub_hide(LauncherItem *it)
 {
     Launcher *launcher = it->launcher;
 
+    ERR("%p (%p)", it, launcher->sub_bg);
     movie_play_rev(launcher->sub_bg, launcher->view->box_sub_bg, false);
     movie_set_done(launcher->sub_bg, _launcher_sub_hide_done, it);
 
@@ -949,6 +949,7 @@ static void _launcher_sub_show_done(Movie *movie, void *userdata)
 {
     movie_set_done(movie, NULL, NULL);
     LauncherItem *it = userdata;
+    ERR("%p", it);
     Launcher *launcher = it->launcher;
 
     int gap = 10;
@@ -968,6 +969,7 @@ static void _launcher_sub_show_done(Movie *movie, void *userdata)
 
 void launcher_sub_show(LauncherItem *it)
 {
+    ERR("%p", it);
     Launcher *launcher = it->launcher;
 
     movie_show(launcher->sub_bg);
@@ -1005,24 +1007,9 @@ static void _launcher_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
             if (it->launcher->it_cur) {
                 launcher_sub_hide(it->launcher->it_cur);
             }
+
             launcher_sub_show(it);
             it->launcher->it_cur = it;
-            /*
-            int i = 1;
-            List *l;
-            LauncherItemSub *sub;
-            LIST_FOR_EACH(it->items, l, sub) {
-                int x, y;
-                x = launcher->x + gap * i;
-                y = launcher->y + (launcher->height - sub->height)/2;
-                launcher_item_translate(sub, 0, 0, 0, x, y);
-                movie_play(sub->movie, sub->grp->box_show, false);
-
-                uint32_t time = sub->movie->mbox->cnt * (1000/60);
-                TOOL_ADD_TIMER(sub->movie->tool, time, _launcher_item_show_done, sub);
-                i++;
-            }
-            */
 
         } else {
             movie_rewind(it->movie);
@@ -1092,7 +1079,6 @@ void launcher_translate(Launcher *launcher, uint32_t easetype, int duration, int
 
 static void _launcher_show_done(Movie *movie, void *userdata)
 {
-    ERR("");
     movie_set_done(movie, NULL, NULL);
     Launcher *launcher = userdata;
     int gap = 10;
@@ -1112,7 +1098,6 @@ static void _launcher_show_done(Movie *movie, void *userdata)
 
 void launcher_show(Launcher *launcher)
 {
-    ERR("");
     movie_show(launcher->main_bg);
     movie_play(launcher->main_bg, launcher->view->box_main_bg, false);
     movie_set_done(launcher->main_bg, _launcher_show_done, launcher);
