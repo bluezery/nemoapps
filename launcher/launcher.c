@@ -1083,10 +1083,11 @@ static void _longpress_done(struct nemotimer *timer, void *userdata)
     LauncherView *view = longpress->view;
     movie_destroy(longpress->del_movie);
 
+    int tx = longpress->ex - view->box_main_bg->width/2;
+
     Launcher *launcher;
     launcher = launcher_create(view);
-    launcher_translate(launcher, 0, 0, 0,
-            longpress->ex - view->box_main_bg->width/2, 0);
+    launcher_translate(launcher, 0, 0, 0, tx, 0);
     launcher_show(launcher);
 
     view->launchers = list_append(view->launchers, launcher);
@@ -1098,6 +1099,16 @@ static void _longpress_timeout(struct nemotimer *timer, void *userdata)
     LauncherGrab *lgrab = userdata;
     Movie *movie = lgrab->movie;
     LauncherView *view = lgrab->view;
+
+    int tx = lgrab->ex - view->box_main_bg->width/2;
+    List *l;
+    Launcher *_launcher;
+    LIST_FOR_EACH(view->launchers, l, _launcher) {
+        if (abs(_launcher->x - tx) < 200) {
+            nemotimer_set_timeout(lgrab->timer, 500);
+            return;
+        }
+    }
 
     nemotimer_destroy(timer);
     lgrab->timer = NULL;
