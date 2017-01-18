@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
 <size width="1920" height="1080" col="4" row="4"/>
+<!-- CES 2017
     <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
@@ -17,7 +18,8 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/Microsoft- Productivity Future Vision.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/The Future According To Samsung.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
-    <!--
+    -->
+    <!-- SKT RTSP
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:558/004"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:559/005"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:560/006"/>
@@ -79,21 +81,22 @@
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
     -->
-    <!-- Futuristic samples
-    <file path="/home/root/FUTURE/MS 2011.mp4"/>
-    <file path="/home/root/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
-    <file path="/home/root/FUTURE/Expected future for the Deaf.mp4"/>
-    <file path="/home/root/FUTURE/FutureVision Town.mp4"/>
-    <file path="/home/root/FUTURE/IKEA Kitchen 2025.mp4"/>
-    <file path="/home/root/FUTURE/Meta Glasses are the future of computing.mp4"/>
-    <file path="/home/root/FUTURE/Microsoft in 2019 [HQ].mp4"/>
-    <file path="/home/root/FUTURE/Microsoft- Productivity Future Vision.mp4"/>
-    <file path="/home/root/FUTURE/PGR 21 SMART.mp4"/>
-    <file path="/home/root/FUTURE/Smart buildings - the future of building technology.mp4"/>
-    <file path="/home/root/FUTURE/Pizza Hut + Chaotic Moon Studios Interactive Concept Table.mp4"/>
-    <file path="/home/root/FUTURE/The Future According To Samsung.mp4"/>
-    <file path="/home/root/FUTURE/United Rentals - Future Vision - HD.mp4"/>
-    <file path="/home/root/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
-    <file path="/home/root/FUTURE/A Day Made of Glass... Made possible by Corning. (2011).mp4"/>
-    -->
+    <!-- Futuristic
+     -->
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/MS 2011.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Expected future for the Deaf.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Future Technology - Our Digital World 2020.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/FutureVision Town.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/IKEA Kitchen 2025.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Meta Glasses are the future of computing.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Microsoft in 2019 [HQ].mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Microsoft- Productivity Future Vision.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/The Future According To Samsung.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/PGR 21 SMART.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Smart buildings - the future of building technology.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Pizza Hut + Chaotic Moon Studios Interactive Concept Table.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/United Rentals - Future Vision - HD.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass... Made possible by Corning. (2011).mp4"/>
 </@APPNAME@>
