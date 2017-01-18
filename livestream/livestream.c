@@ -216,12 +216,12 @@ Item *item_create(NemoWidget *widget, struct showone *pgroup,
 
     PlayerUI *ui;
     it->ui = ui = nemoui_player_create(widget, w, h, uri, enable_audio);
-    nemoui_player_append_callback(ui, "player,done", _player_done, ui);
     if (!ui) {
         ERR("ui is NULL");
         free(it);
         return NULL;
     }
+    nemoui_player_append_callback(ui, "player,done", _player_done, ui);
     struct showone *group;
     it->group = group = GROUP_CREATE(pgroup);
 
