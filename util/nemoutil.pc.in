@@ -7,7 +7,7 @@ libname=@LIBNAME@
 Name: @LIBNAME@
 Description: NEMO Utility Library
 Version: 0.1.0
-Requires: MagickWand expat
+Requires: MagickWand expat dbus-1
 Requires.private:
 Libs: -L${libdir} -l${libname} -lmagic
 Cflags: -I${includedir}/${libname}
