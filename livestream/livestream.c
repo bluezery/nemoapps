@@ -570,8 +570,10 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 
         Item *it;
         it = item_create(widget, group, ix, iy, view->iw, view->ih, path, app->enable_audio);
-        if (!it) continue;
-
+        if (!it) {
+            ERR("item create failed: %d/%d", i, app->row * app->row);
+            continue;
+        }
         view->items = list_append(view->items, it);
         i++;
         if (i >= app->row * app->row) break;
@@ -618,7 +620,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-	ao_initialize();
+    // FIXME
+    avformat_network_init();
+    ao_initialize();
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
