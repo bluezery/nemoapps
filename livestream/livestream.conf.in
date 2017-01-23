@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
 <size width="1920" height="1080" col="4" row="4"/>
-<!-- CES 2017
+    <!-- Local 
+    -->
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <!-- CES 2017
     <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
@@ -82,7 +95,6 @@
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
     -->
     <!-- Futuristic
-     -->
     <file path="/opt/contents/TEST/VIDEO/FUTURE/MS 2011.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/Expected future for the Deaf.mp4"/>
@@ -99,4 +111,5 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/United Rentals - Future Vision - HD.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass... Made possible by Corning. (2011).mp4"/>
+     -->
 </@APPNAME@>
