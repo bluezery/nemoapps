@@ -740,6 +740,16 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     // Video
     view->player = nemoui_player_create(parent, cw, ch, path, enable_audio);
+    if (!view->player) {
+        ERR("nemoui_player_create() failed");
+        free(view->path);
+        nemobus_destroy(view->bus);
+        free(view->objpath);
+        frame_destroy(view->frame);
+        free(view);
+        return NULL;
+    }
+
     nemoui_player_append_callback(view->player, "event", _player_event, view);
     nemoui_player_append_callback(view->player, "player,update", _player_update, view);
     nemoui_player_append_callback(view->player, "player,done", _player_done, view);
@@ -1202,6 +1212,10 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
+    // FIXME
+    avformat_network_init();
+    ao_initialize();
+
     ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->path) {
@@ -1224,6 +1238,10 @@ int main(int argc, char *argv[])
     PlayerView *view = playerview_create(win,
             app->config->width, app->config->height, vw, vh,
             app->path, app->enable_audio, app->repeat);
+    if (!view) {
+        ERR("playerview_create() failed");
+        return -1;
+    };
     nemowidget_append_callback(win, "fullscreen", _win_fullscreen_callback, view);
     nemowidget_append_callback(win, "exit", _win_exit, view);
     playerview_show(view);
