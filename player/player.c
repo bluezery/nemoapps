@@ -54,7 +54,6 @@ struct _PlayerView
     Frame *frame;
 
     PlayerUI *player;
-    int duration;
 
     struct nemotimer *frame_timer;
     Sketch *sketch;
@@ -199,10 +198,10 @@ void playerview_fr(PlayerView *view)
 {
     ERR("FR");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-
+    int duration = nemoui_player_get_duration(view->player);
     double cts = nemoui_player_get_cts(view->player);
-    if (cts - 10 > view->duration) {
-        cts = view->duration;
+    if (cts - 10 > duration) {
+        cts = duration;
     } else
         cts = cts - 10;
     nemoui_player_seek(view->player, cts);
@@ -213,9 +212,10 @@ void playerview_ff(PlayerView *view)
     ERR("FF");
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
 
+    int duration = nemoui_player_get_duration(view->player);
     double cts = nemoui_player_get_cts(view->player);
-    if (cts + 10 > view->duration) {
-        cts = view->duration;
+    if (cts + 10 > duration) {
+        cts = duration;
     } else
         cts = cts + 10;
     nemoui_player_seek(view->player, cts);
@@ -277,6 +277,7 @@ void playerview_volume_disable(PlayerView *view)
 
 static void _progressbar_update(PlayerView *view)
 {
+    int duration = nemoui_player_get_duration(view->player);
     double cts = nemoui_player_get_cts(view->player);
 
     char buf[16];
@@ -286,9 +287,14 @@ static void _progressbar_update(PlayerView *view)
     text_update(view->cur_time_back, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
     text_update(view->cur_time, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
 
+    parse_seconds_to_hms(duration, &hour, &min, &sec);
+    snprintf(buf, 16, "%02d:%02d:%02d", hour, min, sec);
+    text_update(view->total_time_back, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
+    text_update(view->total_time, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, buf);
+
     double p0, p1;
-    p0 = cts/(double)view->duration;
-    p1 = 1.0 - cts/(double)view->duration;
+    p0 = cts/(double)duration;
+    p1 = 1.0 - cts/(double)duration;
     graph_bar_item_set_percent(view->progress_it0, p0);
     graph_bar_item_set_percent(view->progress_it1, p1);
     graph_bar_update(view->progress, 0, 0, 0);
@@ -505,13 +511,14 @@ static void _overlay_player_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
                 int x, w;
                 graph_bar_get_geometry(view->progress, &x, NULL, &w, NULL);
 
+                int duration = nemoui_player_get_duration(view->player);
                 double ex, ey;
                 nemowidget_transform_from_global(widget,
                         nemoshow_event_get_x(event),
                         nemoshow_event_get_y(event), &ex, &ey);
-                ERR("POS: %lf", ((ex - x)/w) * view->duration);
+                ERR("POS: %lf", ((ex - x)/w) * duration);
 
-                double cts = ((ex - x)/w) * view->duration;
+                double cts = ((ex - x)/w) * duration;
                 nemoui_player_seek(view->player, cts);
             }
         }
@@ -769,7 +776,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     nemoui_player_append_callback(view->player, "event", _player_event, view);
     nemoui_player_append_callback(view->player, "player,update", _player_update, view);
     nemoui_player_append_callback(view->player, "player,done", _player_done, view);
-    view->duration = nemoui_player_get_duration(view->player);
 
     // Sketch
     view->frame_timer = TOOL_ADD_TIMER(view->tool, 0, _playerview_frame_timeout, view);
@@ -931,16 +937,10 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_show(text, 0, 0, 0);
     view->cur_time = text;
 
-    int duration = nemoui_player_get_duration(view->player);
-    char buf[16];
-    int hour, min, sec;
-    parse_seconds_to_hms(duration, &hour, &min, &sec);
-    snprintf(buf, 16, "%02d:%02d:%02d", hour, min, sec);
-
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
     text_set_stroke_color(text, 0, 0, 0, COLORBACK, 1);
     text_set_fill_color(text, 0, 0, 0, COLORBACK);
-    text_update(text, 0, 0, 0, buf);
+    text_update(text, 0, 0, 0, "00:00:00");
     text_set_anchor(text, 1.0, 0.0);
     text_translate(text, 0, 0, 0, bar_x + bar_w + 1, ry - ih - 5 + 1);
     text_show(text, 0, 0, 0);
@@ -948,7 +948,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
     text_set_fill_color(text, 0, 0, 0, WHITE);
-    text_update(text, 0, 0, 0, buf);
+    text_update(text, 0, 0, 0, "00:00:00");
     text_set_anchor(text, 1.0, 0.0);
     text_translate(text, 0, 0, 0, bar_x + bar_w, ry - ih - 5);
     text_show(text, 0, 0, 0);
@@ -1043,6 +1043,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
 static void playerview_show(PlayerView *view)
 {
+    nemoui_player_play(view->player);
     nemoui_player_show(view->player, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
     playerview_overlay_show(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 400);
     sketch_show(view->sketch, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
