@@ -28,12 +28,14 @@ struct _PlayerUI {
     struct playdecoder *decoder;
     struct playaudio *audio;
     struct playvideo *video;
+    bool prepared;
 };
 
 static void _player_resize(NemoWidget *widget, const char *id, void *info, void *data)
 {
     PlayerUI *ui = data;
     RET_IF(!ui->video);
+    RET_IF(!ui->prepared);
 
     struct showone *canvas;
     canvas = nemowidget_get_canvas(widget);
@@ -67,6 +69,16 @@ void nemoui_player_destroy(PlayerUI *ui)
 	if (ui->decoder) nemoplay_decoder_destroy(ui->decoder);
     nemoplay_destroy(ui->play);
     free(ui);
+}
+
+const char *nemoui_player_get_uri(PlayerUI *ui)
+{
+    return ui->path;
+}
+
+bool nemoui_player_is_prepared(PlayerUI *ui)
+{
+    return ui->prepared;
 }
 
 double nemoui_player_get_cts(PlayerUI *ui)
@@ -161,17 +173,22 @@ static void _video_done(struct nemoplay *play, void *data)
 	nemoshow_dispatch_frame(ui->show);
 }
 
+void nemoui_player_prepare(PlayerUI *ui)
+{
+    nemoplay_load_media(ui->play, ui->path);
+    ui->prepared = true;
+}
+
 void nemoui_player_play(PlayerUI *ui)
 {
     struct nemoplay *play = ui->play;
 
-    if (!ui->audio) {
-        ui->audio = nemoplay_audio_create_by_ao(play);
-        nemoplay_audio_stop(ui->audio);
-    }
-    if (!ui->video) {
+    if (!ui->prepared) {
         nemoplay_load_media(play, ui->path);
+        ui->prepared = true;
+    }
 
+    if (!ui->video) {
         int vw, vh;
         vw = nemoplay_get_video_width(play);
         vh = nemoplay_get_video_height(play);
@@ -193,6 +210,10 @@ void nemoui_player_play(PlayerUI *ui)
         nemoplay_video_set_done(video, _video_done);
         nemoplay_video_set_data(video, ui);
     }
+    if (!ui->audio) {
+        ui->audio = nemoplay_audio_create_by_ao(play);
+        nemoplay_audio_stop(ui->audio);
+    }
     if (!ui->decoder) {
         ui->decoder = nemoplay_decoder_create(play);
         nemoplay_decoder_stop(ui->decoder);
@@ -207,7 +228,9 @@ void nemoui_player_play(PlayerUI *ui)
     nemoplay_audio_play(ui->audio);
     nemoplay_video_play(ui->video);
     nemoplay_decoder_play(ui->decoder);
-    ERR("%s", ui->path);
+
+    nemowidget_dirty(ui->widget);
+    nemoshow_dispatch_frame(ui->show);
 }
 
 void nemoui_player_stop(PlayerUI *ui)
@@ -262,7 +285,7 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     struct nemoplay *play;
     ui->play = play = nemoplay_create();
     if (!enable_audio) nemoplay_revoke_audio(play);
-    //nemoplay_set_video_stropt(play, "threads", "4");
+    nemoplay_set_video_stropt(play, "threads", "1");
 
     NemoWidget *widget;
     ui->widget = widget = nemowidget_create_opengl(parent, cw, ch);

@@ -7,11 +7,14 @@ extern "C" {
 
 typedef struct _PlayerUI PlayerUI;
 
+void nemoui_player_prepare(PlayerUI *ui);
 void nemoui_player_play(PlayerUI *ui);
 void nemoui_player_stop(PlayerUI *ui);
 void nemoui_player_seek(PlayerUI *ui, double time);
 void nemoui_player_append_callback(PlayerUI *ui, const char *id, NemoWidget_Func func, void *userdata);
 void nemoui_player_redraw(PlayerUI *ui);
+bool nemoui_player_is_prepared(PlayerUI *ui);
+const char *nemoui_player_get_uri(PlayerUI *ui);
 double nemoui_player_get_cts(PlayerUI *ui);
 double nemoui_player_get_duration(PlayerUI *ui);
 bool nemoui_player_is_playing(PlayerUI *ui);

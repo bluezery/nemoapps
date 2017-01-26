@@ -149,17 +149,19 @@ static void _config_unload(ConfigApp *app)
 }
 
 typedef struct _Item Item;
+typedef struct _View View;
 struct _Item
 {
+    View *view;
     PlayerUI *ui;
     int x, y;
     struct showone *group;
     struct showone *event;
     struct showone *font;
     struct showone *text;
+    Thread *thread;
 };
 
-typedef struct _View View;
 struct _View {
     int width, height;
     struct nemoshow *show;
@@ -175,6 +177,7 @@ struct _View {
     int iw0, ih0;
     int iw, ih;
     int ix, iy;
+    double scale;
 
     int zoom_start;
 
@@ -192,6 +195,7 @@ void item_below(Item *it, NemoWidget *below)
 
 void item_destroy(Item *it)
 {
+    thread_destroy(it->thread);
     nemoshow_one_destroy(it->event);
     nemoshow_one_destroy(it->text);
     nemoshow_one_destroy(it->font);
@@ -206,11 +210,11 @@ static void _player_done(NemoWidget *widget, const char *id, void *info, void *u
     nemoui_player_play(ui);
 }
 
-
-Item *item_create(NemoWidget *widget, struct showone *pgroup,
+Item *item_create(NemoWidget *widget, struct showone *pgroup, View *view,
         int x, int y, int w, int h, const char *uri, bool enable_audio)
 {
     Item *it = calloc(sizeof(Item), 1);
+    it->view = view;
     it->x = x;
     it->y = y;
 
@@ -276,7 +280,6 @@ void item_scale(Item *it, uint32_t easetype, int duration, int delay, float sx, 
     } else {
         nemoshow_item_scale(it->group, sx, sy);
     }
-    nemoshow_dispatch_frame(it->group->show);
 }
 
 void item_hide(Item *it, uint32_t easetype, int duration, int delay)
@@ -315,9 +318,7 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
     view->ih = view->height/view->zoom;
     view->ix = ix;
     view->iy = iy;
-
-    double scale;
-    scale = (double)view->iw/view->iw0;
+    view->scale = (double)view->iw/view->iw0;
 
     List *l;
     Item *it;
@@ -326,20 +327,25 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
             ERR("it is NULL");
             continue;
         }
+        if (!nemoui_player_is_prepared(it->ui)) {
+            ERR("item(%s) is not prepared", nemoui_player_get_uri(it->ui));
+            continue;
+        }
         float x, y;
-        x = (it->x - ix) * view->iw;
-        y = (it->y - iy) * view->ih;
+        x = (it->x - view->ix) * view->iw;
+        y = (it->y - view->iy) * view->ih;
         // XXX: show only visible players
-        if (ix <= it->x && it->x < ix + zoom && iy <= it->y && it->y < iy + zoom) {
+        if (view->ix <= it->x && it->x < view->ix + view->zoom && view->iy <= it->y && it->y < view->iy + view->zoom) {
             item_translate(it, easetype, duration, delay, x, y);
-            item_scale(it, easetype, duration, delay, scale, scale);
+            item_scale(it, easetype, duration, delay, view->scale, view->scale);
             item_show(it, 0, 0, 0);
         } else {
             item_translate(it, easetype, duration, delay, x, y);
-            item_scale(it, easetype, duration, delay, scale, scale);
+            item_scale(it, easetype, duration, delay, view->scale, view->scale);
             item_hide(it, easetype, duration, delay);
         }
     }
+    nemoshow_dispatch_frame(view->show);
 }
 
 void view_zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration, int delay)
@@ -349,6 +355,36 @@ void view_zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int dura
     if (view->zoom == zoom) return;
 
     _zoom(view, zoom, ix, iy, easetype, duration, delay);
+}
+
+static void *_item_prepare(void *userdata)
+{
+    Item *it = userdata;
+    nemoui_player_prepare(it->ui);
+    return NULL;
+}
+
+static void _item_prepare_done(bool cancel, void *userdata)
+{
+    Item *it = userdata;
+    View *view = it->view;
+    if (!cancel) {
+        nemoui_player_play(it->ui);
+        float x, y;
+        x = (it->x - view->ix) * view->iw;
+        y = (it->y - view->iy) * view->ih;
+        // XXX: show only visible players
+        if (view->ix <= it->x && it->x < view->ix + view->zoom && view->iy <= it->y && it->y < view->iy + view->zoom) {
+            item_translate(it, 0, 0, 0, x, y);
+            item_scale(it, 0, 0, 0, view->scale, view->scale);
+            item_show(it, 0, 0, 0);
+        } else {
+            item_translate(it, 0, 0, 0, x, y);
+            item_scale(it, 0, 0, 0, view->scale, view->scale);
+            item_hide(it, 0, 0, 0);
+        }
+        nemoshow_dispatch_frame(view->show);
+    }
 }
 
 void view_show(View *view, uint32_t easetype, int duration, int delay)
@@ -366,7 +402,10 @@ void view_show(View *view, uint32_t easetype, int duration, int delay)
             ERR("it is NULL");
             continue;
         }
-        nemoui_player_show(it->ui, easetype, duration, delay);
+        item_show(it, easetype, duration, delay);
+        if (!it->thread) {
+            it->thread = thread_create(view->tool, _item_prepare, _item_prepare_done, it);
+        }
     }
 }
 
@@ -431,6 +470,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
                 view->iy = 0;
                 view->zoom = view->row + 1;
             }
+            nemoshow_dispatch_frame(view->show);
         }
     }
 }
@@ -569,7 +609,7 @@ View *view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
         int iy = i/app->row;
 
         Item *it;
-        it = item_create(widget, group, ix, iy, view->iw, view->ih, path, app->enable_audio);
+        it = item_create(widget, group, view, ix, iy, view->iw, view->ih, path, app->enable_audio);
         if (!it) {
             ERR("item create failed: %d/%d", i, app->row * app->row);
             continue;
@@ -613,16 +653,16 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
 
 int main(int argc, char *argv[])
 {
+    // FIXME
+    avformat_network_init();
+    ao_initialize();
+
     ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->paths) {
         ERR("No playable resources are provided");
         return -1;
     }
-
-    // FIXME
-    avformat_network_init();
-    ao_initialize();
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);

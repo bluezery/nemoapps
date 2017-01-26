@@ -2,18 +2,18 @@
 <@APPNAME@>
 <size width="1920" height="1080" col="4" row="4"/>
     <!-- Local 
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
+    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
     -->
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
-    <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
     <!-- CES 2017
     <file path="rtsp://nemoux:nemo1234@192.168.0.199"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
@@ -32,6 +32,12 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/The Future According To Samsung.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
     -->
+    <!--
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:556/002"/>
+    -->
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:557/003"/>
     <!-- SKT RTSP
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:558/004"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:559/005"/>
