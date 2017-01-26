@@ -14,6 +14,8 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 #include <nemobus.h>
+#include <nemojson.h>
+#include <nemoitem.h>
 
 #include <nemoplay.h>
 #include <playback.h>
@@ -599,79 +601,93 @@ static void _bus_callback(void *data, const char *events)
 
     PlayerView *view = data;
 
-	struct nemoitem *it;
-	struct itemone *one;
-    it = nemobus_recv_item(view->bus);
-    RET_IF(!it);
+	char buffer[4096];
+    int length = nemobus_recv(view->bus, buffer, sizeof(buffer));
+	if (length <= 0) return;
 
-	nemoitem_for_each(one, it) {
-        const char *from = nemoitem_one_get_attr(one, "from");
-        if (!from){
-            ERR("No from in the attribute");
-            continue;
-        }
+    struct nemojson *json;
+	json = nemojson_create(buffer, length);
+	nemojson_update(json);
 
-        const char *path = nemoitem_one_get_path(one);
-        const char *name = strrchr(path, '/');
-        if (!path) continue;
-        if (!name) continue;
+    int i;
+	for (i = 0; i < nemojson_get_object_count(json); i++) {
+        struct nemoitem *msg;
+		msg = nemoitem_create();
+		nemoitem_load_json(msg, "/nemoshell", nemojson_get_object(json, i));
 
-
-        if (!strcmp(name, "/property")) {
-            struct busmsg *msg;
-            msg = nemobus_msg_create();
-            nemobus_msg_set_name(msg, "property");
-            nemobus_msg_set_attr(msg, "from", view->objpath);
-            nemobus_msg_set_attr(msg, "filename", view->filename);
-            nemobus_msg_set_attr_format(msg, "isplaying", "%s",
-                    nemoui_player_is_playing(view->player) ? "true" : "false");
-            nemobus_msg_set_attr_format(msg, "ismute", "%s",
-                    view->is_mute ? "true" : "false");
-            nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
-            nemobus_msg_set_attr(msg, "from", view->objpath);
-            nemobus_send(view->bus, view->objpath, from, msg);
-            nemobus_msg_destroy(msg);
-        } else if (!strcmp(name, "/command")) {
-            const char *type = nemoitem_one_get_attr(one, "type");
-            ERR("%s", type);
-            if (!type) continue;
-            if (!strcmp(type, "exit")) {
-                NemoWidget *win = nemowidget_get_top_widget(view->overlay);
-                nemowidget_callback_dispatch(win, "exit", NULL);
-            } else if (!strcmp(type, "play")) {
-                playerview_play(view);
-            } else if (!strcmp(type, "stop")) {
-                playerview_stop(view);
-            } else if (!strcmp(type, "fr")) {
-                playerview_fr(view);
-            } else if (!strcmp(type, "ff")) {
-                playerview_ff(view);
-            } else if (!strcmp(type, "volume-up")) {
-                playerview_volume_up(view);
-            } else if (!strcmp(type, "volume-down")) {
-                playerview_volume_down(view);
-            } else if (!strcmp(type, "volume-enable")) {
-                playerview_volume_enable(view);
-            } else if (!strcmp(type, "volume-disable")) {
-                playerview_volume_disable(view);
+        struct itemone *one;
+        nemoitem_for_each(one, msg) {
+            const char *from = nemoitem_one_get_attr(one, "from");
+            if (!from){
+                ERR("No from in the attribute");
+                continue;
             }
 
-            struct busmsg *msg;
-            msg = nemobus_msg_create();
-            nemobus_msg_set_name(msg, "property");
-            nemobus_msg_set_attr(msg, "from", view->objpath);
-            nemobus_msg_set_attr(msg, "filename", view->filename);
-            nemobus_msg_set_attr_format(msg, "isplaying", "%s",
-                    nemoui_player_is_playing(view->player) ? "true" : "false");
-            nemobus_msg_set_attr_format(msg, "ismute", "%s",
-                    view->is_mute ? "true" : "false");
-            nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
-            nemobus_msg_set_attr(msg, "from", view->objpath);
-            nemobus_send(view->bus, view->objpath, from, msg);
-            nemobus_msg_destroy(msg);
+            const char *path = nemoitem_one_get_path(one);
+            const char *name = strrchr(path, '/');
+            if (!path) continue;
+            if (!name) continue;
+
+
+            if (!strcmp(name, "/property")) {
+                struct busmsg *msg;
+                msg = nemobus_msg_create();
+                nemobus_msg_set_name(msg, "property");
+                nemobus_msg_set_attr(msg, "from", view->objpath);
+                nemobus_msg_set_attr(msg, "filename", view->filename);
+                nemobus_msg_set_attr_format(msg, "isplaying", "%s",
+                        nemoui_player_is_playing(view->player) ? "true" : "false");
+                nemobus_msg_set_attr_format(msg, "ismute", "%s",
+                        view->is_mute ? "true" : "false");
+                nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
+                nemobus_msg_set_attr(msg, "from", view->objpath);
+                nemobus_send_msg(view->bus, view->objpath, from, msg);
+                nemobus_msg_destroy(msg);
+            } else if (!strcmp(name, "/command")) {
+                const char *type = nemoitem_one_get_attr(one, "type");
+                ERR("%s", type);
+                if (!type) continue;
+                if (!strcmp(type, "exit")) {
+                    NemoWidget *win = nemowidget_get_top_widget(view->overlay);
+                    nemowidget_callback_dispatch(win, "exit", NULL);
+                } else if (!strcmp(type, "play")) {
+                    playerview_play(view);
+                } else if (!strcmp(type, "stop")) {
+                    playerview_stop(view);
+                } else if (!strcmp(type, "fr")) {
+                    playerview_fr(view);
+                } else if (!strcmp(type, "ff")) {
+                    playerview_ff(view);
+                } else if (!strcmp(type, "volume-up")) {
+                    playerview_volume_up(view);
+                } else if (!strcmp(type, "volume-down")) {
+                    playerview_volume_down(view);
+                } else if (!strcmp(type, "volume-enable")) {
+                    playerview_volume_enable(view);
+                } else if (!strcmp(type, "volume-disable")) {
+                    playerview_volume_disable(view);
+                }
+
+                struct busmsg *msg;
+                msg = nemobus_msg_create();
+                nemobus_msg_set_name(msg, "property");
+                nemobus_msg_set_attr(msg, "from", view->objpath);
+                nemobus_msg_set_attr(msg, "filename", view->filename);
+                nemobus_msg_set_attr_format(msg, "isplaying", "%s",
+                        nemoui_player_is_playing(view->player) ? "true" : "false");
+                nemobus_msg_set_attr_format(msg, "ismute", "%s",
+                        view->is_mute ? "true" : "false");
+                nemobus_msg_set_attr_format(msg, "volume", "%d", view->vol_cnt);
+                nemobus_msg_set_attr(msg, "from", view->objpath);
+                nemobus_send_msg(view->bus, view->objpath, from, msg);
+                nemobus_msg_destroy(msg);
+            }
         }
+
+		nemoitem_destroy(msg);
 	}
-	nemoitem_destroy(it);
+
+	nemojson_destroy(json);
 }
 
 static void _player_update(NemoWidget *widget, const char *id, void *info, void *userdata)

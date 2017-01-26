@@ -1578,7 +1578,7 @@ static inline char *NEMOMSG_SEND(struct nemobus *bus, struct busmsg *msg)
 {
     char *uuid = uuid_gen();
     nemobus_msg_set_attr(msg, "uuid", uuid);
-    nemobus_send(bus, "", "/nemoshell", msg);
+    nemobus_send_msg(bus, "", "/nemoshell", msg);
     nemobus_msg_destroy(msg);
 
     nemobus_destroy(bus);
@@ -1622,7 +1622,7 @@ static inline void nemo_close(const char *uuid)
     nemobus_msg_set_name(msg, "command");
     nemobus_msg_set_attr(msg, "type", "close");
     nemobus_msg_set_attr(msg, "uuid", uuid);
-    nemobus_send(bus, "", "/nemoshell", msg);
+    nemobus_send_msg(bus, "", "/nemoshell", msg);
     nemobus_msg_destroy(msg);
 
     nemobus_destroy(bus);

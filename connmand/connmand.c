@@ -11,7 +11,10 @@
 
 #include <nemotool.h>
 #include <nemotimer.h>
+#include <nemoshow.h>
 #include <nemobus.h>
+#include <nemojson.h>
+#include <nemoitem.h>
 
 #include "nemoutil.h"
 #include "widgets.h"
@@ -1278,7 +1281,7 @@ static void _send(struct nemobus *bus, const char *dst, const char *cmd, const c
     nemobus_msg_set_attr(msg, "cmd", cmd);
     nemobus_msg_set_attr(msg, "path", path);
     nemobus_msg_set_attr(msg, "result", result);
-    nemobus_send(bus, OBJECT_PATH, dst, msg);
+    nemobus_send_msg(bus, OBJECT_PATH, dst, msg);
     nemobus_msg_destroy(msg);
 }
 
@@ -1703,172 +1706,185 @@ static void _conndaemon_bus_callback(void *data, const char *events)
 
 	ConnDaemon *daemon = data;
 
-	struct nemoitem *it;
-	struct itemone *one;
-    it = nemobus_recv_item(daemon->bus);
-    RET_IF(!it);
+	char buffer[4096];
+    int length = nemobus_recv(daemon->bus, buffer, sizeof(buffer));
+	if (length <= 0) return;
 
-    const char *from = NULL;
-	nemoitem_for_each(one, it) {
-        if (nemoitem_one_has_path(one, "/nemoshell")) {
-            from = nemoitem_one_get_attr(one, "from");
-        }
-    }
+    struct nemojson *json;
+	json = nemojson_create(buffer, length);
+	nemojson_update(json);
 
-	nemoitem_for_each(one, it) {
-        const char *cmd = nemoitem_one_get_attr(one, "cmd");
-        if (!cmd) {
-            ERR("No cmd specified");
-            continue;
-        }
-        if (!strcmp(cmd, "get")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/state")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/state");
-                connman_get_state(daemon->con, _get_state, msgdata);
-            } else if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/services");
-                connman_get_services(daemon->con, _get_services, msgdata);
-            } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/technology");
-                connman_get_technologies(daemon->con, _get_technologies, msgdata);
-            } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/technology/wifi");
-                connman_get_technologies(daemon->con, _get_technologies_wifi, msgdata);
-            } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/ethernet")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/technology/ethernet");
-                connman_get_technologies(daemon->con, _get_technologies_ethernet, msgdata);
+    int i;
+	for (i = 0; i < nemojson_get_object_count(json); i++) {
+        struct nemoitem *msg;
+		msg = nemoitem_create();
+		nemoitem_load_json(msg, "/nemoshell", nemojson_get_object(json, i));
+
+        const char *from = NULL;
+        struct itemone *one;
+        nemoitem_for_each(one, msg) {
+            if (nemoitem_one_has_path(one, "/nemoshell")) {
+                from = nemoitem_one_get_attr(one, "from");
             }
-        } else if (!strcmp(cmd, "set")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
-                const char *value = nemoitem_one_get_attr(one, "powered");
-                if (value) {
+        }
+
+        nemoitem_for_each(one, msg) {
+            const char *cmd = nemoitem_one_get_attr(one, "cmd");
+            if (!cmd) {
+                ERR("No cmd specified");
+                continue;
+            }
+            if (!strcmp(cmd, "get")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/state")) {
+                    MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                    msgdata->daemon = daemon;
+                    msgdata->src = strdup(from);
+                    msgdata->cmd = strdup(cmd);
+                    msgdata->path = strdup(OBJECT_PATH"/state");
+                    connman_get_state(daemon->con, _get_state, msgdata);
+                } else if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
+                    MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                    msgdata->daemon = daemon;
+                    msgdata->src = strdup(from);
+                    msgdata->cmd = strdup(cmd);
+                    msgdata->path = strdup(OBJECT_PATH"/services");
+                    connman_get_services(daemon->con, _get_services, msgdata);
+                } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology")) {
+                    MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                    msgdata->daemon = daemon;
+                    msgdata->src = strdup(from);
+                    msgdata->cmd = strdup(cmd);
+                    msgdata->path = strdup(OBJECT_PATH"/technology");
+                    connman_get_technologies(daemon->con, _get_technologies, msgdata);
+                } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
                     MsgData *msgdata = calloc(sizeof(MsgData), 1);
                     msgdata->daemon = daemon;
                     msgdata->src = strdup(from);
                     msgdata->cmd = strdup(cmd);
                     msgdata->path = strdup(OBJECT_PATH"/technology/wifi");
-                    if (!strcasecmp(value, "on")) {
-                        connman_enable_wifi(daemon->con, _enable_wifi, msgdata);
-                        break;
-                    } else {
-                        connman_disable_wifi(daemon->con, _disable_wifi, msgdata);
-                        break;
-                    }
-                }
-            } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/ethernet")) {
-                const char *value = nemoitem_one_get_attr(one, "powered");
-                if (value) {
+                    connman_get_technologies(daemon->con, _get_technologies_wifi, msgdata);
+                } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/ethernet")) {
                     MsgData *msgdata = calloc(sizeof(MsgData), 1);
                     msgdata->daemon = daemon;
                     msgdata->src = strdup(from);
                     msgdata->cmd = strdup(cmd);
                     msgdata->path = strdup(OBJECT_PATH"/technology/ethernet");
-                    if (!strcasecmp(value, "on")) {
-                        connman_enable_ethernet(daemon->con, _enable_ethernet, msgdata);
-                        break;
-                    } else {
-                        connman_disable_ethernet(daemon->con, _disable_ethernet, msgdata);
-                        break;
+                    connman_get_technologies(daemon->con, _get_technologies_ethernet, msgdata);
+                }
+            } else if (!strcmp(cmd, "set")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
+                    const char *value = nemoitem_one_get_attr(one, "powered");
+                    if (value) {
+                        MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                        msgdata->daemon = daemon;
+                        msgdata->src = strdup(from);
+                        msgdata->cmd = strdup(cmd);
+                        msgdata->path = strdup(OBJECT_PATH"/technology/wifi");
+                        if (!strcasecmp(value, "on")) {
+                            connman_enable_wifi(daemon->con, _enable_wifi, msgdata);
+                            break;
+                        } else {
+                            connman_disable_wifi(daemon->con, _disable_wifi, msgdata);
+                            break;
+                        }
+                    }
+                } else if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/ethernet")) {
+                    const char *value = nemoitem_one_get_attr(one, "powered");
+                    if (value) {
+                        MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                        msgdata->daemon = daemon;
+                        msgdata->src = strdup(from);
+                        msgdata->cmd = strdup(cmd);
+                        msgdata->path = strdup(OBJECT_PATH"/technology/ethernet");
+                        if (!strcasecmp(value, "on")) {
+                            connman_enable_ethernet(daemon->con, _enable_ethernet, msgdata);
+                            break;
+                        } else {
+                            connman_disable_ethernet(daemon->con, _disable_ethernet, msgdata);
+                            break;
+                        }
                     }
                 }
-            }
-        } else if (!strcmp(cmd, "scan")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
-                MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                msgdata->daemon = daemon;
-                msgdata->src = strdup(from);
-                msgdata->cmd = strdup(cmd);
-                msgdata->path = strdup(OBJECT_PATH"/technology/wifi");
-                connman_scan_wifi(daemon->con, _scan_wifi, msgdata);
-            }
-        } else if (!strcmp(cmd, "connect")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
-                const char *id = nemoitem_one_get_attr(one, "path");
-                const char *pw = nemoitem_one_get_attr(one, "passwd");
-                if (id) {
-                    ERR("%s %s", id, pw);
+            } else if (!strcmp(cmd, "scan")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/technology/wifi")) {
                     MsgData *msgdata = calloc(sizeof(MsgData), 1);
                     msgdata->daemon = daemon;
                     msgdata->src = strdup(from);
                     msgdata->cmd = strdup(cmd);
-                    msgdata->path = strdup(OBJECT_PATH"/services");
-                    connman_connect(daemon->con, _connect, msgdata, id, pw);
+                    msgdata->path = strdup(OBJECT_PATH"/technology/wifi");
+                    connman_scan_wifi(daemon->con, _scan_wifi, msgdata);
                 }
-            }
-        } else if (!strcmp(cmd, "disconnect")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
-                const char *id = nemoitem_one_get_attr(one, "path");
-                if (id) {
-                    MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                    msgdata->daemon = daemon;
-                    msgdata->src = strdup(from);
-                    msgdata->cmd = strdup(cmd);
-                    msgdata->path = strdup(OBJECT_PATH"/services");
-                    connman_disconnect(daemon->con, _disconnect, msgdata, id);
-                }
-            }
-        } else if (!strcmp(cmd, "config")) {
-            if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
-                const char *id = nemoitem_one_get_attr(one, "path");
-                const char *address = nemoitem_one_get_attr(one, "address");
-                const char *netmask = nemoitem_one_get_attr(one, "netmask");
-                const char *gateway = nemoitem_one_get_attr(one, "gateway");
-                const char *value = nemoitem_one_get_attr(one, "path");
-                char *nameserver = NULL, *nameserver2 = NULL;
-                if (value) {
-                    char *temp, *temp2;
-                    temp = strdup(value);
-                    temp2 = strtok(temp, ";");
-                    if (temp2) nameserver = strdup(temp2);
-                    temp2 = strtok(NULL, ";");
-                    if (temp2) nameserver2 = strdup(temp2);
-                    free(temp);
-                }
-
-                if (id) {
-                    MsgData *msgdata = calloc(sizeof(MsgData), 1);
-                    msgdata->daemon = daemon;
-                    msgdata->src = strdup(from);
-                    msgdata->cmd = strdup(cmd);
-                    msgdata->path = strdup(OBJECT_PATH"/services");
-                    if (!nameserver) {
-                        connman_config_ipv4(daemon->con, _config_ipv4, msgdata,
-                                id, address, netmask, gateway);
-                    } else {
-                        connman_config_ipv4(daemon->con, _config_nameserver, msgdata,
-                                id, address, netmask, gateway);
-                        connman_config_nameserver(daemon->con, _config_nameserver, msgdata,
-                                id, nameserver, nameserver2);
-                        free(nameserver);
-                        if (nameserver2) free(nameserver);
+            } else if (!strcmp(cmd, "connect")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
+                    const char *id = nemoitem_one_get_attr(one, "path");
+                    const char *pw = nemoitem_one_get_attr(one, "passwd");
+                    if (id) {
+                        ERR("%s %s", id, pw);
+                        MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                        msgdata->daemon = daemon;
+                        msgdata->src = strdup(from);
+                        msgdata->cmd = strdup(cmd);
+                        msgdata->path = strdup(OBJECT_PATH"/services");
+                        connman_connect(daemon->con, _connect, msgdata, id, pw);
                     }
                 }
+            } else if (!strcmp(cmd, "disconnect")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
+                    const char *id = nemoitem_one_get_attr(one, "path");
+                    if (id) {
+                        MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                        msgdata->daemon = daemon;
+                        msgdata->src = strdup(from);
+                        msgdata->cmd = strdup(cmd);
+                        msgdata->path = strdup(OBJECT_PATH"/services");
+                        connman_disconnect(daemon->con, _disconnect, msgdata, id);
+                    }
+                }
+            } else if (!strcmp(cmd, "config")) {
+                if (nemoitem_one_has_path(one, OBJECT_PATH"/services")) {
+                    const char *id = nemoitem_one_get_attr(one, "path");
+                    const char *address = nemoitem_one_get_attr(one, "address");
+                    const char *netmask = nemoitem_one_get_attr(one, "netmask");
+                    const char *gateway = nemoitem_one_get_attr(one, "gateway");
+                    const char *value = nemoitem_one_get_attr(one, "path");
+                    char *nameserver = NULL, *nameserver2 = NULL;
+                    if (value) {
+                        char *temp, *temp2;
+                        temp = strdup(value);
+                        temp2 = strtok(temp, ";");
+                        if (temp2) nameserver = strdup(temp2);
+                        temp2 = strtok(NULL, ";");
+                        if (temp2) nameserver2 = strdup(temp2);
+                        free(temp);
+                    }
 
+                    if (id) {
+                        MsgData *msgdata = calloc(sizeof(MsgData), 1);
+                        msgdata->daemon = daemon;
+                        msgdata->src = strdup(from);
+                        msgdata->cmd = strdup(cmd);
+                        msgdata->path = strdup(OBJECT_PATH"/services");
+                        if (!nameserver) {
+                            connman_config_ipv4(daemon->con, _config_ipv4, msgdata,
+                                    id, address, netmask, gateway);
+                        } else {
+                            connman_config_ipv4(daemon->con, _config_nameserver, msgdata,
+                                    id, address, netmask, gateway);
+                            connman_config_nameserver(daemon->con, _config_nameserver, msgdata,
+                                    id, nameserver, nameserver2);
+                            free(nameserver);
+                            if (nameserver2) free(nameserver);
+                        }
+                    }
+
+                }
             }
         }
+
+		nemoitem_destroy(msg);
 	}
 
-	nemoitem_destroy(it);
+	nemojson_destroy(json);
 }
 
 ConnDaemon *conndaemon_create(struct nemotool *tool, int port)

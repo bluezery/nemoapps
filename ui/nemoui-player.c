@@ -64,16 +64,13 @@ void nemoui_player_destroy(PlayerUI *ui)
 	if (ui->video) nemoplay_video_destroy(ui->video);
 	if (ui->audio) nemoplay_audio_destroy(ui->audio);
 	if (ui->decoder) nemoplay_decoder_destroy(ui->decoder);
-
-	nemoplay_set_state(ui->play, NEMOPLAY_DONE_STATE);
-	nemoplay_wait_thread(ui->play);
     nemoplay_destroy(ui->play);
     free(ui);
 }
 
 double nemoui_player_get_cts(PlayerUI *ui)
 {
-    return nemoplay_get_cts(ui->play);
+    return nemoplay_get_clock_cts(ui->play);
 }
 
 double nemoui_player_get_duration(PlayerUI *ui)
@@ -138,9 +135,12 @@ static void _video_update(struct nemoplay *play, void *data)
 {
     PlayerUI *ui = data;
 
+    ERR("%p", ui->video);
     if (ui->need_stop) {
         ui->need_stop = false;
-        nemoplay_set_state(ui->play, NEMOPLAY_STOP_STATE);
+        nemoplay_audio_stop(ui->audio);
+        nemoplay_video_stop(ui->video);
+        nemoplay_decoder_stop(ui->decoder);
     }
 
     nemowidget_callback_dispatch(ui->widget, "player,update", NULL);
@@ -170,7 +170,9 @@ void nemoui_player_play(PlayerUI *ui)
     if (!ui->video) {
         struct playvideo *video;
         ui->video = video = nemoplay_video_create_by_timer(play);
+        nemoplay_video_set_drop_rate(video, 0.0);
         nemoplay_video_set_texture(video, nemowidget_get_texture(ui->widget), ui->w, ui->h);
+        ERR("%p", ui->video);
         nemoplay_video_set_update(video, _video_update);
         nemoplay_video_set_done(video, _video_done);
         nemoplay_video_set_data(video, ui);
@@ -182,7 +184,9 @@ void nemoui_player_play(PlayerUI *ui)
         ui->fin = false;
     } else {
     }
-    nemoplay_set_state(play, NEMOPLAY_PLAY_STATE);
+    nemoplay_audio_play(ui->audio);
+    nemoplay_video_play(ui->video);
+    nemoplay_decoder_play(ui->decoder);
 
     nemowidget_dirty(ui->widget);
     nemoshow_dispatch_frame(ui->show);
@@ -191,7 +195,9 @@ void nemoui_player_play(PlayerUI *ui)
 void nemoui_player_stop(PlayerUI *ui)
 {
     ui->is_playing = false;
-    nemoplay_set_state(ui->play, NEMOPLAY_STOP_STATE);
+    nemoplay_audio_stop(ui->audio);
+    nemoplay_video_stop(ui->video);
+    nemoplay_decoder_stop(ui->decoder);
 
     nemowidget_dirty(ui->widget);
     nemoshow_dispatch_frame(ui->show);
@@ -203,7 +209,9 @@ void nemoui_player_seek(PlayerUI *ui, double time)
     nemoplay_decoder_seek(ui->decoder, time);
     if (!ui->is_playing) {
         ui->need_stop = true;
-        nemoplay_set_state(ui->play, NEMOPLAY_PLAY_STATE);
+        nemoplay_audio_play(ui->audio);
+        nemoplay_video_play(ui->video);
+        nemoplay_decoder_play(ui->decoder);
     }
     nemowidget_dirty(ui->widget);
     nemoshow_dispatch_frame(ui->show);
@@ -242,7 +250,7 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
 
     struct nemoplay *play;
     ui->play = play = nemoplay_create();
-    nemoplay_set_video_stropt(play, "threads", "1");
+    //nemoplay_set_video_stropt(play, "threads", "4");
 
     // XXX: it's state is PLAY as default
     ui->is_playing = true;

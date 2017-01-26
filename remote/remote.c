@@ -13,6 +13,9 @@
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
+#include <nemobus.h>
+#include <nemojson.h>
+#include <nemoitem.h>
 
 #include "nemoutil.h"
 #include "widgets.h"
@@ -215,7 +218,7 @@ static void _view_grab_button_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                 nemobus_msg_set_name(msg, "command");
                 nemobus_msg_set_attr(msg, "from", view->objpath);
                 nemobus_msg_set_attr(msg, "type", "exit");
-                nemobus_send(view->bus, view->objpath, OBJPATH_PLAYER, msg);
+                nemobus_send_msg(view->bus, view->objpath, OBJPATH_PLAYER, msg);
                 nemobus_msg_destroy(msg);
 
                 NemoWidget *win = nemowidget_get_top_widget(widget);
@@ -248,7 +251,7 @@ static void _view_grab_button_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                     ERR("incorrect tag!!");
                 }
 
-                nemobus_send(view->bus, view->objpath, OBJPATH_PLAYER, msg);
+                nemobus_send_msg(view->bus, view->objpath, OBJPATH_PLAYER, msg);
                 nemobus_msg_destroy(msg);
             }
         }
@@ -307,7 +310,7 @@ static void _view_grab_ss_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
             } else {
                 nemobus_msg_set_attr(msg, "type", "play");
             }
-            nemobus_send(view->bus, view->objpath, OBJPATH_PLAYER, msg);
+            nemobus_send_msg(view->bus, view->objpath, OBJPATH_PLAYER, msg);
             nemobus_msg_destroy(msg);
         }
     }
@@ -351,93 +354,106 @@ static void _bus_callback(void *data, const char *events)
 
     RemoteView *view = data;
 
-	struct nemoitem *it;
-	struct itemone *one;
-    it = nemobus_recv_item(view->bus);
-    RET_IF(!it);
+	char buffer[4096];
+    int length = nemobus_recv(view->bus, buffer, sizeof(buffer));
+	if (length <= 0) return;
 
-	nemoitem_for_each(one, it) {
-        const char *from = nemoitem_one_get_attr(one, "from");
-        if (!from) {
-            ERR("No objpath in the attribute");
-            continue;
-        }
+    struct nemojson *json;
+	json = nemojson_create(buffer, length);
+	nemojson_update(json);
 
-        const char *path = nemoitem_one_get_path(one);
-        const char *name = strrchr(path, '/');
-        if (!path) continue;
-        if (!name) continue;
+    int i;
+	for (i = 0; i < nemojson_get_object_count(json); i++) {
+        struct nemoitem *msg;
+		msg = nemoitem_create();
+		nemoitem_load_json(msg, "/nemoshell", nemojson_get_object(json, i));
 
-        if (!strcmp(name, "/property")) {
-            const char *filename = nemoitem_one_get_attr(one, "filename");
-            const char *isplaying = nemoitem_one_get_attr(one, "isplaying");
-            const char *ismute = nemoitem_one_get_attr(one, "ismute");
-            const char *volume = nemoitem_one_get_attr(one, "volume");
-
-            ERR("%s %s %s %s", filename, isplaying, ismute, volume);
-            if (filename) {
-                if (view->filename) free(view->filename);
-                view->filename = strdup(filename);
-                text_update(view->name_back,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, view->filename);
-                text_show(view->name_back,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-                text_update(view->name,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, view->filename);
-                text_show(view->name_back,
-                        NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        struct itemone *one;
+        nemoitem_for_each(one, msg) {
+            const char *from = nemoitem_one_get_attr(one, "from");
+            if (!from) {
+                ERR("No objpath in the attribute");
+                continue;
             }
-            if (isplaying) {
-                if (!strcmp(isplaying, "true")) {
-                    view->isplaying = true;
-                    _nemoshow_item_motion(view->ss0,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 1.0, NULL);
-                    _nemoshow_item_motion(view->ss1,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 0.0, NULL);
-                } else {
-                    view->isplaying = false;
-                    _nemoshow_item_motion(view->ss0,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 0.0, NULL);
-                    _nemoshow_item_motion(view->ss1,
-                            NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                            "alpha", 1.0, NULL);
+
+            const char *path = nemoitem_one_get_path(one);
+            const char *name = strrchr(path, '/');
+            if (!path) continue;
+            if (!name) continue;
+
+            if (!strcmp(name, "/property")) {
+                const char *filename = nemoitem_one_get_attr(one, "filename");
+                const char *isplaying = nemoitem_one_get_attr(one, "isplaying");
+                const char *ismute = nemoitem_one_get_attr(one, "ismute");
+                const char *volume = nemoitem_one_get_attr(one, "volume");
+
+                ERR("%s %s %s %s", filename, isplaying, ismute, volume);
+                if (filename) {
+                    if (view->filename) free(view->filename);
+                    view->filename = strdup(filename);
+                    text_update(view->name_back,
+                            NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, view->filename);
+                    text_show(view->name_back,
+                            NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+                    text_update(view->name,
+                            NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, view->filename);
+                    text_show(view->name_back,
+                            NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
                 }
-            }
-            if (ismute) {
-                if (!strcmp(ismute, "true")) {
-                    if (!view->is_mute) {
-                        view->is_mute = true;
-                        button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                                0, REMOTE_ICON_DIR"/volume_mute.svg", -1, -1);
-                        button_set_fill(view->vol_mute, 0, 0, 0, 0, GRAY);
-                        _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                                "stroke", GRAY,
-                                NULL);
-                    }
-                } else {
-                    if (view->is_mute) {
-                        view->is_mute = false;
-                        button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                                0, REMOTE_ICON_DIR"/volume.svg", -1, -1);
-                        button_set_fill(view->vol_mute, 0, 0, 0, 0, COLOR1);
-                        _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                                "stroke", COLOR1,
-                                NULL);
+                if (isplaying) {
+                    if (!strcmp(isplaying, "true")) {
+                        view->isplaying = true;
+                        _nemoshow_item_motion(view->ss0,
+                                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                "alpha", 1.0, NULL);
+                        _nemoshow_item_motion(view->ss1,
+                                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                "alpha", 0.0, NULL);
+                    } else {
+                        view->isplaying = false;
+                        _nemoshow_item_motion(view->ss0,
+                                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                "alpha", 0.0, NULL);
+                        _nemoshow_item_motion(view->ss1,
+                                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                "alpha", 1.0, NULL);
                     }
                 }
-            }
-            if (volume) {
-                view->vol_cnt = atoi(volume);
-                _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
-                        "to", (360/100.0) * view->vol_cnt - 90.0,
-                        NULL);
+                if (ismute) {
+                    if (!strcmp(ismute, "true")) {
+                        if (!view->is_mute) {
+                            view->is_mute = true;
+                            button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                    0, REMOTE_ICON_DIR"/volume_mute.svg", -1, -1);
+                            button_set_fill(view->vol_mute, 0, 0, 0, 0, GRAY);
+                            _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                    "stroke", GRAY,
+                                    NULL);
+                        }
+                    } else {
+                        if (view->is_mute) {
+                            view->is_mute = false;
+                            button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                    0, REMOTE_ICON_DIR"/volume.svg", -1, -1);
+                            button_set_fill(view->vol_mute, 0, 0, 0, 0, COLOR1);
+                            _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                    "stroke", COLOR1,
+                                    NULL);
+                        }
+                    }
+                }
+                if (volume) {
+                    view->vol_cnt = atoi(volume);
+                    _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
+                            "to", (360/100.0) * view->vol_cnt - 90.0,
+                            NULL);
+                }
             }
         }
+
+		nemoitem_destroy(msg);
 	}
-	nemoitem_destroy(it);
+	nemojson_destroy(json);
 }
 
 RemoteView *remoteview_create(NemoWidget *parent, int width, int height)
@@ -472,7 +488,7 @@ RemoteView *remoteview_create(NemoWidget *parent, int width, int height)
     msg = nemobus_msg_create();
     nemobus_msg_set_name(msg, "property");
     nemobus_msg_set_attr(msg, "from", view->objpath);
-    nemobus_send(view->bus, view->objpath, OBJPATH_PLAYER, msg);
+    nemobus_send_msg(view->bus, view->objpath, OBJPATH_PLAYER, msg);
     nemobus_msg_destroy(msg);
 
     view->back = frameback_create(parent, width, height);

@@ -170,11 +170,9 @@ static void _key_repeat_timeout(struct nemotimer *timer, void *userdata)
 {
     Key *key = userdata;
     ERR("PRESSED: %s(%d)", key->keycoord->name, key->keycoord->code);
-    nemotool_keyboard_key(key->tool, get_time(),
-            key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_PRESSED);
+    nemotool_keyboard_key(key->tool, get_time(), key->keycoord->code, 1);
     ERR("RELEASED: %s(%d)", key->keycoord->name, key->keycoord->code);
-    nemotool_keyboard_key(key->tool, get_time(),
-            key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_RELEASED);
+    nemotool_keyboard_key(key->tool, get_time(), key->keycoord->code, 0);
     nemotimer_set_timeout(timer, 100);
 }
 
@@ -704,8 +702,7 @@ static void _keyboard_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
         key_down(key);
         if (key->type == 1) {
             ERR("PRESSED: %s(%d)", key->keycoord->name, key->keycoord->code);
-            nemotool_keyboard_key(tool, get_time(),
-                    key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_PRESSED);
+            nemotool_keyboard_key(tool, get_time(), key->keycoord->code, 1);
             if (!strcmp(key->keycoord->name, "SHIFT")) {
                 keyboard->shift_cnt++;
             } else if (!strcmp(key->keycoord->name, "CTRL")) {
@@ -754,8 +751,7 @@ static void _keyboard_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
 
         if (key->type == 1) {
             ERR("RELEASED: %s(%d)", key->keycoord->name, key->keycoord->code);
-            nemotool_keyboard_key(tool, get_time(),
-                    key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_RELEASED);
+            nemotool_keyboard_key(tool, get_time(), key->keycoord->code, 0);
             if (!strcmp(key->keycoord->name, "SHIFT")) {
                 keyboard->shift_cnt--;
             } else if (!strcmp(key->keycoord->name, "CTRL")) {
@@ -765,11 +761,9 @@ static void _keyboard_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struc
             }
         } else {
             ERR("PRESSED: %s(%d)", key->keycoord->name, key->keycoord->code);
-            nemotool_keyboard_key(tool, get_time(),
-                    key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_PRESSED);
+            nemotool_keyboard_key(tool, get_time(), key->keycoord->code, 1);
             ERR("RELEASED: %s(%d)", key->keycoord->name, key->keycoord->code);
-            nemotool_keyboard_key(tool, get_time(),
-                    key->keycoord->code, NEMO_KEYBOARD_KEY_STATE_RELEASED);
+            nemotool_keyboard_key(tool, get_time(), key->keycoord->code, 0);
 
             if (!strcmp(key->keycoord->name, "CAPS")) {
                 keyboard->is_capslock = !keyboard->is_capslock;
