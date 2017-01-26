@@ -165,17 +165,22 @@ void nemoui_player_play(PlayerUI *ui)
 {
     struct nemoplay *play = ui->play;
 
-    if (!ui->decoder) ui->decoder = nemoplay_decoder_create(play);
-    if (!ui->audio) ui->audio = nemoplay_audio_create_by_ao(play);
+    if (!ui->audio) {
+        ui->audio = nemoplay_audio_create_by_ao(play);
+        nemoplay_audio_stop(ui->audio);
+    }
     if (!ui->video) {
         struct playvideo *video;
         ui->video = video = nemoplay_video_create_by_timer(play);
-        nemoplay_video_set_drop_rate(video, 0.0);
+        nemoplay_video_stop(ui->video);
         nemoplay_video_set_texture(video, nemowidget_get_texture(ui->widget), ui->w, ui->h);
-        ERR("%p", ui->video);
         nemoplay_video_set_update(video, _video_update);
         nemoplay_video_set_done(video, _video_done);
         nemoplay_video_set_data(video, ui);
+    }
+    if (!ui->decoder) {
+        ui->decoder = nemoplay_decoder_create(play);
+        nemoplay_decoder_stop(ui->decoder);
     }
 
     ui->is_playing = true;
