@@ -284,6 +284,7 @@ void item_scale(Item *it, uint32_t easetype, int duration, int delay, float sx, 
 
 void item_hide(Item *it, uint32_t easetype, int duration, int delay)
 {
+    nemoui_player_stop(it->ui);
     nemoui_player_hide(it->ui, easetype, duration, delay);
     if (duration > 0) {
         _nemoshow_item_motion(it->group, easetype, duration, delay,
@@ -302,6 +303,11 @@ void item_show(Item *it, uint32_t easetype, int duration, int delay)
     } else {
         nemoshow_item_set_alpha(it->group, 1.0);
     }
+}
+
+void item_play(Item *it)
+{
+    nemoui_player_play(it->ui);
 }
 
 // ix, iy are designated left top item's coordinates.
@@ -327,10 +333,6 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
             ERR("it is NULL");
             continue;
         }
-        if (!nemoui_player_is_prepared(it->ui)) {
-            ERR("item(%s) is not prepared", nemoui_player_get_uri(it->ui));
-            continue;
-        }
         float x, y;
         x = (it->x - view->ix) * view->iw;
         y = (it->y - view->iy) * view->ih;
@@ -339,6 +341,11 @@ void _zoom(View *view, int zoom, int ix, int iy, uint32_t easetype, int duration
             item_translate(it, easetype, duration, delay, x, y);
             item_scale(it, easetype, duration, delay, view->scale, view->scale);
             item_show(it, 0, 0, 0);
+            if (!nemoui_player_is_prepared(it->ui)) {
+                ERR("item(%s) is not prepared", nemoui_player_get_uri(it->ui));
+            } else {
+                item_play(it);
+            }
         } else {
             item_translate(it, easetype, duration, delay, x, y);
             item_scale(it, easetype, duration, delay, view->scale, view->scale);
@@ -369,7 +376,6 @@ static void _item_prepare_done(bool cancel, void *userdata)
     Item *it = userdata;
     View *view = it->view;
     if (!cancel) {
-        nemoui_player_play(it->ui);
         float x, y;
         x = (it->x - view->ix) * view->iw;
         y = (it->y - view->iy) * view->ih;
@@ -378,6 +384,11 @@ static void _item_prepare_done(bool cancel, void *userdata)
             item_translate(it, 0, 0, 0, x, y);
             item_scale(it, 0, 0, 0, view->scale, view->scale);
             item_show(it, 0, 0, 0);
+            if (!nemoui_player_is_prepared(it->ui)) {
+                ERR("item(%s) is not prepared", nemoui_player_get_uri(it->ui));
+            } else {
+                item_play(it);
+            }
         } else {
             item_translate(it, 0, 0, 0, x, y);
             item_scale(it, 0, 0, 0, view->scale, view->scale);
@@ -440,6 +451,7 @@ static void _view_event(NemoWidget *widget, const char *id, void *event, void *u
                 List *l;
                 Item *itt;
                 LIST_FOR_EACH(view->items, l, itt) {
+                    item_play(itt);
                     item_show(itt, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
                     double scale;
                     float x, y;

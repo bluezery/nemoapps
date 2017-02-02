@@ -56,7 +56,6 @@ void nemoui_player_show(PlayerUI *ui, uint32_t easetype, int duration, int delay
 
 void nemoui_player_hide(PlayerUI *ui, uint32_t easetype, int duration, int delay)
 {
-    nemoui_player_stop(ui);
     nemowidget_hide(ui->widget, 0, 0, 0);
     nemowidget_set_alpha(ui->widget, easetype, duration, delay, 0.0);
 }
