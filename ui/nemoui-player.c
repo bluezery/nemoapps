@@ -178,7 +178,7 @@ void nemoui_player_prepare(PlayerUI *ui)
     RET_IF(ui->prepared);
 
     if (nemoplay_load_media(ui->play, ui->path) < 0) {
-        ERR("nemoplay load media failed");
+        ERR("nemoplay load media failed: %s", ui->path);
         return;
     }
     ui->prepared = true;
@@ -190,7 +190,7 @@ void nemoui_player_play(PlayerUI *ui)
 
     if (!ui->prepared) {
         if (nemoplay_load_media(play, ui->path) < 0) {
-            ERR("nemoplay load media failed");
+            ERR("nemoplay load media failed: %s", ui->path);
             return;
         }
         ui->prepared = true;
