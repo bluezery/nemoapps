@@ -33,10 +33,9 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
     -->
     <!-- SKT RTSP
-    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:556/002"/>
-    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:564/010"/>
     -->
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:556/002"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:557/003"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:558/004"/>
@@ -45,6 +44,7 @@
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:561/007"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:562/008"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:563/009"/>
+    <file path="rtsp://nemoux:nemoux1234@180.67.220.155:564/010"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:565/011"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:566/012"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:567/013"/>
