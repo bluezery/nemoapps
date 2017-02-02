@@ -136,6 +136,7 @@ void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int dela
         ui->h = ui->h * sy;
         nemowidget_resize(ui->widget, ui->w, ui->h);
     }
+    nemoshow_dispatch_frame(ui->show);
 }
 
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y)
@@ -174,7 +175,12 @@ static void _video_done(struct nemoplay *play, void *data)
 
 void nemoui_player_prepare(PlayerUI *ui)
 {
-    nemoplay_load_media(ui->play, ui->path);
+    RET_IF(ui->prepared);
+
+    if (nemoplay_load_media(ui->play, ui->path) < 0) {
+        ERR("nemoplay load media failed");
+        return;
+    }
     ui->prepared = true;
 }
 
@@ -183,7 +189,10 @@ void nemoui_player_play(PlayerUI *ui)
     struct nemoplay *play = ui->play;
 
     if (!ui->prepared) {
-        nemoplay_load_media(play, ui->path);
+        if (nemoplay_load_media(play, ui->path) < 0) {
+            ERR("nemoplay load media failed");
+            return;
+        }
         ui->prepared = true;
     }
 
@@ -204,7 +213,9 @@ void nemoui_player_play(PlayerUI *ui)
         ui->video = video = nemoplay_video_create_by_timer(play);
         nemoplay_video_set_drop_rate(video, 0.0);
         nemoplay_video_stop(ui->video);
-        nemoplay_video_set_texture(video, nemowidget_get_texture(ui->widget), ui->w, ui->h);
+        nemoplay_video_set_texture(video,
+                nemowidget_get_texture(ui->widget),
+                ui->w, ui->h);
         nemoplay_video_set_update(video, _video_update);
         nemoplay_video_set_done(video, _video_done);
         nemoplay_video_set_data(video, ui);
@@ -234,6 +245,7 @@ void nemoui_player_play(PlayerUI *ui)
 
 void nemoui_player_stop(PlayerUI *ui)
 {
+    RET_IF(!ui->audio || !ui->video || !ui->decoder)
     ui->is_playing = false;
     nemoplay_audio_stop(ui->audio);
     nemoplay_video_stop(ui->video);
