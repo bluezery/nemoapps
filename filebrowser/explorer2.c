@@ -432,7 +432,7 @@ static void _explorer_item_img_work_done(bool cancel, void *userdata)
             char *buf;
             size_t len = data->w/8;
             buf = malloc(sizeof(char) * len);
-            snprintf(buf, len, it->txt_str);
+            snprintf(buf, len, "%s", it->txt_str);
             nemoshow_item_set_text(it->txt, buf);
 
             nemoshow_item_translate(it->txt_bg, 0, data->h/2.0 -it->w/8.0/2.0);
@@ -497,7 +497,7 @@ static void _explorer_item_video_timer(struct nemotimer *timer, void *userdata)
         }
         // translate TXT
         char buf[25];
-        snprintf(buf, 25, it->txt_str);
+        snprintf(buf, 25, "%s", it->txt_str);
         nemoshow_item_set_text(it->txt, buf);
 
         nemoshow_item_translate(it->txt_bg, 0, h/2.0 - it->w/8.0/2.0);
@@ -869,7 +869,7 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     it->txt_str = strdup(txt);
 
     char buf[25];
-    snprintf(buf, 25, txt);
+    snprintf(buf, 25, "%s", txt);
     one = TEXT_CREATE(group, font, it->w/11, NULL);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(COLOR_TXT));

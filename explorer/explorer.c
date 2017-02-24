@@ -1035,7 +1035,7 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     }
 
     char buf[16];
-    snprintf(buf, 16, txt);
+    snprintf(buf, 16, "%s", txt);
 
     one = TEXT_CREATE(group, font, it->w/11, buf);
     nemoshow_item_set_fill_color(one, RGBA(GRAY));

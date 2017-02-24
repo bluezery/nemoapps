@@ -197,8 +197,8 @@ static void _viewer_item_btn_grab_event(NemoWidgetGrab *grab, NemoWidget *widget
             char args[PATH_MAX];
 
             snprintf(name, PATH_MAX, "/usr/bin/electron");
-            snprintf(path, PATH_MAX, name);
-            snprintf(args, PATH_MAX, item->url);
+            snprintf(path, PATH_MAX, "%s", name);
+            snprintf(args, PATH_MAX, "%s", item->url);
 
             ERR("(%s) (%s) (%s)", path, name, item->url);
             nemo_execute(view->karim->uuid, "xapp", path, args, "off",
@@ -1709,6 +1709,8 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, "%s%d.svg", uri, 1);
     map->one = one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
+    //nemoshow_item_scale(one, 0.5, 0.5);
+    //nemoshow_item_translate(one, view->w * (1.0 - 0.5)/2.0, view->h * (1.0 - 0.5)/2.0);
 
     int i;
     for (i = 2 ; i <= 5 ; i++) {
@@ -1717,6 +1719,8 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
         one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
         nemoshow_item_set_fill_color(one, RGBA(0x0));
         nemoshow_item_set_alpha(one, 0.0);
+        //nemoshow_item_scale(one, 0.5, 0.5);
+        //nemoshow_item_translate(one, view->w * (1.0 - 0.5)/2.0, view->h * (1.0 - 0.5)/2.0);
         map->ones = list_append(map->ones, one);
     }
 
