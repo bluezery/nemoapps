@@ -1588,7 +1588,7 @@ Coord REGION_X_COORDS[] = {
     {890,322},
     {870,380},
     {896,342},
-    {934,350},
+    {970,350},
     {952,275},
     {980,276},
     {1012,295},
@@ -1703,7 +1703,7 @@ Coord REGION_ICON_COORDS[] = {
     {1664,288},
     {1664,443},
     {1653,602},
-    {1664,756}
+    {1664,758}
 };
 
 struct _RegionView {
@@ -1816,6 +1816,7 @@ static void region_map_hide(RegionMap *map, uint32_t easetype, int duration, int
     nemotimer_set_timeout(map->timer, 0);
 }
 
+static void region_view_hide(RegionView *view, uint32_t easetype, int duration, int delay);
 static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -1850,6 +1851,17 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                 "sx", 0.5, 1.0, "sy", 0.5, 1.0,
                 NULL);
         view->icon_grab = NULL;
+    }
+    if (nemoshow_event_is_single_click(show, event)) {
+        ERR("%d", (int)tag);
+        if (((int)tag) == (14 + 5)) {
+            ERR("single click");
+            Karim *karim = view->karim;
+            karim->type = KARIM_TYPE_HONEY;
+            karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h);
+            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1500, 1000);
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+        }
     }
 }
 
@@ -1960,6 +1972,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
         view->logos = list_append(view->logos, one);
     }
     for (i = 1 ; i <= sizeof(REGION_X_COORDS)/sizeof(REGION_X_COORDS[0]) ; i++) {
+        ERR("%d", i);
         double w, h;
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/X/%02d.svg", i);
@@ -2067,9 +2080,8 @@ static void region_view_show(RegionView *view, uint32_t easetype, int duration, 
         i++;
     }
 
-    double sx, sy;
+    double sy;
     // Designed for 1920x1080
-    sx = view->w/1920.0;
     sy = view->h/1080.0;
 
     i = 1;
