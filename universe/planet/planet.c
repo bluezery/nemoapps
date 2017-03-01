@@ -379,7 +379,7 @@ static void _planet_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct 
         if (!over) {
             char args[PATH_MAX];
             snprintf(args, PATH_MAX, "--width;%d;--height;%d;--planet;%s",
-                    (int)(950 * view->app->sxy), (int)(950 * view->app->sxy),
+                    (int)(636 * view->app->sxy), (int)(636 * view->app->sxy),
                     planet->uri);
             nemo_execute(view->uuid, "app", "/usr/bin/nemouniverse-menu", args, "off",
                     ex, ey, 0.0, 1.0, 1.0);
