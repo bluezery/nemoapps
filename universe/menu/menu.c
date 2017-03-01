@@ -474,7 +474,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     double sx = 1.0;
     double sy = 1.0;
     if (width > 0) sx = (double)app->config->width/width;
-    if (width > 0) sy = (double)app->config->height/height;
+    if (height > 0) sy = (double)app->config->height/height;
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
 
