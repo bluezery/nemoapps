@@ -89,7 +89,8 @@ struct _ConfigApp {
 };
 
 typedef struct _MenuView MenuView;
-typedef struct _MenuMainItem MenuMainItem;
+typedef struct _MenuItem MenuItem;
+typedef struct _SubItem SubItem;
 
 struct _MenuView {
     const char *uuid;
@@ -109,43 +110,73 @@ struct _MenuView {
     struct nemotimer *destroy_timer;
 };
 
-struct _MenuMainItem {
+struct SubItem {
+    int w, h;
+    MenuItem *it;
+    struct showone *group;
+    struct showone *one;
+};
+
+struct _MenuItem {
     int w, h;
     MenuView *view;
     char *id;
     struct showone *group;
     struct showone *event;
     struct showone *one;
+    struct showone *one_active;
+    int state; // 0:normal, 1: active
+    List *items;
 };
 
+void menu_item_set_state(MenuItem *it, int state)
+{
+    it->state = state;
+    if (it->state == 0) {
+        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 1.0, NULL);
+        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 0.0, NULL);
+    } else if (it->state == -1) {
+        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 0.0, NULL);
+        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 0.0, NULL);
+    } else if (it->state == 1) {
+        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 0.0, NULL);
+        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+                "alpha", 1.0, NULL);
+    } else {
+        ERR("Not supported state");
+    }
+}
 
-void menu_item_down(MenuMainItem *it)
+void menu_item_down(MenuItem *it)
 {
     _nemoshow_item_motion_bounce(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
-            "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
-    _nemoshow_item_motion_bounce(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
-            "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
-    _nemoshow_item_motion_bounce(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
             "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
     _nemoshow_item_motion_bounce(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
             "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
 }
 
-void menu_item_up(MenuMainItem *it)
+void menu_item_up(MenuItem *it)
 {
     _nemoshow_item_motion(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
             "sx", 1.0, "sy", 1.0, NULL);
-    _nemoshow_item_motion(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
-            "sx", 1.0, "sy", 1.0, NULL);
     _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
             "sx", 1.0, "sy", 1.0, NULL);
-    _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
-            "sx", 1.0, "sy", 1.0, NULL);
+}
+
+void menu_item_scale(MenuItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
+{
+    _nemoshow_item_motion(it->group, easetype, duration, 0,
+            "sx", sx, "sy", sy, NULL);
 }
 
 static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
-    MenuMainItem *it = userdata;
+    MenuItem *it = userdata;
     MenuView *view = it->view;
     nemotimer_set_timeout(view->destroy_timer, MENU_DESTROY_TIMEOUT);
 
@@ -159,18 +190,32 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     if (nemoshow_event_is_down(show, event)) {
         nemotimer_set_timeout(view->timer, 0);
         List *l;
-        MenuMainItem *itt;
+        MenuItem *itt;
         LIST_FOR_EACH(view->items, l, itt) {
-            nemoshow_revoke_transition_one(view->show, itt->event, "ro");
-            nemoshow_revoke_transition_one(view->show, itt->one, "ro");
+            nemoshow_revoke_transition_one(view->show, itt->group, "ro");
         }
         menu_item_down(it);
     } else if (nemoshow_event_is_up(show, event)) {
         menu_item_up(it);
         nemotimer_set_timeout(view->timer, 100);
 
-#if 0
         if (nemoshow_event_is_single_click(show, event)) {
+            if (it->state == 0) {
+                menu_item_set_state(it, 1);
+                menu_item_scale(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 1.25, 1.25);
+
+                List *l;
+                MenuItem *itt;
+                LIST_FOR_EACH(view->items, l, itt) {
+                    if (it == itt) continue;
+                    menu_item_set_state(itt, 0);
+                    menu_item_scale(itt, NEMOEASE_CUBIC_IN_TYPE, 500, 0, 1.0, 1.0);
+                }
+            } else if (it->state == 1) {
+                menu_item_set_state(it, 0);
+                menu_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, 500, 0, 1.0, 1.0);
+            }
+#if 0
             MenuView *view = it->view;
             char path[PATH_MAX];
             char name[PATH_MAX];
@@ -187,8 +232,8 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
             nemo_execute(view->uuid, it->menu_item->type, path, args, it->menu_item->resize? "on" : "off",
                     ex, ey, 0.0, it->menu_item->sxy, it->menu_item->sxy);
-        }
 #endif
+        }
     }
     nemoshow_dispatch_frame(show);
 }
@@ -199,7 +244,7 @@ static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     nemotimer_set_timeout(view->destroy_timer, MENU_DESTROY_TIMEOUT);
 }
 
-void menu_item_show(MenuMainItem *it, uint32_t easetype, int duration, int delay)
+void menu_item_show(MenuItem *it, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(it->group, easetype, duration, delay,
@@ -208,14 +253,16 @@ void menu_item_show(MenuMainItem *it, uint32_t easetype, int duration, int delay
                 "sx", 1.0, "sy", 1.0, NULL);
         _nemoshow_item_motion(it->one, easetype, duration, delay,
                 "sx", 1.0, "sy", 1.0, NULL);
+        _nemoshow_item_motion(it->one_active, easetype, duration, delay,
+                "sx", 1.0, "sy", 1.0, NULL);
     } else {
         nemoshow_item_set_alpha(it->group, 1.0);
         nemoshow_item_scale(it->one, 1.0, 1.0);
-        nemoshow_item_scale(it->one, 1.0, 1.0);
+        nemoshow_item_scale(it->one_active, 1.0, 1.0);
     }
 }
 
-void menu_item_hide(MenuMainItem *it, uint32_t easetype, int duration, int delay)
+void menu_item_hide(MenuItem *it, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(it->group, easetype, duration, delay,
@@ -233,15 +280,7 @@ void menu_item_hide(MenuMainItem *it, uint32_t easetype, int duration, int delay
     }
 }
 
-void menu_item_rotate(MenuMainItem *it, uint32_t easetype, int duration, int delay)
-{
-    _nemoshow_item_motion(it->event, easetype, duration, delay,
-            "ro", 360.0, NULL);
-    _nemoshow_item_motion(it->one, easetype, duration, delay,
-            "ro", 360.0, NULL);
-}
-
-void menu_item_destroy(MenuMainItem *it)
+void menu_item_destroy(MenuItem *it)
 {
     free(it->id);
     nemoshow_one_destroy(it->event);
@@ -250,27 +289,43 @@ void menu_item_destroy(MenuMainItem *it)
     free(it);
 }
 
-MenuMainItem *menu_create_item(MenuView *view, const char *id)
+void menu_item_translate(MenuItem *it, int x, int y)
 {
-    MenuMainItem *it = calloc(sizeof(MenuMainItem), 1);
+    nemoshow_item_translate(it->group, x, y);
+}
+
+MenuItem *menu_create_item(MenuView *view, const char *id)
+{
+    MenuItem *it = calloc(sizeof(MenuItem), 1);
     it->view = view;
     it->id = strdup(id);
+
+    char uri[PATH_MAX];
+    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s.png", id);
+    file_get_image_wh(uri, &it->w, &it->h);
+    it->w *= view->app->sxy;
+    it->h *= view->app->sxy;
 
     struct showone *group;
     struct showone *one;
     it->group = group = GROUP_CREATE(view->group);
     nemoshow_item_set_alpha(group, 0.0);
+    nemoshow_item_set_width(group, it->w);
+    nemoshow_item_set_height(group, it->h);
+    nemoshow_item_set_anchor(group, 0.5, 0.5);
+    nemoshow_item_translate(group, it->w/2, it->h/2);
 
-    char uri[PATH_MAX];
-
-    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s.png", id);
-    file_get_image_wh(uri, &it->w, &it->h);
-    it->w *= view->app->sxy;
-    it->h *= view->app->sxy;
     it->one = one = IMAGE_CREATE(group, it->w, it->h, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
+
+    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s_active.png", id);
+    it->one_active = one = IMAGE_CREATE(group, it->w, it->h, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, it->w/2, it->h/2);
+    nemoshow_item_scale(one, 0.0, 0.0);
+    nemoshow_item_set_alpha(one, 0.0);
 
     snprintf(uri, PATH_MAX, UNIVERSE_ICON_DIR"/menu/%s.svg", id);
     // FIXME: Temporary---------
@@ -280,19 +335,22 @@ MenuMainItem *menu_create_item(MenuView *view, const char *id)
     ww *= view->app->sxy;
     hh *= view->app->sxy;
     it->event = one = SVG_PATH_CREATE(group, ww, hh, uri);
-    nemoshow_item_translate(one, ww/2, hh/2);
-    nemoshow_item_scale(one, 0.0, 0.0);
-#else
-    it->event = one = SVG_PATH_CREATE(group, it->w, it->h, uri);
-    nemoshow_item_set_fill_color(one, RGBA(RED));
-    nemoshow_item_set_alpha(one, 0.5);
-    nemoshow_item_translate(one, it->w/2, it->h/2);
-#endif
     nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, ww/2, hh/2);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
     nemoshow_one_set_userdata(one, it);
-
+    nemoshow_item_scale(one, 0.0, 0.0);
+#else
+    it->event = one = SVG_PATH_CREATE(group, it->w, it->h, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, it->w/2, it->h/2);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
+    nemoshow_one_set_userdata(one, it);
+    nemoshow_item_set_fill_color(one, RGBA(RED));
+    nemoshow_item_set_alpha(one, 0.5);
+#endif
 
     view->items = list_append(view->items, it);
     return it;
@@ -300,7 +358,7 @@ MenuMainItem *menu_create_item(MenuView *view, const char *id)
 
 void menu_view_destroy(MenuView *view)
 {
-    MenuMainItem *it;
+    MenuItem *it;
     LIST_FREE(view->items, it) menu_item_destroy(it);
     nemoshow_one_destroy(view->group);
     free(view);
@@ -318,7 +376,7 @@ void menu_view_hide(MenuView *view)
 
     int delay = 0;
     List *l;
-    MenuMainItem *it;
+    MenuItem *it;
     LIST_FOR_EACH(view->items, l, it) {
         menu_item_hide(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay);
         delay += 50;
@@ -354,7 +412,7 @@ static void _menu_view_event(NemoWidget *widget, const char *id, void *info, voi
         struct showone *one;
         one = nemowidget_pick_one(widget, ex, ey);
         if (one) {
-            MenuMainItem *it = nemoshow_one_get_userdata(one);
+            MenuItem *it = nemoshow_one_get_userdata(one);
             if (it) {
                 nemowidget_create_grab(widget, event,
                         _menu_item_grab_event, it);
@@ -383,7 +441,7 @@ void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay)
             "alpha", 1.0, "sx", 1.0, "sy", 1.0, NULL);
     int _delay = 0;
     List *l;
-    MenuMainItem *it;
+    MenuItem *it;
     LIST_FOR_EACH(view->items, l, it) {
         menu_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, _delay + delay);
         _delay += 150;
@@ -399,16 +457,16 @@ static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
 
     int duration = 0;
     List *l;
-    MenuMainItem *it;
+    MenuItem *it;
     LIST_FOR_EACH(view->items, l, it) {
-        double ro = nemoshow_item_get_rotate(it->event);
+        double ro = nemoshow_item_get_rotate(it->group);
         if (ceil(ro) == 360) {
             ro = 0.0;
-            nemoshow_item_rotate(it->event, 0.0);
-            nemoshow_item_rotate(it->one, 0.0);
+            nemoshow_item_rotate(it->group, 0.0);
         }
         duration = 40000 * ((360 - ro)/360.0);
-        menu_item_rotate(it, NEMOEASE_LINEAR_TYPE, duration, 0);
+        _nemoshow_item_motion(it->group, NEMOEASE_LINEAR_TYPE, duration, 0,
+                "ro", 360.0, NULL);
     }
     nemoshow_dispatch_frame(view->show);
     nemotimer_set_timeout(timer, duration);
@@ -454,18 +512,24 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     nemoshow_item_set_alpha(one, 0.0);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    menu_create_item(view, "content");
-    menu_create_item(view, "entertainment");
-    menu_create_item(view, "internet");
-    menu_create_item(view, "setting");
-    menu_create_item(view, "utility");
+    MenuItem *it;
+    it = menu_create_item(view, "content");
+    menu_item_translate(it, width/2, height/2);
+    it = menu_create_item(view, "entertainment");
+    menu_item_translate(it, width/2, height/2);
+    it = menu_create_item(view, "internet");
+    menu_item_translate(it, width/2, height/2);
+    it = menu_create_item(view, "setting");
+    menu_item_translate(it, width/2, height/2);
+    it = menu_create_item(view, "utility");
+    menu_item_translate(it, width/2, height/2);
 
 #if 0
     int i = 1;
     List *l;
     ConfigMenuItem *itt;
     LIST_FOR_EACH(app->menu_items, l, itt) {
-        MenuMainItem *it = menu_create_item(view, itt, uri);
+        MenuItem *it = menu_create_item(view, itt, uri);
         view->items = list_append(view->items, it);
         i++;
     }

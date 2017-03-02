@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-    <size width="636" height="636"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/creative"/>
-    <items icon="" txt="" type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/nemoux"/>
-    <items icon="" txt="" type="app"  exec="/usr/bin/nemoplayer;-f;rtmp://175.207.12.219/live/admin-coex"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/map" sxy="0.333"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/foundation"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/invention"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/kova"/>
-    <items icon="" txt="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/science"/>
+    <size width="950" height="950"/>
+    <items group="content" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/creative"/>
+    <items group="entertainment" icon="" type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/nemoux"/>
+    <items group="internet" icon="" type="app"  exec="/usr/bin/nemoplayer;-f;rtmp://175.207.12.219/live/admin-coex"/>
+    <items group="setting" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/map" sxy="0.333"/>
+    <items group="utility" icon="" type="app" exec="/usr/share/steshell/sub-icons/clock.svg"/>
+    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/invention"/>
+    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/kova"/>
+    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/science"/>
 </@APPNAME@>
 
