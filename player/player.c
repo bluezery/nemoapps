@@ -719,7 +719,7 @@ static void _player_done(NemoWidget *widget, const char *id, void *info, void *u
     _progressbar_update(view);
 }
 
-PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool enable_audio, int repeat)
+PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw, int vh, const char *path, bool enable_audio, int repeat, int num_threads, bool no_drop)
 {
     struct nemotool *tool;
     struct nemoshow *show;
@@ -762,7 +762,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     ch = view->frame->content_height;
 
     // Video
-    view->player = nemoui_player_create(parent, cw, ch, path, enable_audio);
+    view->player = nemoui_player_create(parent, cw, ch, path, enable_audio, num_threads, no_drop);
     if (!view->player) {
         ERR("nemoui_player_create() failed");
         free(view->path);
@@ -1165,6 +1165,8 @@ struct _ConfigApp {
     char *path;
     bool enable_audio;
     int repeat;
+    int num_threads;
+    bool no_drop;
 };
 
 static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
@@ -1182,27 +1184,42 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         xml = xml_load_from_domain(domain, filename);
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
-    if (xml) {
-        char buf[PATH_MAX];
-        const char *temp;
-
-        snprintf(buf, PATH_MAX, "%s/play", appname);
-        temp = xml_get_value(xml, buf, "repeat");
-        if (temp && strlen(temp) > 0) {
-            app->repeat = atoi(temp);
-        }
-        xml_unload(xml);
+    if (!xml) {
+        config_unload(app->config);
+        free(app);
+        return NULL;
     }
+    char buf[PATH_MAX];
+    const char *temp;
+
+    snprintf(buf, PATH_MAX, "%s/play", appname);
+    temp = xml_get_value(xml, buf, "repeat");
+    if (temp && strlen(temp) > 0) {
+        app->repeat = atoi(temp);
+    }
+    snprintf(buf, PATH_MAX, "%s/threads", appname);
+    temp = xml_get_value(xml, buf, "count");
+    if (temp && strlen(temp) > 0) {
+        app->num_threads = atoi(temp);
+    }
+    snprintf(buf, PATH_MAX, "%s/frame", appname);
+    temp = xml_get_value(xml, buf, "no_drop");
+    if (temp && strlen(temp) > 0) {
+        app->no_drop = !strcmp(temp, "off") ? false : true;
+    }
+    xml_unload(xml);
 
     struct option options[] = {
         {"file", required_argument, NULL, 'f'},
         {"repeat", required_argument, NULL, 'p'},
         {"audio", required_argument, NULL, 'a'},
+        {"threads", required_argument, NULL, 't'},
+        {"no_drop", required_argument, NULL, 'n'},
         { NULL }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "f:a:p:", options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "f:a:p:t:n", options, NULL)) != -1) {
         switch(opt) {
             case 'f':
                 app->path = strdup(optarg);
@@ -1212,6 +1229,10 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
                 break;
             case 'p':
                 app->repeat = atoi(optarg);
+            case 't':
+                app->num_threads = atoi(optarg);
+            case 'n':
+                app->no_drop = !strcmp(optarg, "off") ? false : true;
             default:
                 break;
         }
@@ -1254,7 +1275,7 @@ int main(int argc, char *argv[])
 
     PlayerView *view = playerview_create(win,
             app->config->width, app->config->height, vw, vh,
-            app->path, app->enable_audio, app->repeat);
+            app->path, app->enable_audio, app->repeat, app->num_threads, app->no_drop);
     if (!view) {
         ERR("playerview_create() failed");
         return -1;

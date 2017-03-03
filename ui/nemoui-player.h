@@ -25,7 +25,7 @@ void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int 
 void nemoui_player_above(PlayerUI *ui, NemoWidget *above);
 void nemoui_player_below(PlayerUI *ui, NemoWidget *below);
 void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int delay, float sx, float sy);
-PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio);
+PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio, int num_threads, bool no_drop);
 
 #ifdef __cplusplus
 }

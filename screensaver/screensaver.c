@@ -70,7 +70,7 @@ SaverView *saver_view_create(NemoWidget *parent, int width, int height, const ch
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
 
     PlayerUI *player;
-    view->player = player = nemoui_player_create(parent, width, height, path, enable_audio);
+    view->player = player = nemoui_player_create(parent, width, height, path, enable_audio, -1, false);
 
     /*
     nemowidget_append_callback(widget, "event", _saver_view_event, view);

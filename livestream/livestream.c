@@ -219,7 +219,7 @@ Item *item_create(NemoWidget *widget, struct showone *pgroup, View *view,
     it->y = y;
 
     PlayerUI *ui;
-    it->ui = ui = nemoui_player_create(widget, w, h, uri, enable_audio);
+    it->ui = ui = nemoui_player_create(widget, w, h, uri, enable_audio, 1, true);
     if (!ui) {
         ERR("ui is NULL");
         free(it);

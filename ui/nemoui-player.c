@@ -24,6 +24,7 @@ struct _PlayerUI {
     bool fin;
     bool need_stop;
     bool is_playing;
+    bool no_drop;
 
     struct playdecoder *decoder;
     struct playaudio *audio;
@@ -211,7 +212,7 @@ void nemoui_player_play(PlayerUI *ui)
 
         struct playvideo *video;
         ui->video = video = nemoplay_video_create_by_timer(play);
-        nemoplay_video_set_drop_rate(video, 0.0);
+        if (ui->no_drop) nemoplay_video_set_drop_rate(video, 0.0);
         nemoplay_video_stop(ui->video);
         nemoplay_video_set_texture(video,
                 nemowidget_get_texture(ui->widget),
@@ -279,7 +280,7 @@ void nemoui_player_append_callback(PlayerUI *ui, const char *id, NemoWidget_Func
     nemowidget_append_callback(ui->widget, id, func, userdata);
 }
 
-PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio)
+PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio, int num_threads, bool no_drop)
 {
     RET_IF(cw <= 0 || ch <= 0, NULL);
     RET_IF(!path, NULL);
@@ -292,11 +293,16 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     ui->ch = ch;
     ui->sx = 1.0;
     ui->sy = 1.0;
+    ui->no_drop = no_drop;
 
     struct nemoplay *play;
     ui->play = play = nemoplay_create();
     if (!enable_audio) nemoplay_revoke_audio(play);
-    nemoplay_set_video_stropt(play, "threads", "1");
+    if (num_threads > 0) {
+        char buf[PATH_MAX];
+        snprintf(buf, PATH_MAX, "%d", num_threads);
+        nemoplay_set_video_stropt(play, "threads", buf);
+    }
 
     NemoWidget *widget;
     ui->widget = widget = nemowidget_create_opengl(parent, cw, ch);
