@@ -1553,6 +1553,7 @@ struct _Coord {
 };
 
 Coord REGION_LOGO_COORDS[] = {
+    #if 0
     {142,26},
     {191,26},
     {240,26},
@@ -1572,9 +1573,11 @@ Coord REGION_LOGO_COORDS[] = {
     {810,76},
     {1652,54},
     {133,25}
+    #endif
 };
 
 Coord REGION_X_COORDS[] = {
+    #if 0
     {457,414},
     {420,414},
     {470,478},
@@ -1602,9 +1605,11 @@ Coord REGION_X_COORDS[] = {
     {1400,400},
     {1453,414},
     {1360,465}
+    #endif
 };
 
 Coord REGION_LINE_COORDS[] = {
+    #if 0
     {134,122},
     {134,278},
     {134,434},
@@ -1632,9 +1637,53 @@ Coord REGION_LINE_COORDS[] = {
     {1415,278},
     {1468,429},
     {1375,479}
+    #endif
 };
 
 Coord REGION_TXT_COORDS[] = {
+    {301,248},
+    {330,364},
+    {264,464},
+    {394,602},
+    {416,667},
+    {590,666},
+    {830,146},
+    {797,185},
+    {767,216},
+    {657,245},
+    {707,265},
+    {657,285},
+    {719,305},
+    {692,325},
+    {733,345},
+    {1006,147},
+    {1006,166},
+    {1006,185},
+    {1006,204},
+    {1006,223},
+    {1070,242},
+    {1070,261},
+    {1070,280},
+    {1070,299},
+    {1070,318},
+    {1070,337},
+    {1023,363},
+    {944,352},
+    {877,333},
+    {973,457},
+    {1036,429},
+    {1069,478},
+    {1203,443},
+    {1284,221},
+    {1353,347},
+    {1282,464},
+    {1531,392},
+    {1648,381},
+    {1582,438},
+    {1390,559},
+    {1392,631},
+    {1565,775}
+#if 0
     {143,221},
     {143,377},
     {143,534},
@@ -1668,9 +1717,53 @@ Coord REGION_TXT_COORDS[] = {
     {1653,534},
     {1653,691},
     {1653,848}
+#endif
 };
 
 Coord REGION_ICON_COORDS[] = {
+    {324,207},
+    {334,323},
+    {285,423},
+    {427,561},
+    {425,626},
+    {611,625},
+    {932,181},
+    {925,231},
+    {861,234},
+    {902,250},
+    {890,269},
+    {918,284},
+    {879,300},
+    {829,324},
+    {848,333},
+    {966,160},
+    {966,179},
+    {922,254},
+    {956,243},
+    {943,261},
+    {950,279},
+    {968,286},
+    {1004,278},
+    {986,289},
+    {993,307},
+    {974,307},
+    {1040,343},
+    {986,332},
+    {945,309},
+    {989,416},
+    {1055,388},
+    {1119,437},
+    {1165,432},
+    {1303,180},
+    {1365,306},
+    {1296,423},
+    {1546,351},
+    {1610,371},
+    {1544,428},
+    {1424,518},
+    {1429,590},
+    {1603,734}
+#if 0
     {154,133},
     {143,288},
     {154,443},
@@ -1704,6 +1797,7 @@ Coord REGION_ICON_COORDS[] = {
     {1664,443},
     {1653,602},
     {1664,758}
+#endif
 };
 
 struct _RegionView {
@@ -1766,11 +1860,12 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
     map->group = group = GROUP_CREATE(parent);
     nemoshow_item_set_alpha(group, 0.0);
 
+    double alpha = 1.00;
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, "%s%d.svg", uri, 1);
     map->one = one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
-    nemoshow_item_scale(one, 0.75, 0.75);
-    nemoshow_item_translate(one, view->w * (1.0 - 0.75)/2.0, view->h * (1.0 - 0.75)/2.0);
+    nemoshow_item_scale(one, alpha, alpha);
+    nemoshow_item_translate(one, view->w * (1.0 - alpha)/2.0, view->h * (1.0 - alpha)/2.0);
 
     int i;
     for (i = 2 ; i <= 5 ; i++) {
@@ -1779,8 +1874,8 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
         one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
         nemoshow_item_set_fill_color(one, RGBA(0x0));
         nemoshow_item_set_alpha(one, 0.0);
-        nemoshow_item_scale(one, 0.75, 0.75);
-        nemoshow_item_translate(one, view->w * (1.0 - 0.75)/2.0, view->h * (1.0 - 0.75)/2.0);
+        nemoshow_item_scale(one, alpha, alpha);
+        nemoshow_item_translate(one, view->w * (1.0 - alpha)/2.0, view->h * (1.0 - alpha)/2.0);
         map->ones = list_append(map->ones, one);
     }
 
@@ -1854,7 +1949,7 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
     }
     if (nemoshow_event_is_single_click(show, event)) {
         ERR("%d", (int)tag);
-        if (((int)tag) == (14 + 5)) {
+        if (((int)tag) == (29)) {
             ERR("single click");
             Karim *karim = view->karim;
             karim->type = KARIM_TYPE_HONEY;
@@ -1949,6 +2044,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     // Designed for 1920x1080
     sx = view->w/1920.0;
     sy = view->h/1080.0;
+#if 0
     for (i = 1 ; i <= sizeof(REGION_LOGO_COORDS)/sizeof(REGION_LOGO_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
@@ -1981,8 +2077,8 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
             continue;
         }
         svg_get_wh(buf, &w, &h);
-				w *= sx;
-				h *= sy;
+        w *= sx;
+        h *= sy;
         one = SVG_PATH_GROUP_CREATE(group, w, h, buf);
         nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
         nemoshow_one_set_userdata(one, view);
@@ -2004,8 +2100,8 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
             continue;
         }
         svg_get_wh(buf, &w, &h);
-				w *= sx;
-				h *= sy;
+        w *= sx;
+        h *= sy;
         one = SVG_PATH_GROUP_CREATE(group, w, h, buf);
         nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
         nemoshow_one_set_userdata(one, view);
@@ -2017,6 +2113,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
         nemoshow_item_set_alpha(one, 0.0);
         view->lines = list_append(view->lines, one);
     }
+#endif
     for (i = 1 ; i <= sizeof(REGION_ICON_COORDS)/sizeof(REGION_ICON_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
@@ -2026,8 +2123,8 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
             continue;
         }
         svg_get_wh(buf, &w, &h);
-				w *= sx;
-				h *= sy;
+        w *= sx;
+        h *= sy;
         one = SVG_PATH_GROUP_CREATE(group, w, h, buf);
         nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
         nemoshow_one_set_userdata(one, view);
@@ -2045,8 +2142,8 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/text/%02d.svg", i);
         svg_get_wh(buf, &w, &h);
-				w *= sx;
-				h *= sy;
+        w *= sx;
+        h *= sy;
         one = SVG_PATH_GROUP_CREATE(group, w, h, buf);
         nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
         nemoshow_one_set_userdata(one, view);
@@ -2064,7 +2161,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
 
 }
 
-static void menu_view_right(MenuView *view, uint32_t easetype, int duration, int delay);
+//static void menu_view_right(MenuView *view, uint32_t easetype, int duration, int delay);
 static void region_view_show(RegionView *view, uint32_t easetype, int duration, int delay)
 {
     nemowidget_show(view->widget, 0, 0, 0);
@@ -2146,6 +2243,7 @@ static void region_view_show(RegionView *view, uint32_t easetype, int duration, 
                 NULL);
         i++;
     }
+    #if 0
     i = 1;
     _delay = 0;
     LIST_FOR_EACH(view->icons, l, one) {
@@ -2161,6 +2259,55 @@ static void region_view_show(RegionView *view, uint32_t easetype, int duration, 
     LIST_FOR_EACH(view->txts, l, one) {
         _delay = 100 * i;
         _nemoshow_item_motion_bounce(one, easetype, 1000, delay + _delay,
+                "alpha", 1.0, 1.0,
+                "sx", 1.5, 1.0, "sy", 1.5, 1.0,
+                NULL);
+        i++;
+    }
+    #endif
+    LIST_FOR_EACH(view->icons, l, one) {
+        int ddelay;
+        if (1 <= i && i <= 6) {
+            ddelay = delay + 150 + 50 * i;
+        } else if (i == 9) {
+            ddelay = delay + 150 * 11;
+        } else if (i == 40) {
+            ddelay = delay + 150 * 14;
+        } else if (i == 41) {
+            ddelay = delay + 150 * 15;
+        } else if (i == 43) {
+            ddelay = delay + 150 * 21;
+        } else if (i == 44) {
+            ddelay = delay + 150 * 23;
+        } else {
+            ddelay = delay + 150 * 10 + 50 * (i - 10);
+        }
+        _nemoshow_item_motion_bounce(one, easetype, 1000, ddelay + 500,
+                "alpha", 1.0, 1.0,
+                "sx", 1.5, 1.0, "sy", 1.5, 1.0,
+                NULL);
+        i++;
+    }
+
+    i = 1;
+    LIST_FOR_EACH(view->txts, l, one) {
+        int ddelay;
+        if (1 <= i && i <= 6) {
+            ddelay = delay + 150 + 50 * i;
+        } else if (i == 9) {
+            ddelay = delay + 150 * 11;
+        } else if (i == 40) {
+            ddelay = delay + 150 * 14;
+        } else if (i == 41) {
+            ddelay = delay + 150 * 15;
+        } else if (i == 43) {
+            ddelay = delay + 150 * 21;
+        } else if (i == 44) {
+            ddelay = delay + 150 * 23;
+        } else {
+            ddelay = delay + 150 * 10 + 50 * (i - 10);
+        }
+        _nemoshow_item_motion_bounce(one, easetype, 1000, ddelay + 600,
                 "alpha", 1.0, 1.0,
                 "sx", 1.5, 1.0, "sy", 1.5, 1.0,
                 NULL);
@@ -2895,7 +3042,7 @@ static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             }
             if (!strcmp(id, "region")) {
                 karim->type = KARIM_TYPE_REGION;
-                menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
+                //menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
                 region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             } else if (!strcmp(id, "work")) {
                 karim->type = KARIM_TYPE_WORK;
@@ -3065,6 +3212,7 @@ static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int 
     nemotimer_set_timeout(view->timer, duration + delay);
 }
 
+#if 0
 static void menu_view_right(MenuView *view, uint32_t easetype, int duration, int delay)
 {
     _nemoshow_item_motion(view->group, easetype, duration, delay,
@@ -3072,6 +3220,7 @@ static void menu_view_right(MenuView *view, uint32_t easetype, int duration, int
             NULL);
     nemoshow_dispatch_frame(view->show);
 }
+#endif
 
 static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int delay)
 {
@@ -3669,7 +3818,7 @@ static void _saver_view_event(NemoWidget *widget, const char *id, void *info, vo
         } else {
             menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             if (karim->type == KARIM_TYPE_REGION) {
-                menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
+                //menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
                 region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             } else if (karim->type == KARIM_TYPE_WORK) {
                 work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
@@ -3809,7 +3958,7 @@ static void _karim_event(NemoWidget *widget, const char *id, void *info, void *u
                             NULL);
                 } else if (karim->type == KARIM_TYPE_WORK) {
                     work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-                    menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
+                    //menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
                     region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
                     karim->type = KARIM_TYPE_REGION;
                     _nemoshow_item_motion_bounce(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
@@ -3843,7 +3992,7 @@ static void _karim_event(NemoWidget *widget, const char *id, void *info, void *u
                 }
             } else if (keycode == 106) { // right
                 if (karim->type == KARIM_TYPE_MENU) {
-                    menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
+                    //menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
                     region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
                     karim->type = KARIM_TYPE_REGION;
                     _nemoshow_item_motion_bounce(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
