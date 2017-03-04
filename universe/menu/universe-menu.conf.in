@@ -1,13 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
     <size width="950" height="950"/>
-    <items group="content" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/creative"/>
-    <items group="entertainment" icon="" type="app"  exec="/usr/bin/ste-explorer;-f;/opt/contents/nemoux"/>
-    <items group="internet" icon="" type="app"  exec="/usr/bin/nemoplayer;-f;rtmp://175.207.12.219/live/admin-coex"/>
-    <items group="setting" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/map" sxy="0.333"/>
-    <items group="utility" icon="" type="app" exec="/usr/share/steshell/sub-icons/clock.svg"/>
-    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/invention"/>
-    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/kova"/>
-    <items group="" icon="" type="xapp" exec="/usr/bin/electron;/usr/share/nemoapps/koex/science"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/biztworld.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/BizTWorld"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/lifeplatform.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/LifePlatform"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/lunawatch.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/LunaWatch"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/nemoux.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/Nemoux"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/sktelecom.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/SKTelecom"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/smarthome.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/SmartHome"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/tworld.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/TWorld"/>
+    <items group="content" icon="@UNIVERSE_IMG_DIR@/menu/content/tum.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/Tum"/>
+
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/monopoly.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/monopoly"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/bmwi8.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/bmwi8"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/hex.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/2d/hex"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/sorcerer.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/downloaded/sorcerer"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/googlemap.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/googlemap"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/memonotepad.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/memonotepad"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/setting.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/setting"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/journey.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/sketchfab/journey"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/carvisualizer.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/3d/carvisualizer"/>
+    <items group="entertainment" icon="@UNIVERSE_IMG_DIR@/menu/entertainment/3dgis.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/utility/3dgis"/>
+
+    <items group="internet" icon="@UNIVERSE_IMG_DIR@/menu/internet/skt.png" type="xapp"  exec="/usr/bin/electron;http://www.sktelecom.com"/>
+    <items group="internet" icon="@UNIVERSE_IMG_DIR@/menu/internet/nemoux.png" type="xapp"  exec="/usr/bin/electron;http://www.nemoux.net"/>
+    <items group="internet" icon="@UNIVERSE_IMG_DIR@/menu/internet/tworld.png" type="xapp"  exec="/usr/bin/electron;http://www.tworld.co.kr"/>
+
+    <items group="setting" icon="@UNIVERSE_IMG_DIR@/menu/setting/weston-terminal.png" type="app" exec="/usr/bin/weston-terminal"/>
+    <items group="setting" icon="@UNIVERSE_IMG_DIR@/menu/setting/nemokeyboard.png" type="app" exec="/usr/bin/nemokeyboard"/>
+
+    <items group="utility" icon="@UNIVERSE_IMG_DIR@/menu/utility/nemoclock.png" type="app" exec="/usr/bin/nemoclock"/>
+    <items group="utility" icon="@UNIVERSE_IMG_DIR@/menu/utility/nemoweather.png" type="app" exec="/usr/bin/nemoweather"/>
+    <items group="utility" icon="@UNIVERSE_IMG_DIR@/menu/utility/nemostat.png" type="app" exec="/usr/bin/nemostat"/>
+    <items group="utility" icon="@UNIVERSE_IMG_DIR@/menu/utility/nemotest_map.png" type="app" exec="/usr/bin/nemotest_map"/>
+    <items group="utility" icon="@UNIVERSE_IMG_DIR@/menu/utility/nemolivestream.png" type="app" exec="/usr/bin/nemolivestream"/>
 </@APPNAME@>
 

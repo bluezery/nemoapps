@@ -23,22 +23,27 @@
 #define PLANET_GRAB_MIN_TIME 500
 #define MENU_DESTROY_TIMEOUT 6000
 
-typedef struct _ConfigMenuItem ConfigMenuItem;
-struct _ConfigMenuItem {
-    char *type;
-    char *bg;
-    char *txt;
+typedef struct _ConfigGroup ConfigGroup;
+typedef struct _ConfigItem ConfigItem;
+
+struct _ConfigGroup {
+    char *name;
+    List *items;
+};
+
+struct _ConfigItem {
     char *icon;
+    char *type;
     char *exec;
     bool resize;
     double sxy;
 };
 
-static ConfigMenuItem *parse_tag_menu(XmlTag *tag)
+static ConfigItem *parse_tag_item(XmlTag *tag)
 {
     List *ll;
     XmlAttr *attr;
-    ConfigMenuItem *item = calloc(sizeof(ConfigMenuItem), 1);
+    ConfigItem *item = calloc(sizeof(ConfigItem), 1);
     item->sxy = 1.0;
     item->resize = true;
 
@@ -46,14 +51,6 @@ static ConfigMenuItem *parse_tag_menu(XmlTag *tag)
         if (!strcmp(attr->key, "type")) {
             if (attr->val) {
                  item->type = strdup(attr->val);
-            }
-        } else if (!strcmp(attr->key, "bg")) {
-            if (attr->val) {
-                 item->bg = strdup(attr->val);
-            }
-        } else if (!strcmp(attr->key, "txt")) {
-            if (attr->val) {
-                 item->txt = strdup(attr->val);
             }
         } else if (!strcmp(attr->key, "icon")) {
             if (attr->val) {
@@ -83,13 +80,13 @@ static ConfigMenuItem *parse_tag_menu(XmlTag *tag)
 typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
     Config *config;
-    List *menu_items;
+    List *grps;
     double sxy;
     char *planet_uri;
 };
 
 typedef struct _MenuView MenuView;
-typedef struct _MenuItem MenuItem;
+typedef struct _MainItem MainItem;
 typedef struct _SubItem SubItem;
 
 struct _MenuView {
@@ -110,18 +107,21 @@ struct _MenuView {
     struct nemotimer *destroy_timer;
 };
 
-struct SubItem {
+struct _SubItem {
+    MainItem *main_it;
+    ConfigItem *config;
     int w, h;
-    MenuItem *it;
+    MainItem *it;
     struct showone *group;
     struct showone *one;
 };
 
-struct _MenuItem {
+struct _MainItem {
     int w, h;
     MenuView *view;
-    char *id;
+    char *name;
     struct showone *group;
+    struct showone *main_group; // Only scale for main item
     struct showone *event;
     struct showone *one;
     struct showone *one_active;
@@ -129,7 +129,79 @@ struct _MenuItem {
     List *items;
 };
 
-void menu_item_set_state(MenuItem *it, int state)
+SubItem *sub_item_create(MainItem *main_it, ConfigItem *config, double app_sxy)
+{
+    SubItem *it;
+    it = calloc(sizeof(SubItem), 1);
+    it->main_it = main_it;
+    it->config = config;
+
+    struct showone *group;
+    it->group = group = GROUP_CREATE(main_it->group);
+    nemoshow_item_set_alpha(group, 0.0);
+    nemoshow_item_scale(group, 0.0, 0.0);
+
+    image_get_wh(config->icon, &it->w, &it->h);
+    it->w *= app_sxy;
+    it->h *= app_sxy;
+
+    struct showone *one;
+    it->one = one = IMAGE_CREATE(group, it->w, it->h, config->icon);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_id(one, "sub_item");
+    nemoshow_one_set_userdata(one, it);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+
+    return it;
+}
+
+void sub_item_down(SubItem *it)
+{
+    _nemoshow_item_motion_bounce(it->group, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
+            "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
+}
+
+void sub_item_up(SubItem *it)
+{
+    _nemoshow_item_motion(it->group, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
+            "sx", 1.0, "sy", 1.0, NULL);
+}
+
+void sub_item_translate(SubItem *it, uint32_t easetype, int duration, int delay, double x, double y)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "tx", x, "ty", y, NULL);
+    } else {
+        nemoshow_item_translate(it->group, x, y);
+    }
+}
+
+void sub_item_show(SubItem *it, uint32_t easetype, int duration, int delay)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "sx", 1.0, "sy", 1.0,
+                "alpha", 1.0, NULL);
+    } else {
+        nemoshow_item_scale(it->group, 1.0, 1.0);
+        nemoshow_item_set_alpha(it->group, 1.0);
+    }
+}
+
+void sub_item_hide(SubItem *it, uint32_t easetype, int duration, int delay)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "sx", 0.0, "sy", 0.0,
+                "alpha", 0.0, NULL);
+    } else {
+        nemoshow_item_scale(it->group, 0.0, 0.0);
+        nemoshow_item_set_alpha(it->group, 0.0);
+    }
+}
+
+void menu_item_set_state(MainItem *it, int state)
 {
     it->state = state;
     if (it->state == 0) {
@@ -137,22 +209,47 @@ void menu_item_set_state(MenuItem *it, int state)
                 "alpha", 1.0, NULL);
         _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
                 "alpha", 0.0, NULL);
+
+        int delay = 0;
+        List *l;
+        SubItem *sub_it;
+        LIST_FOR_EACH(it->items, l, sub_it) {
+            sub_item_translate(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 400, delay, 0, 0);
+            sub_item_hide(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 400, delay);
+            delay += 100;
+        }
     } else if (it->state == -1) {
-        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 0.0, NULL);
-        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 0.0, NULL);
     } else if (it->state == 1) {
-        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        _nemoshow_item_motion(it->one, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 0.0, NULL);
-        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 1.0, NULL);
+
+        double r = (it->w/2) * 1.25;
+        double s_angle = -90 + 12 + (list_get_idx(it->view->items, it) + 1) * 72;
+        int delay = 0;
+        List *l;
+        SubItem *sub_it;
+        LIST_FOR_EACH(it->items, l, sub_it) {
+            double x, y;
+            x = r * cos(s_angle * M_PI / 180.0);
+            y = r * sin(s_angle * M_PI / 180.0);
+            s_angle += 24;
+            sub_item_translate(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 500, delay, x, y);
+            sub_item_show(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 500, delay);
+            delay += 100;
+        }
+
     } else {
         ERR("Not supported state");
     }
 }
 
-void menu_item_down(MenuItem *it)
+void menu_item_down(MainItem *it)
 {
     _nemoshow_item_motion_bounce(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 350, 0,
             "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
@@ -160,7 +257,7 @@ void menu_item_down(MenuItem *it)
             "sx", 0.75, 0.85, "sy", 0.75, 0.85, NULL);
 }
 
-void menu_item_up(MenuItem *it)
+void menu_item_up(MainItem *it)
 {
     _nemoshow_item_motion(it->event, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0,
             "sx", 1.0, "sy", 1.0, NULL);
@@ -168,15 +265,61 @@ void menu_item_up(MenuItem *it)
             "sx", 1.0, "sy", 1.0, NULL);
 }
 
-void menu_item_scale(MenuItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
+void menu_item_scale(MainItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
 {
-    _nemoshow_item_motion(it->group, easetype, duration, 0,
+    _nemoshow_item_motion(it->main_group, easetype, duration, 0,
             "sx", sx, "sy", sy, NULL);
 }
 
+static void _menu_sub_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+{
+    SubItem *it = userdata;
+    MenuView *view = it->main_it->view;
+    nemotimer_set_timeout(view->destroy_timer, MENU_DESTROY_TIMEOUT);
+
+    struct nemoshow *show = nemowidget_get_show(widget);
+    double ex, ey;
+
+    nemowidget_transform_from_global(widget,
+            nemoshow_event_get_x(event),
+            nemoshow_event_get_y(event), &ex, &ey);
+
+    if (nemoshow_event_is_down(show, event)) {
+        nemotimer_set_timeout(view->timer, 0);
+        List *l;
+        MainItem *itt;
+        LIST_FOR_EACH(view->items, l, itt) {
+            nemoshow_revoke_transition_one(view->show, itt->group, "ro");
+        }
+        sub_item_down(it);
+    } else if (nemoshow_event_is_up(show, event)) {
+        nemotimer_set_timeout(view->timer, 100);
+        sub_item_up(it);
+
+        if (nemoshow_event_is_single_click(show, event)) {
+            char path[PATH_MAX];
+            char name[PATH_MAX];
+            char args[PATH_MAX];
+            char *buf;
+            char *tok;
+            buf = strdup(it->config->exec);
+            tok = strtok(buf, ";");
+            snprintf(name, PATH_MAX, "%s", tok);
+            snprintf(path, PATH_MAX, "%s", tok);
+            tok = strtok(NULL, "");
+            snprintf(args, PATH_MAX, "%s", tok);
+            free(buf);
+
+            nemo_execute(view->uuid, it->config->type, path, args,
+                    it->config->resize? "on" : "off",
+                    ex, ey, 0.0, it->config->sxy, it->config->sxy);
+        }
+    }
+    nemoshow_dispatch_frame(show);
+}
 static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
-    MenuItem *it = userdata;
+    MainItem *it = userdata;
     MenuView *view = it->view;
     nemotimer_set_timeout(view->destroy_timer, MENU_DESTROY_TIMEOUT);
 
@@ -190,14 +333,14 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     if (nemoshow_event_is_down(show, event)) {
         nemotimer_set_timeout(view->timer, 0);
         List *l;
-        MenuItem *itt;
+        MainItem *itt;
         LIST_FOR_EACH(view->items, l, itt) {
             nemoshow_revoke_transition_one(view->show, itt->group, "ro");
         }
         menu_item_down(it);
     } else if (nemoshow_event_is_up(show, event)) {
-        menu_item_up(it);
         nemotimer_set_timeout(view->timer, 100);
+        menu_item_up(it);
 
         if (nemoshow_event_is_single_click(show, event)) {
             if (it->state == 0) {
@@ -205,34 +348,18 @@ static void _menu_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                 menu_item_scale(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 1.25, 1.25);
 
                 List *l;
-                MenuItem *itt;
+                MainItem *itt;
                 LIST_FOR_EACH(view->items, l, itt) {
                     if (it == itt) continue;
                     menu_item_set_state(itt, 0);
                     menu_item_scale(itt, NEMOEASE_CUBIC_IN_TYPE, 500, 0, 1.0, 1.0);
                 }
+
+
             } else if (it->state == 1) {
                 menu_item_set_state(it, 0);
                 menu_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, 500, 0, 1.0, 1.0);
             }
-#if 0
-            MenuView *view = it->view;
-            char path[PATH_MAX];
-            char name[PATH_MAX];
-            char args[PATH_MAX];
-            char *buf;
-            char *tok;
-            buf = strdup(it->menu_item->exec);
-            tok = strtok(buf, ";");
-            snprintf(name, PATH_MAX, "%s", tok);
-            snprintf(path, PATH_MAX, "%s", tok);
-            tok = strtok(NULL, "");
-            snprintf(args, PATH_MAX, "%s", tok);
-            free(buf);
-
-            nemo_execute(view->uuid, it->menu_item->type, path, args, it->menu_item->resize? "on" : "off",
-                    ex, ey, 0.0, it->menu_item->sxy, it->menu_item->sxy);
-#endif
         }
     }
     nemoshow_dispatch_frame(show);
@@ -244,7 +371,7 @@ static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     nemotimer_set_timeout(view->destroy_timer, MENU_DESTROY_TIMEOUT);
 }
 
-void menu_item_show(MenuItem *it, uint32_t easetype, int duration, int delay)
+void menu_item_show(MainItem *it, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(it->group, easetype, duration, delay,
@@ -262,7 +389,7 @@ void menu_item_show(MenuItem *it, uint32_t easetype, int duration, int delay)
     }
 }
 
-void menu_item_hide(MenuItem *it, uint32_t easetype, int duration, int delay)
+void menu_item_hide(MainItem *it, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(it->group, easetype, duration, delay,
@@ -280,56 +407,59 @@ void menu_item_hide(MenuItem *it, uint32_t easetype, int duration, int delay)
     }
 }
 
-void menu_item_destroy(MenuItem *it)
+void menu_item_destroy(MainItem *it)
 {
-    free(it->id);
+    free(it->name);
     nemoshow_one_destroy(it->event);
     nemoshow_one_destroy(it->one);
+    nemoshow_one_destroy(it->main_group);
     nemoshow_one_destroy(it->group);
     free(it);
 }
 
-void menu_item_translate(MenuItem *it, int x, int y)
+void menu_item_translate(MainItem *it, int x, int y)
 {
     nemoshow_item_translate(it->group, x, y);
 }
 
-MenuItem *menu_create_item(MenuView *view, const char *id)
+MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
 {
-    MenuItem *it = calloc(sizeof(MenuItem), 1);
+    MainItem *it = calloc(sizeof(MainItem), 1);
     it->view = view;
-    it->id = strdup(id);
+    it->name = strdup(grp->name);
 
+    // XXX: There should be icon with same name as group name
     char uri[PATH_MAX];
-    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s.png", id);
+    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s.png", grp->name);
     file_get_image_wh(uri, &it->w, &it->h);
     it->w *= view->app->sxy;
     it->h *= view->app->sxy;
 
     struct showone *group;
-    struct showone *one;
     it->group = group = GROUP_CREATE(view->group);
     nemoshow_item_set_alpha(group, 0.0);
+
+    struct showone *one;
+    it->main_group = group = GROUP_CREATE(it->group);
     nemoshow_item_set_width(group, it->w);
     nemoshow_item_set_height(group, it->h);
     nemoshow_item_set_anchor(group, 0.5, 0.5);
-    nemoshow_item_translate(group, it->w/2, it->h/2);
+    //nemoshow_item_translate(group, it->w/2, it->h/2);
 
     it->one = one = IMAGE_CREATE(group, it->w, it->h, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s_active.png", id);
+    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s_active.png", grp->name);
     it->one_active = one = IMAGE_CREATE(group, it->w, it->h, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
     nemoshow_item_set_alpha(one, 0.0);
 
-    snprintf(uri, PATH_MAX, UNIVERSE_ICON_DIR"/menu/%s.svg", id);
-    // FIXME: Temporary---------
-#if 0
+    snprintf(uri, PATH_MAX, UNIVERSE_ICON_DIR"/menu/%s.svg", grp->name);
+
     double ww, hh;
     svg_get_wh(uri, &ww, &hh);
     ww *= view->app->sxy;
@@ -339,18 +469,17 @@ MenuItem *menu_create_item(MenuView *view, const char *id)
     nemoshow_item_translate(one, ww/2, hh/2);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
+    nemoshow_one_set_id(one, "main_item");
     nemoshow_one_set_userdata(one, it);
-    nemoshow_item_scale(one, 0.0, 0.0);
-#else
-    it->event = one = SVG_PATH_CREATE(group, it->w, it->h, uri);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, it->w/2, it->h/2);
-    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-    nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
-    nemoshow_one_set_userdata(one, it);
-    nemoshow_item_set_fill_color(one, RGBA(RED));
-    nemoshow_item_set_alpha(one, 0.5);
-#endif
+    nemoshow_item_set_alpha(one, 0.0);
+
+    List *l;
+    ConfigItem *cit;
+    LIST_FOR_EACH(grp->items, l, cit) {
+        SubItem *sub_it;
+        sub_it = sub_item_create(it, cit, view->app->sxy);
+        it->items = list_append(it->items, sub_it);
+    }
 
     view->items = list_append(view->items, it);
     return it;
@@ -358,7 +487,7 @@ MenuItem *menu_create_item(MenuView *view, const char *id)
 
 void menu_view_destroy(MenuView *view)
 {
-    MenuItem *it;
+    MainItem *it;
     LIST_FREE(view->items, it) menu_item_destroy(it);
     nemoshow_one_destroy(view->group);
     free(view);
@@ -376,7 +505,7 @@ void menu_view_hide(MenuView *view)
 
     int delay = 0;
     List *l;
-    MenuItem *it;
+    MainItem *it;
     LIST_FOR_EACH(view->items, l, it) {
         menu_item_hide(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay);
         delay += 50;
@@ -412,10 +541,21 @@ static void _menu_view_event(NemoWidget *widget, const char *id, void *info, voi
         struct showone *one;
         one = nemowidget_pick_one(widget, ex, ey);
         if (one) {
-            MenuItem *it = nemoshow_one_get_userdata(one);
-            if (it) {
-                nemowidget_create_grab(widget, event,
-                        _menu_item_grab_event, it);
+            const char *id = nemoshow_one_get_id(one);
+            if (id) {
+                if (!strcmp(id, "main_item")) {
+                    MainItem *it = nemoshow_one_get_userdata(one);
+                    if (it) {
+                        nemowidget_create_grab(widget, event,
+                                _menu_item_grab_event, it);
+                    }
+                } else if (!strcmp(id, "sub_item")) {
+                    SubItem *it = nemoshow_one_get_userdata(one);
+                    if (it) {
+                        nemowidget_create_grab(widget, event,
+                                _menu_sub_item_grab_event, it);
+                    }
+                }
             } else {
                 nemowidget_create_grab(widget, event,
                         _menu_view_grab_event, view);
@@ -441,7 +581,7 @@ void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay)
             "alpha", 1.0, "sx", 1.0, "sy", 1.0, NULL);
     int _delay = 0;
     List *l;
-    MenuItem *it;
+    MainItem *it;
     LIST_FOR_EACH(view->items, l, it) {
         menu_item_show(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, _delay + delay);
         _delay += 150;
@@ -457,7 +597,7 @@ static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
 
     int duration = 0;
     List *l;
-    MenuItem *it;
+    MainItem *it;
     LIST_FOR_EACH(view->items, l, it) {
         double ro = nemoshow_item_get_rotate(it->group);
         if (ceil(ro) == 360) {
@@ -512,28 +652,13 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     nemoshow_item_set_alpha(one, 0.0);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    MenuItem *it;
-    it = menu_create_item(view, "content");
-    menu_item_translate(it, width/2, height/2);
-    it = menu_create_item(view, "entertainment");
-    menu_item_translate(it, width/2, height/2);
-    it = menu_create_item(view, "internet");
-    menu_item_translate(it, width/2, height/2);
-    it = menu_create_item(view, "setting");
-    menu_item_translate(it, width/2, height/2);
-    it = menu_create_item(view, "utility");
-    menu_item_translate(it, width/2, height/2);
-
-#if 0
-    int i = 1;
     List *l;
-    ConfigMenuItem *itt;
-    LIST_FOR_EACH(app->menu_items, l, itt) {
-        MenuItem *it = menu_create_item(view, itt, uri);
-        view->items = list_append(view->items, it);
-        i++;
+    ConfigGroup *grp;
+    LIST_FOR_EACH(app->grps, l, grp) {
+        MainItem *it;
+        it = menu_create_item(view, grp);
+        menu_item_translate(it, width/2, height/2);
     }
-#endif
 
     view->timer = TOOL_ADD_TIMER(view->tool, 0, _menu_view_timeout, view);
     view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _menu_view_planet_timeout, view);
@@ -591,10 +716,34 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     List *l;
     XmlTag *tag;
     LIST_FOR_EACH(tags, l, tag) {
-        ConfigMenuItem *it = parse_tag_menu(tag);
+        ConfigGroup *grp = NULL;
+        List *ll;
+        XmlAttr *attr;
+        LIST_FOR_EACH(tag->attrs, ll, attr) {
+            if (!strcmp(attr->key, "group")) {
+                if (attr->val) {
+                    List *lll;
+                    ConfigGroup *ggrp;
+                    LIST_FOR_EACH(app->grps, lll, ggrp) {
+                        if (!strcmp(ggrp->name, attr->val)) {
+                            grp = ggrp;
+                            break;
+                        }
+                    }
+                }
+                if (!grp) {
+                    grp = calloc(sizeof(ConfigGroup), 1);
+                    grp->name = strdup(attr->val);
+                    app->grps = list_append(app->grps, grp);
+                }
+                break;
+            }
+        }
+        if (!grp) continue;
+        ConfigItem *it = parse_tag_item(tag);
         if (!it) continue;
         if (!it->type) it->type = strdup("app");
-        app->menu_items = list_append(app->menu_items, it);
+        grp->items = list_append(grp->items, it);
     }
 
     xml_unload(xml);
