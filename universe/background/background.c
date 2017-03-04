@@ -243,6 +243,7 @@ struct _Background {
     int width, height;
     struct nemotool *tool;
     struct nemoshow *show;
+    int framerate;
 
     double ro;
     struct nemotimer *ro_timer;
@@ -325,16 +326,18 @@ static void _background_ro_timeout(struct nemotimer *timer, void *userdata)
     bg->ro += 0.06;
     if (bg->ro >= 360) bg->ro = 0;
 
-    nemotimer_set_timeout(timer, 100);
+    if (bg->framerate > 0)
+        nemotimer_set_timeout(timer, 100 * (60.0/bg->framerate));
 }
 
-Background *background_create(NemoWidget *parent, int width, int height, double sxy, char *bgpath)
+Background *background_create(NemoWidget *parent, int width, int height, double sxy, char *bgpath, int framerate)
 {
     Background *bg = calloc(sizeof(Background), 1);
     bg->tool = nemowidget_get_tool(parent);
     bg->show = nemowidget_get_show(parent);
     bg->width = width;
     bg->height = height;
+    bg->framerate = framerate;
 
     NemoWidget *widget;
     struct showone *group;
@@ -447,7 +450,7 @@ BackgroundView *background_view_create(NemoWidget *parent, int width, int height
     int wh = sqrt(width * width + height * height);
 
     Background *bg;
-    view->bg = bg = background_create(parent, wh, wh, app->sxy, app->bgpath);
+    view->bg = bg = background_create(parent, wh, wh, app->sxy, app->bgpath, app->config->framerate);
     background_translate(bg, (width - wh)/2, (height - wh)/2);
 
     return view;
