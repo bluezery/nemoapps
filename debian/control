@@ -1,0 +1,44 @@
+Source: nemoapps
+Priority: optional
+Maintainer: Taehwan Kim <taehwan@nemoux.net>
+Build-Depends: debhelper (>=9), libc6-dev, libpixman-1-dev
+Standards-Version: 3.9.8
+Section: libs
+Homepage: http://www.nemoux.net
+#Vcs-Git: git://anonscm.debian.org/collab-maint/nemoapps.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/nemoapps.git
+
+Package: libnemoapps
+Priority: optional
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse application libraries
+ <insert long description, indented with spaces>
+
+Package: libnemoapps-dev
+Priority: optional
+Section: libdevel
+Architecture: any
+Depends: libnemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse application development files
+ <insert long description, indented with spaces>
+
+Package: nemoapps-bin
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: libnemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemoapps-dbg
+Priority: extra
+Section: debug
+Architecture: any
+Depends: libnemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's core platform debugging symbols
+ <insert long description, indented with spaces>
