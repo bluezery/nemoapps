@@ -8,7 +8,7 @@ Homepage: http://www.nemoux.net
 #Vcs-Git: git://anonscm.debian.org/collab-maint/nemoapps.git
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/nemoapps.git
 
-Package: libnemoapps
+Package: nemoapps
 Priority: optional
 Section: libs
 Architecture: any
@@ -16,11 +16,11 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's inhouse application libraries
  <insert long description, indented with spaces>
 
-Package: libnemoapps-dev
+Package: nemoapps-dev
 Priority: optional
 Section: libdevel
 Architecture: any
-Depends: libnemoapps (= ${binary:Version}),
+Depends: nemoapps (= ${binary:Version}),
     ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's inhouse application development files
  <insert long description, indented with spaces>
@@ -29,7 +29,7 @@ Package: nemoapps-bin
 Priority: optional
 Section: graphics
 Architecture: any
-Depends: libnemoapps (= ${binary:Version}),
+Depends: nemoapps (= ${binary:Version}),
     ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
@@ -38,7 +38,7 @@ Package: nemoapps-dbg
 Priority: extra
 Section: debug
 Architecture: any
-Depends: libnemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
+Depends: nemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
     ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's core platform debugging symbols
  <insert long description, indented with spaces>
