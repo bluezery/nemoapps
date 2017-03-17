@@ -1,6 +1,6 @@
 SET(SUBPROJECT "sge")
-SET(CONFXML0 "nemocard.conf")
-SET(CONFXML1 "nemobackground.conf")
+SET(CONFXML0 "card.conf")
+SET(CONFXML1 "background.conf")
 SET(SGE_ICON_DIR "${ICON_DIR}/${SUBPROJECT}")
 SET(SGE_IMG_DIR "${IMG_DIR}/${SUBPROJECT}")
 SET(SGE_LINK_DIR "${DATA_DIR}/${SUBPROJECT}")

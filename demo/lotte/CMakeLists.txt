@@ -1,6 +1,6 @@
 SET(SUBPROJECT "lotte")
-SET(CONFXML0 "nemocard.conf")
-SET(CONFXML1 "nemobackground.conf")
+SET(CONFXML0 "card.conf")
+SET(CONFXML1 "background.conf")
 SET(LOTTE_ICON_DIR "${ICON_DIR}/${SUBPROJECT}")
 SET(LOTTE_IMG_DIR "${IMG_DIR}/${SUBPROJECT}")
 SET(LOTTE_LINK_DIR "${DATA_DIR}/${SUBPROJECT}")

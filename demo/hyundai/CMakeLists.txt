@@ -1,6 +1,6 @@
 SET(SUBPROJECT "hyundai")
-SET(CONFXML0 "nemocard.conf")
-SET(CONFXML1 "nemobackground.conf")
+SET(CONFXML0 "card.conf")
+SET(CONFXML1 "background.conf")
 SET(HYUNDAI_ICON_DIR "${ICON_DIR}/${SUBPROJECT}")
 SET(HYUNDAI_IMG_DIR "${IMG_DIR}/${SUBPROJECT}")
 SET(HYUNDAI_LINK_DIR "${DATA_DIR}/${SUBPROJECT}")
