@@ -265,6 +265,7 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
     CardItem *it = userdata;
     struct nemoshow *show = it->icon->show;
 
+    RET_IF(!it->icon)
     RET_IF(!it->icon_anim);
 
     // For lotte animation
@@ -330,7 +331,7 @@ CardItem *card_item_dup(CardItem *it)
     dup->height = it->height;
     dup->type = strdup(it->type);
     dup->bg_uri = strdup(it->bg_uri);
-    dup->icon_uri = strdup(it->icon_uri);
+    if (it->icon_uri) dup->icon_uri = strdup(it->icon_uri);
     if (it->icon_anim) dup->icon_anim = strdup(it->icon_anim);
     if (it->txt_uri) dup->txt_uri = strdup(it->txt_uri);
     dup->exec = strdup(it->exec);
@@ -365,26 +366,29 @@ CardItem *card_item_dup(CardItem *it)
             nemoshow_item_get_width(it->bg), nemoshow_item_get_height(it->bg),
             it->bg_uri);
 
-    if (file_is_svg(it->icon_uri)) {
-        dup->icon = one = SVG_PATH_CREATE(group,
-                nemoshow_item_get_width(it->icon), nemoshow_item_get_height(it->icon),
-                it->icon_uri);
-        nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
-    } else if (file_is_image(it->icon_uri)) {
-        dup->icon = one = IMAGE_CREATE(group,
-                nemoshow_item_get_width(it->icon), nemoshow_item_get_height(it->icon),
-                it->icon_uri);
-    } else {
-        ERR("Not supported file type: %s", it->icon_uri);
-        free(dup);
-        return NULL;
+    if (it->icon_uri && it->icon) {
+        if (file_is_svg(it->icon_uri)) {
+            dup->icon = one = SVG_PATH_CREATE(group,
+                    nemoshow_item_get_width(it->icon), nemoshow_item_get_height(it->icon),
+                    it->icon_uri);
+            nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
+        } else if (file_is_image(it->icon_uri)) {
+            dup->icon = one = IMAGE_CREATE(group,
+                    nemoshow_item_get_width(it->icon), nemoshow_item_get_height(it->icon),
+                    it->icon_uri);
+        } else {
+            ERR("Not supported file type: %s", it->icon_uri);
+            free(dup);
+            return NULL;
+        }
+        nemoshow_item_set_anchor(one,
+                nemoshow_item_get_anchor_x(it->icon), nemoshow_item_get_anchor_y(it->icon));
+        nemoshow_item_translate(one,
+                nemoshow_item_get_translate_x(it->icon), nemoshow_item_get_translate_y(it->icon));
     }
-    nemoshow_item_set_anchor(one,
-            nemoshow_item_get_anchor_x(it->icon), nemoshow_item_get_anchor_y(it->icon));
-    nemoshow_item_translate(one,
-            nemoshow_item_get_translate_x(it->icon), nemoshow_item_get_translate_y(it->icon));
 
-    dup->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, dup);
+    if (dup->icon && dup->icon_anim)
+        dup->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, dup);
 
     if (it->txt_uri) {
         dup->txt = one = SVG_PATH_CREATE(group,
@@ -408,7 +412,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
     it->height = card->ih;
     it->type = strdup(type);
     it->bg_uri = strdup(bg_uri);
-    it->icon_uri = strdup(icon_uri);
+    if (icon_uri) it->icon_uri = strdup(icon_uri);
     if (icon_anim) it->icon_anim = strdup(icon_anim);
     if (txt_uri) it->txt_uri = strdup(txt_uri);
     it->exec = strdup(exec);
@@ -443,23 +447,25 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
     }
     it->bg = one = IMAGE_CREATE(group, w, h, it->bg_uri);
 
-    if (file_is_svg(it->icon_uri)) {
-        double ww, hh;
-        svg_get_wh(it->icon_uri, &ww, &hh);
-        w = ww * global_sxy;
-        h = hh * global_sxy;
-        it->icon = one = SVG_PATH_CREATE(group, w, h, it->icon_uri);
-        nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
-    } else if (file_is_image(it->icon_uri)) {
-        int ww, hh;
-        image_get_wh(it->icon_uri, &ww, &hh);
-        w = ww * global_sxy;
-        h = hh * global_sxy;
-        it->icon = one = IMAGE_CREATE(group, w, h, it->icon_uri);
-    } else {
-        ERR("Not supported file type: %s", it->icon_uri);
-        free(it);
-        return NULL;
+    if (it->icon_uri) {
+        if (file_is_svg(it->icon_uri)) {
+            double ww, hh;
+            svg_get_wh(it->icon_uri, &ww, &hh);
+            w = ww * global_sxy;
+            h = hh * global_sxy;
+            it->icon = one = SVG_PATH_CREATE(group, w, h, it->icon_uri);
+            nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
+        } else if (file_is_image(it->icon_uri)) {
+            int ww, hh;
+            image_get_wh(it->icon_uri, &ww, &hh);
+            w = ww * global_sxy;
+            h = hh * global_sxy;
+            it->icon = one = IMAGE_CREATE(group, w, h, it->icon_uri);
+        } else {
+            ERR("Not supported file type: %s", it->icon_uri);
+            free(it);
+            return NULL;
+        }
     }
 
     nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
@@ -480,7 +486,8 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
         nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
     }
 
-    it->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, it);
+    if (it->icon && it->icon_anim)
+        it->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, it);
 
     if (it->txt_uri) {
         double ww, hh;
@@ -498,10 +505,10 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
 
 void card_item_destroy(CardItem *it)
 {
-    nemotimer_destroy(it->icon_timer);
+    if (it->icon_timer) nemotimer_destroy(it->icon_timer);
     nemoshow_one_destroy(it->group);
     free(it->bg_uri);
-    free(it->icon_uri);
+    if (it->icon_uri) free(it->icon_uri);
     if (it->icon_anim) free(it->icon_anim);
     if (it->txt_uri) free(it->txt_uri);
     free(it->exec);
@@ -550,7 +557,7 @@ void card_item_show(CardItem *it, uint32_t easetype, int duration, int delay)
 void card_item_hide(CardItem *it, uint32_t easetype, int duration, int delay)
 {
     card_item_set_alpha(it, easetype, duration, delay, 0.0);
-    nemotimer_set_timeout(it->icon_timer, 0);
+    if (it->icon_timer) nemotimer_set_timeout(it->icon_timer, 0);
 }
 
 static void _card_item_hide_destroy(struct nemotimer *timer, void *userdata)
@@ -633,12 +640,14 @@ static void card_item_revoke(CardItem *it)
     nemoshow_revoke_transition_one(show, it->group, "tx");
     nemoshow_revoke_transition_one(show, it->group, "ty");
 
-    nemoshow_revoke_transition_one(show, it->icon, "alpha");
-    nemoshow_revoke_transition_one(show, it->icon, "ro");
-    nemoshow_revoke_transition_one(show, it->icon, "sx");
-    nemoshow_revoke_transition_one(show, it->icon, "sy");
-    nemoshow_revoke_transition_one(show, it->icon, "tx");
-    nemoshow_revoke_transition_one(show, it->icon, "ty");
+    if (it->icon) {
+        nemoshow_revoke_transition_one(show, it->icon, "alpha");
+        nemoshow_revoke_transition_one(show, it->icon, "ro");
+        nemoshow_revoke_transition_one(show, it->icon, "sx");
+        nemoshow_revoke_transition_one(show, it->icon, "sy");
+        nemoshow_revoke_transition_one(show, it->icon, "tx");
+        nemoshow_revoke_transition_one(show, it->icon, "ty");
+    }
 }
 
 void card_hide(Card *card)
@@ -1300,7 +1309,7 @@ static void _config_unload(ConfigApp *app)
     LIST_FREE(app->menu_items, it) {
         free(it->type);
         free(it->bg);
-        if (it->icon) free(it->icon);
+        if (it->icon) if (it->icon) free(it->icon);
         if (it->icon_anim) free(it->icon_anim);
         if (it->txt) free(it->txt);
         free(it->exec);
