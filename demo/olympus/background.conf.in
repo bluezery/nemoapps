@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nemobackground>
+    <size width="3840" height="2160"/>
+    <frame rate="30"/>
+    <background path="@OLYMPUS_IMG_DIR@/background" timeout="30000" duration="2000"/>
+    <sketch timeout="3000" min_distance="10.0" dot_count="60"/>
+    <icon count="12" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000"/>
+    <icons path="@OLYMPUS_IMG_DIR@/1.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/2.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/3.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/4.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/5.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/6.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/7.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/8.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/9.png"/>
+    <icons path="@OLYMPUS_IMG_DIR@/10.png"/>
+</nemobackground>
