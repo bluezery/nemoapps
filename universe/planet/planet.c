@@ -123,14 +123,14 @@ Planet *planet_dup(Planet *planet)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = UNIVERSE_IMG_DIR"/ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/0.png";
+        uri1 = PLANET_RES_DIR"/ring/1.png";
     } else if (ran == 1) {
-        uri0 = UNIVERSE_IMG_DIR"/b_ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/b_ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/b0.png";
+        uri1 = PLANET_RES_DIR"/ring/b1.png";
     } else {
-        uri0 = UNIVERSE_IMG_DIR"/p_ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/p_ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/p0.png";
+        uri1 = PLANET_RES_DIR"/ring/p1.png";
     }
 
     file_get_image_wh(uri0, &iw, &ih);
@@ -147,7 +147,7 @@ Planet *planet_dup(Planet *planet)
     dup->width = iww;
     dup->height = ihh;
 
-    uri = UNIVERSE_IMG_DIR"/shine.png";
+    uri = PLANET_RES_DIR"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -235,14 +235,14 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = UNIVERSE_IMG_DIR"/ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/0.png";
+        uri1 = PLANET_RES_DIR"/ring/1.png";
     } else if (ran == 1) {
-        uri0 = UNIVERSE_IMG_DIR"/b_ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/b_ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/b0.png";
+        uri1 = PLANET_RES_DIR"/ring/b1.png";
     } else {
-        uri0 = UNIVERSE_IMG_DIR"/p_ring0.png";
-        uri1 = UNIVERSE_IMG_DIR"/p_ring1.png";
+        uri0 = PLANET_RES_DIR"/ring/p0.png";
+        uri1 = PLANET_RES_DIR"/ring/p1.png";
     }
 
     planet->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
@@ -256,7 +256,7 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
     planet->width = iww;
     planet->height = ihh;
 
-    uri = UNIVERSE_IMG_DIR"/shine.png";
+    uri = PLANET_RES_DIR"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -462,7 +462,7 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
 
     int iw, ih;
     char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/sun/%05d.png", 0);
+    snprintf(buf, PATH_MAX, PLANET_RES_DIR"/sun/%05d.png", 0);
     file_get_image_wh(buf, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -488,14 +488,14 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
 
     i = 0;
     do {
-        snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/sun/%05d.png", i++);
+        snprintf(buf, PATH_MAX, PLANET_RES_DIR"/sun/%05d.png", i++);
         if (!file_is_exist(buf)) break;
         animation_append_item(anim, buf);
     } while (1);
     animation_set_anchor(anim, 0.5, 0.5);
 
 
-    files = fileinfo_readdir(UNIVERSE_IMG_DIR"/planet");
+    files = fileinfo_readdir(PLANET_RES_DIR"/planet");
     int cnt = 0;
     List *l;
     LIST_FOR_EACH(files, l, file) {
@@ -605,7 +605,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         }
     }
 
-    app->backline_path = strdup_printf("%s/backline%d", UNIVERSE_ICON_DIR, id);
+    app->backline_path = strdup_printf("%s/backline%d", PLANET_RES_DIR, id);
 
     return app;
 }

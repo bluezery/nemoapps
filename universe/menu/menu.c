@@ -430,7 +430,7 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
 
     // XXX: There should be icon with same name as group name
     char uri[PATH_MAX];
-    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s.png", grp->name);
+    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/%s.png", grp->name);
     file_get_image_wh(uri, &it->w, &it->h);
     it->w *= view->app->sxy;
     it->h *= view->app->sxy;
@@ -451,14 +451,14 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    snprintf(uri, PATH_MAX, UNIVERSE_IMG_DIR"/menu/main/%s_active.png", grp->name);
+    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/%s_active.png", grp->name);
     it->one_active = one = IMAGE_CREATE(group, it->w, it->h, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
     nemoshow_item_set_alpha(one, 0.0);
 
-    snprintf(uri, PATH_MAX, UNIVERSE_ICON_DIR"/menu/%s.svg", grp->name);
+    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/event/%s.svg", grp->name);
 
     double ww, hh;
     svg_get_wh(uri, &ww, &hh);

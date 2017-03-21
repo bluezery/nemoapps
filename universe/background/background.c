@@ -354,11 +354,11 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
     if (bgpath)
         bg->bg0 = one = IMAGE_CREATE(group, width, height, bgpath);
     else
-        bg->bg0 = one = IMAGE_CREATE(group, width, height, UNIVERSE_IMG_DIR"/back.png");
+        bg->bg0 = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back.png");
 
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, width/2, height/2);
-    bg->bg1 = one = IMAGE_CREATE(group, width, height, UNIVERSE_IMG_DIR"/back_star.png");
+    bg->bg1 = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back_star.png");
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, width/2, height/2);
 
@@ -367,7 +367,7 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
     for (i = 0 ; i < cnt ; i++) {
         int w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/star/%05d.png", 0);
+        snprintf(buf, PATH_MAX, BACKGROUND_RES_DIR"/star/%05d.png", 0);
         file_get_image_wh(buf, &w, &h);
         w *= sxy;
         h *= sxy;
@@ -379,7 +379,7 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
 
         int j = 0;
         do {
-            snprintf(buf, PATH_MAX, UNIVERSE_IMG_DIR"/star/%05d.png", j++);
+            snprintf(buf, PATH_MAX, BACKGROUND_RES_DIR"/star/%05d.png", j++);
             if (!file_is_exist(buf)) break;
             animation_append_item(anim, buf);
         } while (1);
