@@ -38,8 +38,8 @@ struct _ConfigApp {
     int icon_throw_duration;
 };
 
-typedef struct _Background Background;
-struct _Background {
+typedef struct _BackgroundView BackgroundView;
+struct _BackgroundView {
     bool visible;
     int width, height;
     struct nemoshow *show;
@@ -55,6 +55,8 @@ struct _Background {
     Gallery *gallery;
     int gallery_idx;
     struct nemotimer *gallery_timer;
+
+    PlayerUI *player;
 
     Sketch *sketch;
     int sketch_timeout;
@@ -98,7 +100,7 @@ uint32_t COL[] = {
 
 typedef struct _Icon Icon;
 struct _Icon {
-    Background *bg;
+    BackgroundView *view;
     List *grabs;
     uint64_t grab_dev0, grab_dev1;
     double grab_ro;
@@ -134,12 +136,12 @@ static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
 static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
 {
     Icon *icon = userdata;
-    Background *bg = icon->bg;
+    BackgroundView *view = icon->view;
 
     double t, tx, ty, sxy, ro;
     t = (WELLRNG512() % 60) * 1000 + 20000;
-    tx = WELLRNG512()%bg->width;
-    ty = WELLRNG512()%bg->height;
+    tx = WELLRNG512()%view->width;
+    ty = WELLRNG512()%view->height;
     sxy = (WELLRNG512() % 200)/100.0 + 0.5;
     ro = WELLRNG512() % 360;
 
@@ -149,7 +151,7 @@ static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
             "ro", ro, NULL);
 
     nemotimer_set_timeout(timer, t + 100);
-    nemoshow_dispatch_frame(bg->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _icon_timeout(struct nemotimer *timer, void *userdata)
@@ -208,13 +210,13 @@ static void _icon_timeout(struct nemotimer *timer, void *userdata)
         nemomotion_run(m);
     }
     nemotimer_set_timeout(timer, timeout + 100);
-    nemoshow_dispatch_frame(icon->bg->show);
+    nemoshow_dispatch_frame(icon->view->show);
 }
 
-Icon *create_icon(Background *bg, const char *uri, double rx, double ry)
+Icon *backgroundview_create_icon(BackgroundView *view, const char *uri, double rx, double ry)
 {
     Icon *icon = calloc(sizeof(Icon), 1);
-    icon->bg = bg;
+    icon->view = view;
 
     icon->uri = strdup(uri);
 
@@ -236,15 +238,15 @@ Icon *create_icon(Background *bg, const char *uri, double rx, double ry)
 
     struct showone *group;
     struct showone *one;
-    icon->group = group = GROUP_CREATE(bg->icon_group);
+    icon->group = group = GROUP_CREATE(view->icon_group);
     nemoshow_item_set_width(group, icon->width);
     nemoshow_item_set_height(group, icon->height);
     nemoshow_item_pivot(group, 0.5, 0.5);
     nemoshow_item_set_alpha(group, 0.0);
 
-    icon->timer = TOOL_ADD_TIMER(bg->tool, 0, _icon_timeout, icon);
-    icon->move_timer = TOOL_ADD_TIMER(bg->tool, 0, _icon_move_timeout, icon);
-    icon->color_timer = TOOL_ADD_TIMER(bg->tool, 0, _icon_color_timeout, icon);
+    icon->timer = TOOL_ADD_TIMER(view->tool, 0, _icon_timeout, icon);
+    icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_move_timeout, icon);
+    icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_color_timeout, icon);
 
     if (file_is_svg(uri)) {
         icon->one = one = SVG_PATH_GROUP_CREATE(group, icon->width, icon->height, uri);
@@ -513,7 +515,7 @@ void icon_do_move(Icon *icon, NemoWidget *widget, void *event)
     icon->prev_x[icon->prev_idx] = cx;
     icon->prev_y[icon->prev_idx] = cy;
     icon->prev_idx++;
-    if (icon->prev_idx >= icon->bg->icon_history_cnt) {
+    if (icon->prev_idx >= icon->view->icon_history_cnt) {
         icon->prev_idx = 0;
     }
 
@@ -524,8 +526,8 @@ void icon_do_move(Icon *icon, NemoWidget *widget, void *event)
 
 void icon_do_move_up(Icon *icon, NemoWidget *widget, void *event)
 {
-    Background *bg = icon->bg;
-    int history_cnt = icon->bg->icon_history_cnt;
+    BackgroundView *view = icon->view;
+    int history_cnt = icon->view->icon_history_cnt;
     // Move
     if (list_count(icon->grabs) >= 1) {
         double cx = 0, cy = 0;
@@ -567,8 +569,8 @@ void icon_do_move_up(Icon *icon, NemoWidget *widget, void *event)
 
             if (icon->prev_t[j] == 0) break;
 
-            if (abs(icon->prev_x[i] - icon->prev_x[j]) <= bg->icon_history_min_dist &&
-                    abs(icon->prev_y[i] - icon->prev_y[i] <= bg->icon_history_min_dist)) {
+            if (abs(icon->prev_x[i] - icon->prev_x[j]) <= view->icon_history_min_dist &&
+                    abs(icon->prev_y[i] - icon->prev_y[i] <= view->icon_history_min_dist)) {
                 i++;
                 if (i >= history_cnt) i = 0;
                 continue;
@@ -594,18 +596,18 @@ void icon_do_move_up(Icon *icon, NemoWidget *widget, void *event)
         } else {
             double dir = atan2f((icon->prev_y[start] - icon->prev_y[end]),
                     (icon->prev_x[start] - icon->prev_x[end]));
-            double avg = (sum/k) * bg->icon_throw_coeff;
+            double avg = (sum/k) * view->icon_throw_coeff;
 
             double tx = -avg * cos(dir) + icon->prev_x[end];
             double ty = -avg * sin(dir) + icon->prev_y[end];
             if (tx <= 0) tx = 0;
-            if (tx >= bg->width) tx = bg->width;
+            if (tx >= view->width) tx = view->width;
             if (ty <= 0) ty = 0;
-            if (ty >= bg->height) ty = bg->height;
+            if (ty >= view->height) ty = view->height;
 
-            if (abs(nemoshow_item_get_translate_x(icon->group) - tx) > bg->icon_throw_min_dist ||
-                    abs(nemoshow_item_get_translate_y(icon->group) - ty) > bg->icon_throw_min_dist) {
-                _nemoshow_item_motion(icon->group, NEMOEASE_CUBIC_OUT_TYPE, bg->icon_throw_duration, 0,
+            if (abs(nemoshow_item_get_translate_x(icon->group) - tx) > view->icon_throw_min_dist ||
+                    abs(nemoshow_item_get_translate_y(icon->group) - ty) > view->icon_throw_min_dist) {
+                _nemoshow_item_motion(icon->group, NEMOEASE_CUBIC_OUT_TYPE, view->icon_throw_duration, 0,
                         "tx", tx, "ty", ty, NULL);
                 if (WELLRNG512()%2 == 0) {
                     nemosound_play(BACKGROUND_SOUND_DIR"/boom.wav");
@@ -613,7 +615,7 @@ void icon_do_move_up(Icon *icon, NemoWidget *widget, void *event)
                     nemosound_play(BACKGROUND_SOUND_DIR"/throwing.wav");
                 }
             }
-            nemotimer_set_timeout(icon->move_timer, bg->icon_throw_duration + 100);
+            nemotimer_set_timeout(icon->move_timer, view->icon_throw_duration + 100);
         }
         nemotimer_set_timeout(icon->color_timer, 0);
     }
@@ -634,7 +636,7 @@ void icon_move_init(Icon *icon, NemoWidget *widget, void *event)
     // history init
     icon->prev_idx = 0;
     int i;
-    for (i = 0 ; i < icon->bg->icon_history_cnt ; i++) {
+    for (i = 0 ; i < icon->view->icon_history_cnt ; i++) {
         icon->prev_t[i] = 0;
         icon->prev_x[i] = 0;
         icon->prev_y[i] = 0;
@@ -672,7 +674,7 @@ void icon_remove_grab(Icon *icon, NemoWidget *widget, void *event)
 static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     Icon *icon = userdata;
-    Background *bg = icon->bg;
+    BackgroundView *view = icon->view;
 
     struct nemoshow *show = nemowidget_get_show(widget);
 
@@ -699,12 +701,12 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
     } else if (nemoshow_event_is_up(show, event)) {
         icon_remove_grab(icon, widget, event);
     }
-    nemoshow_dispatch_frame(bg->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _background_event(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
-    Background *bg = userdata;
+    BackgroundView *view = userdata;
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
 
@@ -715,14 +717,14 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
 
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
-        one = nemowidget_pick_one(bg->icon_widget, ex, ey);
+        one = nemowidget_pick_one(view->icon_widget, ex, ey);
         if (one && 0x111 == nemoshow_one_get_tag(one)) {
             Icon *icon = nemoshow_one_get_userdata(one);
             nemowidget_create_grab(widget, event,
                     _icon_grab_event, icon);
             // XXX: To prevent drawing in the sketch
             nemoshow_event_set_done(event);
-        } else if (!bg->sketch) {
+        } else if (!view->sketch) {
             struct nemotool *tool = nemowidget_get_tool(widget);
             uint64_t device = nemoshow_event_get_device(event);
             float vx, vy;
@@ -747,53 +749,53 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
 
 static void _sketch_timeout(struct nemotimer *timer, void *userdata)
 {
-    Background *bg = userdata;
-    sketch_remove_old(bg->sketch, bg->sketch_timeout);
-    nemotimer_set_timeout(timer, bg->sketch_timeout);
-    nemoshow_dispatch_frame(bg->show);
+    BackgroundView *view = userdata;
+    sketch_remove_old(view->sketch, view->sketch_timeout);
+    nemotimer_set_timeout(timer, view->sketch_timeout);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _background_gallery_timeout(struct nemotimer *timer, void *userdata)
 {
-    Background *bg = userdata;
+    BackgroundView *view = userdata;
 
     GalleryItem *gallery_it;
-    gallery_it = LIST_DATA(list_get_nth(bg->gallery->items, bg->gallery_idx));
-    gallery_item_hide(gallery_it, NEMOEASE_LINEAR_TYPE, bg->gallery_duration, 0);
+    gallery_it = LIST_DATA(list_get_nth(view->gallery->items, view->gallery_idx));
+    gallery_item_hide(gallery_it, NEMOEASE_LINEAR_TYPE, view->gallery_duration, 0);
 
-    bg->gallery_idx++;
-    if (bg->gallery_idx >= list_count(bg->gallery->items))
-        bg->gallery_idx = 0;
+    view->gallery_idx++;
+    if (view->gallery_idx >= list_count(view->gallery->items))
+        view->gallery_idx = 0;
 
-    gallery_it = LIST_DATA(list_get_nth(bg->gallery->items, bg->gallery_idx));
-    gallery_item_show(gallery_it, NEMOEASE_LINEAR_TYPE, bg->gallery_duration, 0);
+    gallery_it = LIST_DATA(list_get_nth(view->gallery->items, view->gallery_idx));
+    gallery_item_show(gallery_it, NEMOEASE_LINEAR_TYPE, view->gallery_duration, 0);
 
-    nemotimer_set_timeout(timer, bg->gallery_timeout);
-    nemoshow_dispatch_frame(bg->show);
+    nemotimer_set_timeout(timer, view->gallery_timeout);
+    nemoshow_dispatch_frame(view->show);
 }
 
-Background *background_create(NemoWidget *parent, ConfigApp *app)
+BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
 {
-    Background *bg = calloc(sizeof(Background), 1);
-    bg->show = nemowidget_get_show(parent);
-    bg->tool = nemowidget_get_tool(parent);
-    bg->parent = parent;
-    bg->width = app->config->width;
-    bg->height = app->config->height;
-    bg->gallery_timeout = app->bgtimeout;
-    bg->gallery_duration = app->bgduration;
-    bg->sketch_timeout = app->sketch_timeout;
-    bg->icon_history_cnt = app->icon_history_cnt;
-    bg->icon_history_min_dist = app->icon_history_min_dist;
-    bg->icon_throw_min_dist = app->icon_throw_min_dist;
-    bg->icon_throw_coeff = app->icon_throw_coeff;
-    bg->icon_throw_duration = app->icon_throw_duration;
+    BackgroundView *view = calloc(sizeof(BackgroundView), 1);
+    view->show = nemowidget_get_show(parent);
+    view->tool = nemowidget_get_tool(parent);
+    view->parent = parent;
+    view->width = app->config->width;
+    view->height = app->config->height;
+    view->gallery_timeout = app->bgtimeout;
+    view->gallery_duration = app->bgduration;
+    view->sketch_timeout = app->sketch_timeout;
+    view->icon_history_cnt = app->icon_history_cnt;
+    view->icon_history_min_dist = app->icon_history_min_dist;
+    view->icon_throw_min_dist = app->icon_throw_min_dist;
+    view->icon_throw_coeff = app->icon_throw_coeff;
+    view->icon_throw_duration = app->icon_throw_duration;
 
     NemoWidget *widget;
     struct showone *group;
 
-    bg->widget = widget = nemowidget_create_vector(parent, bg->width, bg->height);
-    bg->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->widget = widget = nemowidget_create_vector(parent, view->width, view->height);
+    view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     nemoshow_item_set_alpha(group, 0.0);
 
     if (file_is_dir(app->bgpath)) {
@@ -802,11 +804,11 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
 
         if (list_count(bgfiles) > 0) {
             Gallery *gallery;
-            bg->gallery = gallery = gallery_create(bg->tool, group, bg->width, bg->height);
+            view->gallery = gallery = gallery_create(view->tool, group, view->width, view->height);
             if (app->config->layer && !strcmp(app->config->layer, "background")) {
-                gallery_set_bg_color(bg->gallery, WHITE);
+                gallery_set_bg_color(view->gallery, WHITE);
             }
-            bg->gallery_timer = TOOL_ADD_TIMER(bg->tool, 0, _background_gallery_timeout, bg);
+            view->gallery_timer = TOOL_ADD_TIMER(view->tool, 0, _background_gallery_timeout, view);
 
             LIST_FREE(bgfiles, file) {
                 if (file->is_dir) continue;
@@ -814,37 +816,41 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
                 fileinfo_destroy(file);
             }
 
-            bg->sketch = sketch_create(parent, bg->width, bg->height);
-            sketch_set_min_distance(bg->sketch, app->sketch_min_dist);
-            sketch_set_dot_count(bg->sketch, app->sketch_dot_cnt);
-            sketch_set_size(bg->sketch, 3);
-            bg->sketch_timer = TOOL_ADD_TIMER(bg->tool, bg->sketch_timeout, _sketch_timeout, bg);
+            view->sketch = sketch_create(parent, view->width, view->height);
+            sketch_set_min_distance(view->sketch, app->sketch_min_dist);
+            sketch_set_dot_count(view->sketch, app->sketch_dot_cnt);
+            sketch_set_size(view->sketch, 3);
+            view->sketch_timer = TOOL_ADD_TIMER(view->tool, view->sketch_timeout, _sketch_timeout, view);
         }
-    } else if (app->bgpath) {
+    } else if (file_is_image(app->bgpath)) {
         Gallery *gallery;
-        bg->gallery = gallery = gallery_create(bg->tool, group, bg->width, bg->height);
+        view->gallery = gallery = gallery_create(view->tool, group, view->width, view->height);
         if (app->config->layer && !strcmp(app->config->layer, "background")) {
-            gallery_set_bg_color(bg->gallery, WHITE);
+            gallery_set_bg_color(view->gallery, WHITE);
         }
-        bg->gallery_timer = TOOL_ADD_TIMER(bg->tool, 0, _background_gallery_timeout, bg);
+        view->gallery_timer = TOOL_ADD_TIMER(view->tool, 0, _background_gallery_timeout, view);
 
         gallery_append_item(gallery, app->bgpath);
 
-        bg->sketch = sketch_create(parent, bg->width, bg->height);
-        sketch_set_min_distance(bg->sketch, app->sketch_min_dist);
-        sketch_set_dot_count(bg->sketch, app->sketch_dot_cnt);
-        sketch_set_size(bg->sketch, 3);
-        bg->sketch_timer = TOOL_ADD_TIMER(bg->tool, bg->sketch_timeout, _sketch_timeout, bg);
+        view->sketch = sketch_create(parent, view->width, view->height);
+        sketch_set_min_distance(view->sketch, app->sketch_min_dist);
+        sketch_set_dot_count(view->sketch, app->sketch_dot_cnt);
+        sketch_set_size(view->sketch, 3);
+        view->sketch_timer = TOOL_ADD_TIMER(view->tool, view->sketch_timeout, _sketch_timeout, view);
+    } else if (file_is_video(app->bgpath)) {
+        PlayerUI *player;
+        view->player = player = nemoui_player_create(parent,
+                view->width, view->height, app->bgpath, false, -1, false);
     }
 
-    bg->icon_widget = widget = nemowidget_create_vector(parent, bg->width, bg->height);
-    nemowidget_append_callback(widget, "event", _background_event, bg);
+    view->icon_widget = widget = nemowidget_create_vector(parent, view->width, view->height);
+    nemowidget_append_callback(widget, "event", _background_event, view);
     nemowidget_enable_event_repeat(widget, true);
-    bg->icon_group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->icon_group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
     double rx, ry;
-    rx = (double)bg->width/3240;
-    ry = (double)bg->height/1920;
+    rx = (double)view->width/3240;
+    ry = (double)view->height/1920;
 
     if (app->icons) {
         int cnt = list_count(app->icons);
@@ -853,94 +859,94 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
             char *path = LIST_DATA(list_get_nth(app->icons, i%cnt));
 
             int tx, ty;
-            tx = WELLRNG512()%bg->width;
-            ty = WELLRNG512()%bg->height;
+            tx = WELLRNG512()%view->width;
+            ty = WELLRNG512()%view->height;
 
             Icon *icon;
-            icon = create_icon(bg, path, rx, ry);
+            icon = backgroundview_create_icon(view, path, rx, ry);
             icon_translate(icon, 0, 0, 0, tx, ty);
-            bg->icons = list_append(bg->icons, icon);
+            view->icons = list_append(view->icons, icon);
         }
     }
 
-    return bg;
+    return view;
 }
 
-void background_show(Background *bg)
+void background_show(BackgroundView *view)
 {
-    nemowidget_show(bg->widget, 0, 0, 0);
+    nemowidget_show(view->widget, 0, 0, 0);
     int easetype = NEMOEASE_CUBIC_OUT_TYPE;
-    if (bg->gallery) {
-        gallery_show(bg->gallery, easetype, 1000, 0);
-        int cnt = list_count(bg->gallery->items);
+    if (view->gallery) {
+        gallery_show(view->gallery, easetype, 1000, 0);
+        int cnt = list_count(view->gallery->items);
         if (cnt == 1) {
-            gallery_item_show(LIST_DATA(LIST_FIRST(bg->gallery->items)), easetype, 500, 0);
+            gallery_item_show(LIST_DATA(LIST_FIRST(view->gallery->items)), easetype, 500, 0);
         } else if (cnt > 1)
-            nemotimer_set_timeout(bg->gallery_timer, 100);
+            nemotimer_set_timeout(view->gallery_timer, 100);
     }
-    _nemoshow_item_motion(bg->group, easetype, 1000, 0,
+    _nemoshow_item_motion(view->group, easetype, 1000, 0,
             "alpha", 1.0,
             NULL);
 
-    nemowidget_show(bg->icon_widget, 0, 0, 0);
+    nemowidget_show(view->icon_widget, 0, 0, 0);
     int delay = 0;
     List *l;
     Icon *icon;
-    LIST_FOR_EACH(bg->icons, l, icon) {
+    LIST_FOR_EACH(view->icons, l, icon) {
         icon_show(icon, NEMOEASE_CUBIC_OUT_TYPE, 1000, delay);
         delay += 250;
     }
 
-    if (bg->sketch) {
-        sketch_show(bg->sketch, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-        sketch_enable(bg->sketch, true);
-        nemotimer_set_timeout(bg->sketch_timer, 1000 + 100);
+    if (view->sketch) {
+        sketch_show(view->sketch, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+        sketch_enable(view->sketch, true);
+        nemotimer_set_timeout(view->sketch_timer, 1000 + 100);
     }
 
-    nemoshow_dispatch_frame(bg->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
-void background_hide(Background *bg)
+void background_hide(BackgroundView *view)
 {
-    nemowidget_hide(bg->widget, 0, 0, 0);
-    nemotimer_set_timeout(bg->gallery_timer, 0);
-    if (bg->gallery)
-        gallery_hide(bg->gallery, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+    nemowidget_hide(view->widget, 0, 0, 0);
+    nemotimer_set_timeout(view->gallery_timer, 0);
+    if (view->gallery)
+        gallery_hide(view->gallery, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
 
     /* XXX: Needs backgrounds for compositing
-    _nemoshow_item_motion(bg->group, easetype, 1000, 0,
+    _nemoshow_item_motion(view->group, easetype, 1000, 0,
             "alpha", 0.0,
             NULL);
             */
-    nemowidget_show(bg->icon_widget, 0, 0, 0);
+    nemowidget_show(view->icon_widget, 0, 0, 0);
     List *l;
     Icon *icon;
-    LIST_FOR_EACH(bg->icons, l, icon) {
+    LIST_FOR_EACH(view->icons, l, icon) {
         icon_revoke(icon);
         icon_hide(icon, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
     }
 
-    if (bg->sketch) {
-        sketch_hide(bg->sketch, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-        nemotimer_set_timeout(bg->sketch_timer, 0);
+    if (view->sketch) {
+        sketch_hide(view->sketch, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+        nemotimer_set_timeout(view->sketch_timer, 0);
     }
 
-    nemoshow_dispatch_frame(bg->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _background_win_layer(NemoWidget *win, const char *id, void *info, void *userdata)
 {
-    Background *bg = userdata;
+    BackgroundView *view = userdata;
     int32_t visible = (intptr_t)info;
     if (visible == -1) {
-        if (bg->visible) {
-            background_hide(bg);
-            bg->visible = false;
+        if (view->visible) {
+            background_hide(view);
+            view->visible = false;
         }
     } else {
-        if (!bg->visible) {
-            background_show(bg);
-            bg->visible = true;
+        if (!view->visible) {
+            background_show(view);
+            view->visible = true;
         }
     }
 }
@@ -1104,11 +1110,11 @@ int main(int argc, char *argv[])
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
 
-    Background *bg = background_create(win, app);
-    nemowidget_append_callback(win, "layer", _background_win_layer, bg);
-    background_show(bg);
+    BackgroundView *view = background_create(win, app);
+    nemowidget_append_callback(win, "layer", _background_win_layer, view);
+    background_show(view);
 
-    nemoshow_dispatch_frame(bg->show);
+    nemoshow_dispatch_frame(view->show);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
