@@ -13,6 +13,6 @@
     <icons path="@MUNHAK_OVERLAY_DIR@/icon6.svg"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/icon7.svg"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/logo.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/logo0.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/logo1.svg"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/1.mov"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/2.mov"/>
 </nemobackground>

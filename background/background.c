@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <nemoplay.h>
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
@@ -116,6 +117,8 @@ struct _Icon {
     int grab_diff_x, grab_diff_y;
     int idx;
     char *uri;
+
+    PlayerUI *player;
     struct showone *group;
     struct showone *one;
     struct nemotimer *timer;
@@ -149,6 +152,10 @@ static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
             "tx", tx, "ty", ty,
             "sx", sxy, "sy", sxy,
             "ro", ro, NULL);
+    if (icon->player) {
+        nemoui_player_translate(icon->player, NEMOEASE_LINEAR_TYPE, t, 0,
+                tx, ty);
+    }
 
     nemotimer_set_timeout(timer, t + 100);
     nemoshow_dispatch_frame(view->show);
@@ -230,6 +237,12 @@ Icon *backgroundview_create_icon(BackgroundView *view, const char *uri, double r
         image_get_wh(uri, &ww, &hh);
         icon->width = ww * rx;
         icon->height = hh * ry;
+    } else if (file_is_video(uri)) {
+        int ww, hh;
+        nemoplay_get_video_info(uri, &ww, &hh);
+        icon->width = ww * rx;
+        icon->height = hh * ry;
+
     } else {
         ERR("Not supported file type: %s", uri);
         free(icon);
@@ -252,6 +265,12 @@ Icon *backgroundview_create_icon(BackgroundView *view, const char *uri, double r
         icon->one = one = SVG_PATH_GROUP_CREATE(group, icon->width, icon->height, uri);
     } else if (file_is_image(uri)) {
         icon->one = one = IMAGE_CREATE(group, icon->width, icon->height, uri);
+    } else if (file_is_video(uri)) {
+        PlayerUI *player;
+        icon->one = one = RECT_CREATE(group, icon->width, icon->height);
+        nemoshow_item_set_alpha(one, 0.0);
+        icon->player = player = nemoui_player_create(view->icon_widget,
+                icon->width, icon->height, uri, false, -1, false);
     } else {
         ERR("Not supported file type: %s", uri);
         free(icon);
@@ -280,6 +299,15 @@ void icon_revoke(Icon *icon)
     nemoshow_revoke_transition_one(show, icon->one, "ty");
     nemoshow_revoke_transition_one(show, icon->one, "alpha");
     nemoshow_revoke_transition_one(show, icon->one, "ro");
+
+    /*
+    if (icon->player) {
+        nemoui_player_revoke_translate(icon->player);
+        nemoui_player_revoke_scale(icon->player);
+        nemoui_player_revoke_rotate(icon->player);
+        nemoui_player_revoke_alpha(icon->player);
+    }
+    */
 }
 
 void icon_show(Icon *icon, uint32_t easetype, int duration, int delay)
@@ -290,6 +318,10 @@ void icon_show(Icon *icon, uint32_t easetype, int duration, int delay)
                 NULL);
     } else {
         nemoshow_item_set_alpha(icon->group, 0.5);
+    }
+    if (icon->player) {
+        nemoui_player_play(icon->player);
+        nemoui_player_show(icon->player, easetype, duration, delay);
     }
     nemotimer_set_timeout(icon->timer, 100 + delay);
     nemotimer_set_timeout(icon->move_timer, 100 + delay);
@@ -304,6 +336,10 @@ void icon_hide(Icon *icon, uint32_t easetype, int duration, int delay)
     } else {
         nemoshow_item_set_alpha(icon->group, 0.0);
     }
+    if (icon->player) {
+        nemoui_player_stop(icon->player);
+        nemoui_player_hide(icon->player, easetype, duration, delay);
+    }
     nemotimer_set_timeout(icon->timer, 0);
     nemotimer_set_timeout(icon->move_timer, 0);
 }
@@ -317,6 +353,11 @@ void icon_rotate(Icon *icon, uint32_t easetype, int duration, int delay, double 
     } else {
         nemoshow_item_rotate(icon->group, ro);
     }
+    /*
+    if (icon->player) {
+        nemoui_player_rotate(icon->player, easetype, duration, delay, ro);
+    }
+    */
 }
 
 void icon_scale(Icon *icon, uint32_t easetype, int duration, int delay, double sx, double sy)
@@ -328,6 +369,11 @@ void icon_scale(Icon *icon, uint32_t easetype, int duration, int delay, double s
     } else {
         nemoshow_item_scale(icon->group, sx, sy);
     }
+    /*
+    if (icon->player) {
+        nemoui_player_scale(icon->player, easetype, duration, delay, sx, sy);
+    }
+    */
 }
 
 void icon_translate(Icon *icon, uint32_t easetype, int duration, int delay, double tx, double ty)
@@ -339,6 +385,11 @@ void icon_translate(Icon *icon, uint32_t easetype, int duration, int delay, doub
     } else {
         nemoshow_item_translate(icon->group, tx, ty);
     }
+    /*
+    if (icon->player) {
+        nemoui_player_translate(icon->player, easetype, duration, delay, tx, ty);
+    }
+    */
 }
 
 void icon_get_center(Icon *icon, void *event, double *cx, double *cy)
@@ -869,7 +920,6 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
         for (i = 0 ; i < app->icon_cnt ; i++) {
             char *path = LIST_DATA(list_get_nth(app->icons, i%cnt));
 
-            ERR("%s", path);
             int tx, ty;
             tx = WELLRNG512()%view->width;
             ty = WELLRNG512()%view->height;
@@ -1049,45 +1099,31 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
     snprintf(buf, PATH_MAX, "%s/icon", appname);
     temp = xml_get_value(xml, buf, "count");
-    if (!temp) {
-        ERR("No icon count in %s", appname);
-    } else {
+    if (temp) {
         app->icon_cnt = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "history_count");
-    if (!temp) {
-        ERR("No icon history_count in %s", appname);
-    } else {
+    if (temp) {
         app->icon_history_cnt = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "history_min_distance");
-    if (!temp) {
-        ERR("No icon history_min_distance in %s", appname);
-    } else {
+    if (temp) {
         app->icon_history_min_dist = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "throw");
-    if (!temp) {
-        ERR("No icon throw in %s", appname);
-    } else {
+    if (temp) {
         app->icon_throw = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "throw_min_distance");
-    if (!temp) {
-        ERR("No icon throw_min_distance in %s", appname);
-    } else {
+    if (temp) {
         app->icon_throw_min_dist = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "throw_coefficient");
-    if (!temp) {
-        ERR("No icon throw_coeff in %s", appname);
-    } else {
+    if (temp) {
         app->icon_throw_coeff = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "throw_duration");
-    if (!temp) {
-        ERR("No icon throw_duration in %s", appname);
-    } else {
+    if (temp) {
         app->icon_throw_duration = atoi(temp);
     }
 

@@ -63,6 +63,7 @@ SaverView *saver_view_create(NemoWidget *parent, int width, int height, const ch
 
     NemoWidget *widget;
     view->back = widget = nemowidget_create_vector(parent, width, height);
+    nemowidget_append_callback(widget, "event", _saver_view_event, view);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     struct showone *one;

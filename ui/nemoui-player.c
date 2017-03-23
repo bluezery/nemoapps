@@ -140,9 +140,37 @@ void nemoui_player_scale(PlayerUI *ui, uint32_t easetype, int duration, int dela
     nemoshow_dispatch_frame(ui->show);
 }
 
+void nemoui_player_revoke_translate(PlayerUI *ui)
+{
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "tx");
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "ty");
+}
+
+void nemoui_player_revoke_scale(PlayerUI *ui)
+{
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "sx");
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "sy");
+}
+
+void nemoui_player_revoke_rotate(PlayerUI *ui)
+{
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "ro");
+}
+
+void nemoui_player_revoke_alpha(PlayerUI *ui)
+{
+    nemoshow_revoke_transition_one(ui->show, nemowidget_get_canvas(ui->widget), "alpha");
+}
+
 void nemoui_player_translate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float x, float y)
 {
     nemowidget_translate(ui->widget, easetype, duration, delay, x, y);
+}
+
+void nemoui_player_rotate(PlayerUI *ui, uint32_t easetype, int duration, int delay, float ro)
+{
+    // Not supported yet
+    //nemowidget_rotate(ui->widget, easetype, duration, delay, ro);
 }
 
 static void _video_update(struct nemoplay *play, void *data)
