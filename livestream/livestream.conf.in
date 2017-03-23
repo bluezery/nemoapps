@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-<size width="1920" height="1080" col="4" row="4"/>
-    <!-- Local 
+    <size width="1920" height="1080" col="4" row="4"/>
+    <!-- Local
     <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
     <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>
     <file path="rtsp://nemoux:nemoux1234@192.168.0.199"/>

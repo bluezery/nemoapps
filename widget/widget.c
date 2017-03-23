@@ -1817,8 +1817,13 @@ void nemowidget_win_set_layer(NemoWidget *win, const char *layer)
     RET_IF(!layer);
     struct nemoshow *show = nemowidget_get_show(win);
     nemoshow_view_set_layer(show, layer);
-    if (!strcmp(layer, "background"))
+    if (!strcmp(layer, "background")) {
         nemoshow_view_set_opaque(show, 0, 0, show->width, show->height);
+        nemowidget_win_set_anchor(win, 0, 0);
+        nemowidget_win_enable_move(win, 0);
+        nemowidget_win_enable_rotate(win, 0);
+        nemowidget_win_enable_scale(win, 0);
+    }
 }
 
 void nemowidget_win_set_event_area(NemoWidget *win, NemoWidget_Win_Area func, void *userdata)

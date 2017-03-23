@@ -1076,11 +1076,6 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_set_anchor(win, 0, 0);
-    nemowidget_win_set_layer(win, "background");
-    nemowidget_win_enable_move(win, 0);
-    nemowidget_win_enable_rotate(win, 0);
-    nemowidget_win_enable_scale(win, 0);
 
     Background *bg = background_create(win, app->config->width, app->config->height,
             app->bgpath, app->bgtimeout, app->bgduration,

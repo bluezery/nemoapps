@@ -682,10 +682,6 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_move(win, 3);
     nemowidget_win_enable_rotate(win, 3);
     nemowidget_win_enable_scale(win, 3);
-    /*
-    nemowidget_win_set_anchor(win, 0, 0);
-    nemowidget_win_set_layer(win, "underlay");
-    */
 
     View *view = view_create(win, app->config->width, app->config->height, app);
     nemowidget_append_callback(win, "fullscreen", _win_fullscreen_callback, view);

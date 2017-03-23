@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nemobackground>
+    <window layer="background"/>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
     <background path="@HYUNDAI_IMG_DIR@/background" timeout="30000" duration="2000"/>
