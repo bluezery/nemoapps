@@ -138,6 +138,7 @@ bool file_is_exec(const char *path)
 
 bool file_is_image(const char *path)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     bool check = _path_check_magic(magic_str, MAGIC_IMAGES,
             sizeof(MAGIC_IMAGES)/sizeof(MAGIC_IMAGES[0]));
@@ -147,6 +148,7 @@ bool file_is_image(const char *path)
 
 bool file_is_svg(const char *path)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     bool check = _path_check_magic(magic_str, MAGIC_SVGS,
             sizeof(MAGIC_SVGS)/sizeof(MAGIC_SVGS[0]));
@@ -156,6 +158,7 @@ bool file_is_svg(const char *path)
 
 bool file_is_video(const char *path)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     bool check = _path_check_magic(magic_str, MAGIC_VIDEOS,
             sizeof(MAGIC_VIDEOS)/sizeof(MAGIC_VIDEOS[0]));
@@ -165,6 +168,7 @@ bool file_is_video(const char *path)
 
 bool file_is_text(const char *path)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     bool check = _path_check_magic(magic_str, MAGIC_TEXTS,
             sizeof(MAGIC_TEXTS)/sizeof(MAGIC_TEXTS[0]));
@@ -174,6 +178,7 @@ bool file_is_text(const char *path)
 
 bool file_is_pdf(const char *path)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     bool check = _path_check_magic(magic_str, MAGIC_PDFS,
             sizeof(MAGIC_PDFS)/sizeof(MAGIC_PDFS[0]));
@@ -183,6 +188,7 @@ bool file_is_pdf(const char *path)
 
 bool file_get_image_wh(const char *path, int *w, int *h)
 {
+    if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
     RET_IF(!magic_str, false);
 
