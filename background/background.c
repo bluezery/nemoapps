@@ -796,10 +796,31 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
     bg->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     nemoshow_item_set_alpha(group, 0.0);
 
-    FileInfo *file;
-    List *bgfiles = fileinfo_readdir(app->bgpath);
+    if (file_is_dir(app->bgpath)) {
+        FileInfo *file;
+        List *bgfiles = fileinfo_readdir(app->bgpath);
 
-    if (list_count(bgfiles) > 0) {
+        if (list_count(bgfiles) > 0) {
+            Gallery *gallery;
+            bg->gallery = gallery = gallery_create(bg->tool, group, bg->width, bg->height);
+            if (app->config->layer && !strcmp(app->config->layer, "background")) {
+                gallery_set_bg_color(bg->gallery, WHITE);
+            }
+            bg->gallery_timer = TOOL_ADD_TIMER(bg->tool, 0, _background_gallery_timeout, bg);
+
+            LIST_FREE(bgfiles, file) {
+                if (file->is_dir) continue;
+                gallery_append_item(gallery, file->path);
+                fileinfo_destroy(file);
+            }
+
+            bg->sketch = sketch_create(parent, bg->width, bg->height);
+            sketch_set_min_distance(bg->sketch, app->sketch_min_dist);
+            sketch_set_dot_count(bg->sketch, app->sketch_dot_cnt);
+            sketch_set_size(bg->sketch, 3);
+            bg->sketch_timer = TOOL_ADD_TIMER(bg->tool, bg->sketch_timeout, _sketch_timeout, bg);
+        }
+    } else if (app->bgpath) {
         Gallery *gallery;
         bg->gallery = gallery = gallery_create(bg->tool, group, bg->width, bg->height);
         if (app->config->layer && !strcmp(app->config->layer, "background")) {
@@ -807,11 +828,7 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
         }
         bg->gallery_timer = TOOL_ADD_TIMER(bg->tool, 0, _background_gallery_timeout, bg);
 
-        LIST_FREE(bgfiles, file) {
-            if (file->is_dir) continue;
-            gallery_append_item(gallery, file->path);
-            fileinfo_destroy(file);
-        }
+        gallery_append_item(gallery, app->bgpath);
 
         bg->sketch = sketch_create(parent, bg->width, bg->height);
         sketch_set_min_distance(bg->sketch, app->sketch_min_dist);
@@ -819,7 +836,6 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
         sketch_set_size(bg->sketch, 3);
         bg->sketch_timer = TOOL_ADD_TIMER(bg->tool, bg->sketch_timeout, _sketch_timeout, bg);
     }
-
 
     bg->icon_widget = widget = nemowidget_create_vector(parent, bg->width, bg->height);
     nemowidget_append_callback(widget, "event", _background_event, bg);

@@ -116,6 +116,7 @@ bool file_is_null(const char *path)
 
 bool file_is_dir(const char *path)
 {
+    if (!path) return false;
     struct stat st;
     int r = stat(path, &st);
     if (r) {
