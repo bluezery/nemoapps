@@ -174,6 +174,7 @@ static void _video_done(struct nemoplay *play, void *data)
 	nemoshow_dispatch_frame(ui->show);
 }
 
+// This is thread safe function
 void nemoui_player_prepare(PlayerUI *ui)
 {
     RET_IF(ui->prepared);

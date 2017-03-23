@@ -72,27 +72,19 @@ SaverView *saver_view_create(NemoWidget *parent, int width, int height, const ch
     PlayerUI *player;
     view->player = player = nemoui_player_create(parent, width, height, path, enable_audio, -1, false);
 
-    /*
-    nemowidget_append_callback(widget, "event", _saver_view_event, view);
-    nemowidget_append_callback(widget, "resize", _saver_view_opengl_resize, view);
-    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
-    nemowidget_translate(widget, 0, 0, 0, (width - glw)/2, (height - glh)/2);
-
-    view->video_timer = timer = TOOL_ADD_TIMER(tool, 0,
-            _nemoplay_dispatch_video_timer, view);
-    */
-
     return view;
 }
 
 static void saver_view_show(SaverView *view)
 {
+    nemoui_player_play(view->player);
     nemoui_player_show(view->player, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
     nemoshow_dispatch_frame(view->show);
 }
 
 static void saver_view_hide(SaverView *view)
 {
+    nemoui_player_stop(view->player);
     nemoui_player_hide(view->player, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
     nemoshow_dispatch_frame(view->show);
 }
@@ -162,15 +154,6 @@ int main(int argc, char *argv[])
         ERR("Usage: %s -f FILENAME [-a off]", APPNAME);
         return -1;
     }
-
-    int vw, vh;
-    if (!nemoplay_get_video_info(app->path, &vw, &vh)) {
-        ERR("nemoplay_get_video_info failed: %s", app->path);
-        return -1;
-    }
-
-    int glw, glh;
-    _rect_ratio_fit(vw, vh, app->config->width, app->config->height, &glw, &glh);
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
