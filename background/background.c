@@ -812,6 +812,7 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
             gallery_append_item(gallery, file->path);
             fileinfo_destroy(file);
         }
+
         bg->sketch = sketch_create(parent, bg->width, bg->height);
         sketch_set_min_distance(bg->sketch, app->sketch_min_dist);
         sketch_set_dot_count(bg->sketch, app->sketch_dot_cnt);
@@ -829,19 +830,21 @@ Background *background_create(NemoWidget *parent, ConfigApp *app)
     rx = (double)bg->width/3240;
     ry = (double)bg->height/1920;
 
-    int cnt = list_count(app->icons);
-    int i;
-    for (i = 0 ; i < app->icon_cnt ; i++) {
-        char *path = LIST_DATA(list_get_nth(app->icons, i%cnt));
+    if (app->icons) {
+        int cnt = list_count(app->icons);
+        int i;
+        for (i = 0 ; i < app->icon_cnt ; i++) {
+            char *path = LIST_DATA(list_get_nth(app->icons, i%cnt));
 
-        int tx, ty;
-        tx = WELLRNG512()%bg->width;
-        ty = WELLRNG512()%bg->height;
+            int tx, ty;
+            tx = WELLRNG512()%bg->width;
+            ty = WELLRNG512()%bg->height;
 
-        Icon *icon;
-        icon = create_icon(bg, path, rx, ry);
-        icon_translate(icon, 0, 0, 0, tx, ty);
-        bg->icons = list_append(bg->icons, icon);
+            Icon *icon;
+            icon = create_icon(bg, path, rx, ry);
+            icon_translate(icon, 0, 0, 0, tx, ty);
+            bg->icons = list_append(bg->icons, icon);
+        }
     }
 
     return bg;
