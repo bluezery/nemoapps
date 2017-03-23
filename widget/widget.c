@@ -1757,12 +1757,6 @@ NemoWidget *nemowidget_create_win_base(struct nemotool *tool, const char *name, 
 
     if (base->layer) {
         nemowidget_win_set_layer(win, base->layer);
-        if (!strcmp(base->layer, "background")) {
-            nemowidget_win_set_anchor(win, 0.0, 0.0);
-            nemowidget_win_enable_move(win, 0);
-            nemowidget_win_enable_rotate(win, 0);
-            nemowidget_win_enable_scale(win, 0);
-        }
     }
 
     if (base->min_width > 0 && base->min_height > 0) {
@@ -1819,6 +1813,11 @@ void nemowidget_win_set_layer(NemoWidget *win, const char *layer)
     nemoshow_view_set_layer(show, layer);
     if (!strcmp(layer, "background")) {
         nemoshow_view_set_opaque(show, 0, 0, show->width, show->height);
+        nemowidget_win_set_anchor(win, 0, 0);
+        nemowidget_win_enable_move(win, 0);
+        nemowidget_win_enable_rotate(win, 0);
+        nemowidget_win_enable_scale(win, 0);
+    } else if (!strcmp(layer, "overlay")) {
         nemowidget_win_set_anchor(win, 0, 0);
         nemowidget_win_enable_move(win, 0);
         nemowidget_win_enable_rotate(win, 0);
