@@ -792,7 +792,6 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
     view->icon_throw_duration = app->icon_throw_duration;
 
     NemoWidget *widget;
-    struct showone *group;
 
     if (file_is_dir(app->bgpath)) {
         view->bg_widget = widget = nemowidget_create_vector(parent, view->width, view->height);
@@ -847,6 +846,12 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
         PlayerUI *player;
         view->player = player = nemoui_player_create(parent,
                 view->width, view->height, app->bgpath, false, -1, false);
+
+        view->sketch = sketch_create(parent, view->width, view->height);
+        sketch_set_min_distance(view->sketch, app->sketch_min_dist);
+        sketch_set_dot_count(view->sketch, app->sketch_dot_cnt);
+        sketch_set_size(view->sketch, 3);
+        view->sketch_timer = TOOL_ADD_TIMER(view->tool, view->sketch_timeout, _sketch_timeout, view);
     }
 
     if (app->icons) {
@@ -894,6 +899,10 @@ void background_show(BackgroundView *view)
         } else if (cnt > 1)
             nemotimer_set_timeout(view->gallery_timer, 100);
     }
+    if (view->player) {
+        nemoui_player_show(view->player, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        nemoui_player_play(view->player);
+    }
     if (view->sketch) {
         sketch_show(view->sketch, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
         sketch_enable(view->sketch, true);
@@ -924,6 +933,10 @@ void background_hide(BackgroundView *view)
     if (view->gallery) {
         gallery_hide(view->gallery, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
         nemotimer_set_timeout(view->gallery_timer, 0);
+    }
+    if (view->player) {
+        nemoui_player_hide(view->player, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        nemoui_player_stop(view->player);
     }
     if (view->sketch) {
         sketch_hide(view->sketch, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
