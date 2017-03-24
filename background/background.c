@@ -271,6 +271,7 @@ Icon *backgroundview_create_icon(BackgroundView *view, const char *uri, double r
         nemoshow_item_set_alpha(one, 0.0);
         icon->player = player = nemoui_player_create(view->icon_widget,
                 icon->width, icon->height, uri, false, -1, false);
+        nemoui_player_set_repeat(player, -1);
     } else {
         ERR("Not supported file type: %s", uri);
         free(icon);
@@ -897,6 +898,7 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
         PlayerUI *player;
         view->player = player = nemoui_player_create(parent,
                 view->width, view->height, app->bgpath, false, -1, false);
+        nemoui_player_set_repeat(player, -1);
 
         view->sketch = sketch_create(parent, view->width, view->height);
         sketch_set_min_distance(view->sketch, app->sketch_min_dist);

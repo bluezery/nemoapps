@@ -4,5 +4,5 @@
     <size width="3840" height="2160"/>
     <frame rate="30"/>
     <sketch timeout="3000" min_distance="10.0" dot_count="60"/>
-    <background path="@MUNHAK_BG_DIR@" timeout="60000" duration="2000"/>
+    <background path="@MUNHAK_BG_DIR@/bg1.mp4" timeout="60000" duration="2000"/>
 </nemobackground>

@@ -21,6 +21,7 @@ struct _PlayerUI {
     struct nemoplay *play;
     NemoWidget *widget;
 
+    int repeat;
     bool fin;
     bool need_stop;
     bool is_playing;
@@ -195,9 +196,14 @@ static void _video_done(struct nemoplay *play, void *data)
     PlayerUI *ui = data;
 
     ui->fin = true;
+    if (ui->repeat != 0) {
+        if (ui->repeat > 0) ui->repeat--;
 
-    nemowidget_callback_dispatch(ui->widget, "player,done", NULL);
+        nemoui_player_play(ui);
+    } else {
+        nemowidget_callback_dispatch(ui->widget, "player,done", NULL);
 
+    }
     nemowidget_dirty(ui->widget);
 	nemoshow_dispatch_frame(ui->show);
 }
@@ -307,6 +313,11 @@ void nemoui_player_redraw(PlayerUI *ui)
 void nemoui_player_append_callback(PlayerUI *ui, const char *id, NemoWidget_Func func, void *userdata)
 {
     nemowidget_append_callback(ui->widget, id, func, userdata);
+}
+
+void nemoui_player_set_repeat(PlayerUI *ui, int repeat)
+{
+    ui->repeat = repeat;
 }
 
 PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio, int num_threads, bool no_drop)

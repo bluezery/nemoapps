@@ -18,6 +18,7 @@ const char *nemoui_player_get_uri(PlayerUI *ui);
 double nemoui_player_get_cts(PlayerUI *ui);
 double nemoui_player_get_duration(PlayerUI *ui);
 bool nemoui_player_is_playing(PlayerUI *ui);
+void nemoui_player_set_repeat(PlayerUI *ui, int repeat);
 void nemoui_player_show(PlayerUI *ui, uint32_t easetype, int duration, int delay);
 void nemoui_player_hide(PlayerUI *ui, uint32_t easetype, int duration, int delay);
 void nemoui_player_destroy(PlayerUI *ui);
