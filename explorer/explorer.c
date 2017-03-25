@@ -322,7 +322,7 @@ struct _ExplorerItem {
     char *path;
 
     int video_idx;
-    struct nemotimer *video_timer;
+    struct nemotimer *anim_timer;
 
     struct showone *blur;
     struct showone *font;
@@ -340,7 +340,7 @@ struct _ExplorerItem {
     struct showone *clip;
     Image *img;
     struct showone *svg;
-    struct showone *video;
+    struct showone *anim;
 };
 
 static void explorer_icon_destroy(ExplorerIcon *icon)
@@ -549,7 +549,7 @@ static void _clip_img_work(void *userdata)
     }
 }
 
-static void _explorer_item_video_timer(struct nemotimer *timer, void *userdata)
+static void _explorer_item_anim_timer(struct nemotimer *timer, void *userdata)
 {
     ExplorerItem *it = userdata;
 
@@ -559,33 +559,33 @@ static void _explorer_item_video_timer(struct nemotimer *timer, void *userdata)
     char *path = _explorer_get_thumb_url(it->path, buf);
 
     if (!file_is_exist(path) || file_is_null(path)) {
-        ERR("No video thumbnail: %s", path);
+        ERR("No animation thumbnail: %s", path);
         nemotimer_set_timeout(timer, 0);
         return;
     }
 
-    if (nemoshow_item_get_width(it->video) <= 0 ||
-            nemoshow_item_get_height(it->video) <= 0) {
+    if (nemoshow_item_get_width(it->anim) <= 0 ||
+            nemoshow_item_get_height(it->anim) <= 0) {
         int w, h;
         if (!image_get_wh(path, &w, &h)) {
             ERR("image get wh failed: %s", path);
         } else {
             _rect_ratio_full(w, h, it->w, it->h, &w, &h);
-            nemoshow_item_set_width(it->video, w);
-            nemoshow_item_set_height(it->video, h);
-            nemoshow_item_set_anchor(it->video, 0.5, 0.5);
-            nemoshow_item_translate(it->video, it->w/2, it->h/2);
+            nemoshow_item_set_width(it->anim, w);
+            nemoshow_item_set_height(it->anim, h);
+            nemoshow_item_set_anchor(it->anim, 0.5, 0.5);
+            nemoshow_item_translate(it->anim, it->w/2, it->h/2);
             // XXX: move clip as center align
             nemoshow_item_path_translate(it->clip,
                     -(it->w - w)/2, -(it->h - h)/2);
-            _nemoshow_item_motion(it->video,
+            _nemoshow_item_motion(it->anim,
                     NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                     "alpha", 1.0,
                     NULL);
         }
     }
 
-    nemoshow_item_set_uri(it->video, path);
+    nemoshow_item_set_uri(it->anim, path);
     if (path) free(path);
 
     nemoshow_dispatch_frame(it->exp->show);
@@ -644,9 +644,9 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
     } else if (it->type == EXPLORER_ITEM_TYPE_VIDEO) {
         char *path = _explorer_get_thumb_url(it->path, "001.jpg");
         if (!file_is_exist(path) || file_is_null(path)) {
-            ERR("No video thumbnail: %s", path);
+            ERR("No animation thumbnail: %s", path);
 #if 0
-            // Make video thumbnail
+            // Make animtion thumbnail
             path = strdup(it->path);
             VideoWorkData *data = calloc(sizeof(VideoWorkData), 1);
             data->it = it;
@@ -656,7 +656,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
 #endif
         } else {
             it->video_idx = 1;
-            if (it->video_timer) nemotimer_set_timeout(it->video_timer, 10 + delay);
+            if (it->anim_timer) nemotimer_set_timeout(it->anim_timer, 10 + delay);
         }
         free(path);
     }
@@ -664,7 +664,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
 
 static void explorer_item_hide(ExplorerItem *it, uint32_t easetype, int duration, int delay)
 {
-    if (it->video_timer) nemotimer_set_timeout(it->video_timer, 0);
+    if (it->anim_timer) nemotimer_set_timeout(it->anim_timer, 0);
     if (duration > 0) {
         _nemoshow_item_motion_with_callback(it->group,
                 _explorer_item_update, it,
@@ -921,7 +921,7 @@ static void explorer_remove_item(Explorer *exp, ExplorerItem *it)
 {
     exp->items = list_remove(exp->items, it);
 
-    if (it->video_timer) nemotimer_destroy(it->video_timer);
+    if (it->anim_timer) nemotimer_destroy(it->anim_timer);
 
     if (it->clip) nemoshow_one_destroy(it->clip);
     if (it->img) image_destroy(it->img);
@@ -1029,9 +1029,9 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
         ITEM_CREATE(one, group, NEMOSHOW_IMAGE_ITEM);
         nemoshow_item_set_alpha(one, 0.0);
         nemoshow_item_set_clip(one, clip);
-        it->video = one;
-        it->video_timer = TOOL_ADD_TIMER(exp->tool, 0,
-                _explorer_item_video_timer, it);
+        it->anim = one;
+        it->anim_timer = TOOL_ADD_TIMER(exp->tool, 0,
+                _explorer_item_anim_timer, it);
     }
 
     char buf[16];

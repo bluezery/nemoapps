@@ -4,15 +4,11 @@
     <size width="3840" height="2160"/>
     <frame rate="30"/>
     <icon count="12" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon0.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon1.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon2.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon3.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon4.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon5.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon6.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/icon7.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/logo.svg"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/1.mov"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/2.mov"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/eievui/00.png" path0="@MUNHAK_OVERLAY_DIR@/eievui"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/ggoboogi/00.png" path0="@MUNHAK_OVERLAY_DIR@/ggoboogi"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/pairi/00.png" path0="@MUNHAK_OVERLAY_DIR@/pairi"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/pikachu/00.png" path0="@MUNHAK_OVERLAY_DIR@/pikachu"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/motion1"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/motion2"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/motion3"/>
 </nemobackground>
