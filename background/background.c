@@ -476,7 +476,7 @@ BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const 
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, ic->width/2, ic->height/2);
     nemoshow_item_set_alpha(one, 0.3);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    //nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
     if (uri0) {
         icon->ic0 = ic = icon_create(view->tool, view->icon_widget, group, uri0, rx, ry);
