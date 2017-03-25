@@ -20,7 +20,8 @@
 #include "nemoui.h"
 #include "sound.h"
 
-#define VIDEO_INTERVAL (1000.0/24)
+#define ANIM_INTERVAL (1000.0/24)
+#define CHANGE_TIMEOUT 10000
 
 typedef struct _ConfigIcon ConfigIcon;
 struct _ConfigIcon {
@@ -118,6 +119,7 @@ struct _Icon {
 
     PlayerUI *player;
 
+    int anim_repeat;
     int anim_idx;
     List *anim_files;
     struct nemotimer *anim_timer;
@@ -145,7 +147,9 @@ struct _BgIcon {
     struct nemotimer *lotte_timer;
     struct nemotimer *move_timer;
     struct nemotimer *color_timer;
+    struct nemotimer *change_timer;
     Icon *ic;
+    Icon *ic0;
 };
 
 void icon_revoke(Icon *ic)
@@ -201,6 +205,14 @@ void icon_color(Icon *ic, uint32_t easetype, int duration, int delay, uint32_t c
 
 void icon_show(Icon *ic, uint32_t easetype, int duration, int delay)
 {
+    if (ic->one) {
+        if (duration > 0) {
+            _nemoshow_item_motion(ic->one, easetype, duration, delay,
+                    "alpha", 1.0, NULL);
+        } else {
+            nemoshow_item_set_alpha(ic->one, 1.0);
+        }
+    }
     if (ic->anim_timer) {
         nemotimer_set_timeout(ic->anim_timer, 10);
     }
@@ -212,6 +224,14 @@ void icon_show(Icon *ic, uint32_t easetype, int duration, int delay)
 
 void icon_hide(Icon *ic, uint32_t easetype, int duration, int delay)
 {
+    if (ic->one) {
+        if (duration > 0) {
+            _nemoshow_item_motion(ic->one, easetype, duration, delay,
+                    "alpha", 0.0, NULL);
+        } else {
+            nemoshow_item_set_alpha(ic->one, 0.0);
+        }
+    }
     if (ic->anim_timer) {
         nemotimer_set_timeout(ic->anim_timer, 0);
     }
@@ -219,6 +239,11 @@ void icon_hide(Icon *ic, uint32_t easetype, int duration, int delay)
         nemoui_player_stop(ic->player);
         nemoui_player_hide(ic->player, easetype, duration, delay);
     }
+}
+
+void icon_set_anim_repeat(Icon *ic, int repeat)
+{
+    ic->anim_repeat = repeat;
 }
 
 static void _icon_anim_timer(struct nemotimer *timer, void *userdata)
@@ -238,8 +263,15 @@ static void _icon_anim_timer(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(ic->one->show);
 
     ic->anim_idx++;
-    if (ic->anim_idx >= list_count(ic->anim_files)) ic->anim_idx = 0;
-    nemotimer_set_timeout(timer, VIDEO_INTERVAL);
+    if (ic->anim_idx >= list_count(ic->anim_files)) {
+        if (ic->anim_repeat != 0) {
+            if (ic->anim_repeat > 0) ic->anim_repeat--;
+            ic->anim_idx = 0;
+            nemotimer_set_timeout(timer, ANIM_INTERVAL);
+        }
+    } else {
+        nemotimer_set_timeout(timer, ANIM_INTERVAL);
+    }
 }
 
 Icon *icon_create(struct nemotool *tool, NemoWidget *widget, struct showone *parent, const char *uri, double rx, double ry)
@@ -272,6 +304,7 @@ Icon *icon_create(struct nemotool *tool, NemoWidget *widget, struct showone *par
         nemoshow_item_set_width(one, ic->width);
         nemoshow_item_set_height(one, ic->height);
         ic->one = one;
+        nemoshow_item_set_alpha(ic->one, 0.0);
         ic->anim_timer = TOOL_ADD_TIMER(tool, 0, _icon_anim_timer, ic);
     } else if (file_is_svg(uri)) {
         double ww, hh;
@@ -279,12 +312,14 @@ Icon *icon_create(struct nemotool *tool, NemoWidget *widget, struct showone *par
         ic->width = ww * rx;
         ic->height = hh * ry;
         ic->one = SVG_PATH_GROUP_CREATE(parent, ic->width, ic->height, uri);
+        nemoshow_item_set_alpha(ic->one, 0.0);
     } else if (file_is_image(uri)) {
         int ww, hh;
         image_get_wh(uri, &ww, &hh);
         ic->width = ww * rx;
         ic->height = hh * ry;
         ic->one = IMAGE_CREATE(parent, ic->width, ic->height, uri);
+        nemoshow_item_set_alpha(ic->one, 0.0);
     } else if (file_is_video(uri)) {
         int ww, hh;
         nemoplay_get_video_info(uri, &ww, &hh);
@@ -312,6 +347,13 @@ static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
     int idx = WELLRNG512()%(sizeof(COL)/sizeof(COL[0]));
     icon_color(icon->ic, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, COL[idx]);
     nemotimer_set_timeout(timer, 550);
+}
+
+static void _icon_change_timeout(struct nemotimer *timer, void *userdata)
+{
+    BgIcon *icon = userdata;
+    icon_show(icon->ic, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+    icon_hide(icon->ic0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
 }
 
 static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
@@ -419,9 +461,11 @@ BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const 
     }
     icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_move_timeout, icon);
     icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_color_timeout, icon);
+    icon->change_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_change_timeout, icon);
 
     Icon *ic;
     icon->ic = ic = icon_create(view->tool, view->icon_widget, group, uri, rx, ry);
+    icon_set_anim_repeat(ic, -1);
     nemoshow_item_set_width(group, ic->width);
     nemoshow_item_set_height(group, ic->height);
 
@@ -431,8 +475,12 @@ BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const 
     nemoshow_one_set_userdata(one, icon);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, ic->width/2, ic->height/2);
-    nemoshow_item_set_alpha(one, 0.0);
-    //nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    nemoshow_item_set_alpha(one, 0.3);
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+
+    if (uri0) {
+        icon->ic0 = ic = icon_create(view->tool, view->icon_widget, group, uri0, rx, ry);
+    }
 
     return icon;
 }
@@ -860,6 +908,11 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
             nemoshow_revoke_transition_one(show, icon->group, "sy");
             nemoshow_revoke_transition_one(show, icon->group, "ro");
             nemotimer_set_timeout(icon->move_timer, 0);
+            if (icon->ic0) {
+                icon_hide(icon->ic, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+                icon_show(icon->ic0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+                nemotimer_set_timeout(icon->change_timer, CHANGE_TIMEOUT);
+            }
         }
     } else if (nemoshow_event_is_motion(show, event)) {
         // Move
