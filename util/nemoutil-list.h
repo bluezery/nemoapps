@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <nemoutil-log.h>
 
 #ifdef __cplusplus
@@ -130,6 +131,26 @@ static inline List *list_insert_before(List *list, void *data)
 static inline List *list_append(List *list, void *data)
 {
     return list_insert_after(LIST_LAST(list), data);
+}
+
+static inline List *list_insert_sorted(List *list, void *data)
+{
+    if (!list) {
+        list = list_append(list, data);
+    } else {
+        void *d;
+        List *l;
+        LIST_FOR_EACH(list, l, d) {
+            if (strcmp((char *)d, (char *)data) < 0) {
+                list = list_insert_before(l, data);
+                break;
+            } else if (LIST_LAST(list) == l) {
+                list = list_insert_after(l, data);
+                break;
+            }
+        }
+    }
+    return list;
 }
 
 static inline List *list_prepend(List *list, void *data)

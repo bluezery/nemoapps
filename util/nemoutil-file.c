@@ -48,16 +48,16 @@ const char *MAGIC_EXECS[] =
 
 char *file_get_magic(const char *path, int flags)
 {
-    magic_t __magic = magic_open(MAGIC_SYMLINK | flags);
-    if (!__magic) {
+    magic_t _magic = magic_open(MAGIC_SYMLINK | flags);
+    if (!_magic) {
         ERR("magic open failed: %s", path);
         return NULL;
     }
-    if (magic_load(__magic, NULL) == -1) {
+    if (magic_load(_magic, NULL) == -1) {
         ERR("magic load failed: %s", path);
         return NULL;
     }
-    const char *str = magic_file(__magic, path);
+    const char *str = magic_file(_magic, path);
     if (!str) {
         ERR("magic file failed: %s", path);
         return NULL;
@@ -520,6 +520,40 @@ List *fileinfo_readdir(const char *path)
         }
         fileinfo = fileinfo_create(is_dir, child_path, dr->d_name);
         files = list_append(files, fileinfo);
+    }
+    free(rpath);
+    closedir(dir);
+
+    return files;
+}
+
+List *fileinfo_readdir_sorted(const char *path)
+{
+    RET_IF(!path, NULL);
+
+    DIR *dir = opendir(path);
+    if (!dir) {
+        ERR("opendir (%s) failed: %s", path, strerror(errno));
+        return NULL;
+    }
+
+    char *rpath = realpath(path, NULL);
+    List *files = NULL;
+
+    struct dirent *dr;
+    while ((dr = readdir(dir))) {
+        if (!dr->d_name) continue;
+        if ((dr->d_name)[0] == '.') continue;
+
+        char child_path[PATH_MAX];
+        snprintf(child_path, PATH_MAX, "%s/%s", rpath, dr->d_name);
+
+        bool is_dir = false;
+        if (dr->d_type == DT_DIR) {
+            is_dir = true;
+        }
+        FileInfo *fileinfo = fileinfo_create(is_dir, child_path, dr->d_name);
+        files = list_insert_sorted(files, fileinfo);
     }
     free(rpath);
     closedir(dir);
