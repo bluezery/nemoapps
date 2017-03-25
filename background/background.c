@@ -150,6 +150,7 @@ struct _BgIcon {
     struct nemotimer *change_timer;
     Icon *ic;
     Icon *ic0;
+    Icon *cur_ic;
 };
 
 void icon_revoke(Icon *ic)
@@ -264,9 +265,9 @@ static void _icon_anim_timer(struct nemotimer *timer, void *userdata)
 
     ic->anim_idx++;
     if (ic->anim_idx >= list_count(ic->anim_files)) {
+        ic->anim_idx = 0;
         if (ic->anim_repeat != 0) {
             if (ic->anim_repeat > 0) ic->anim_repeat--;
-            ic->anim_idx = 0;
             nemotimer_set_timeout(timer, ANIM_INTERVAL);
         }
     } else {
@@ -341,7 +342,7 @@ Icon *icon_create(struct nemotool *tool, NemoWidget *widget, struct showone *par
     return ic;
 }
 
-static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
+static void _bgicon_color_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     int idx = WELLRNG512()%(sizeof(COL)/sizeof(COL[0]));
@@ -349,14 +350,15 @@ static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
     nemotimer_set_timeout(timer, 550);
 }
 
-static void _icon_change_timeout(struct nemotimer *timer, void *userdata)
+static void _bgicon_change_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     icon_show(icon->ic, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     icon_hide(icon->ic0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    icon->cur_ic = icon->ic;
 }
 
-static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
+static void _bgicon_move_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     BackgroundView *view = icon->view;
@@ -378,7 +380,7 @@ static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(view->show);
 }
 
-static void _icon_lotte_timeout(struct nemotimer *timer, void *userdata)
+static void _bgicon_lotte_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     Icon *ic = icon->ic;
@@ -457,17 +459,18 @@ BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const 
             strstr(uri, "smartshopping") ||
             strstr(uri, "culturecenter") ||
             strstr(uri, "entertainment")) {
-        icon->lotte_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_lotte_timeout, icon);
+        icon->lotte_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_lotte_timeout, icon);
     }
-    icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_move_timeout, icon);
-    icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_color_timeout, icon);
-    icon->change_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_change_timeout, icon);
+    icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_move_timeout, icon);
+    icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_color_timeout, icon);
+    icon->change_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_change_timeout, icon);
 
     Icon *ic;
     icon->ic = ic = icon_create(view->tool, view->icon_widget, group, uri, rx, ry);
     icon_set_anim_repeat(ic, -1);
     nemoshow_item_set_width(group, ic->width);
     nemoshow_item_set_height(group, ic->height);
+    icon->cur_ic = icon->ic;
 
     icon->event = one = RECT_CREATE(group, ic->width, ic->height);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
@@ -909,8 +912,11 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
             nemoshow_revoke_transition_one(show, icon->group, "ro");
             nemotimer_set_timeout(icon->move_timer, 0);
             if (icon->ic0) {
-                icon_hide(icon->ic, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-                icon_show(icon->ic0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+                if (icon->cur_ic != icon->ic0) {
+                    icon->cur_ic = icon->ic0;
+                    icon_hide(icon->ic, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+                    icon_show(icon->ic0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+                }
                 nemotimer_set_timeout(icon->change_timer, CHANGE_TIMEOUT);
             }
         }
