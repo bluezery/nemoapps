@@ -141,7 +141,7 @@ static inline List *list_insert_sorted(List *list, void *data)
         void *d;
         List *l;
         LIST_FOR_EACH(list, l, d) {
-            if (strcmp((char *)d, (char *)data) < 0) {
+            if (strcmp((char *)d, (char *)data) > 0) {
                 list = list_insert_before(l, data);
                 break;
             } else if (LIST_LAST(list) == l) {

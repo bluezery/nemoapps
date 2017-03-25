@@ -553,7 +553,22 @@ List *fileinfo_readdir_sorted(const char *path)
             is_dir = true;
         }
         FileInfo *fileinfo = fileinfo_create(is_dir, child_path, dr->d_name);
-        files = list_insert_sorted(files, fileinfo);
+
+        if (!files) {
+            files = list_append(files, fileinfo);
+        }
+
+        List *l;
+        FileInfo *_fileinfo;
+        LIST_FOR_EACH(files, l, _fileinfo) {
+            if (strcmp(_fileinfo->path, fileinfo->path) > 0) {
+                files = list_insert_before(l, fileinfo);
+                break;
+            } else if (LIST_LAST(files) == l) {
+                files = list_insert_after(l, fileinfo);
+                break;
+            }
+        }
     }
     free(rpath);
     closedir(dir);
