@@ -107,6 +107,22 @@ uint32_t COL[] = {
     0xD1E778FF
 };
 
+typedef struct _Icon Icon;
+struct _Icon {
+    struct nemotool *tool;
+    struct nemoshow *show;
+
+    char *uri;
+    int width, height;
+    struct showone *one;
+
+    PlayerUI *player;
+
+    int anim_idx;
+    List *anim_files;
+    struct nemotimer *anim_timer;
+};
+
 typedef struct _BgIcon BgIcon;
 struct _BgIcon {
     BackgroundView *view;
@@ -116,7 +132,6 @@ struct _BgIcon {
     double grab_scale_sum;
     double grab_scale_x;
     double grab_scale_y;
-    int width, height;
 
     int prev_t[MAX_HISTORY_CNT];
     double prev_x[MAX_HISTORY_CNT], prev_y[MAX_HISTORY_CNT];
@@ -124,30 +139,178 @@ struct _BgIcon {
 
     int grab_diff_x, grab_diff_y;
     int idx;
-    char *uri;
-    char *uri0;
 
     struct showone *group;
-
-    struct showone *one;
-    struct nemotimer *timer;
+    struct showone *event;
+    struct nemotimer *lotte_timer;
     struct nemotimer *move_timer;
     struct nemotimer *color_timer;
-
-    PlayerUI *player;
-
-    int anim_idx;
-    List *anim_files;
-    struct nemotimer *anim_timer;
+    Icon *ic;
 };
+
+void icon_revoke(Icon *ic)
+{
+    struct nemoshow *show = ic->show;
+    if (ic->one) {
+        nemoshow_revoke_transition_one(show, ic->one, "sx");
+        nemoshow_revoke_transition_one(show, ic->one, "sy");
+        nemoshow_revoke_transition_one(show, ic->one, "tx");
+        nemoshow_revoke_transition_one(show, ic->one, "ty");
+        nemoshow_revoke_transition_one(show, ic->one, "alpha");
+        nemoshow_revoke_transition_one(show, ic->one, "ro");
+    }
+    /*
+    if (ic->player) {
+        nemoui_player_revoke_translate(ic->player);
+        nemoui_player_revoke_scale(ic->player);
+        nemoui_player_revoke_rotate(ic->player);
+        nemoui_player_revoke_alpha(ic->player);
+    }
+    */
+}
+
+void icon_rotate(Icon *ic, uint32_t easetype, int duration, int delay, double ro)
+{
+    if (ic->player) {
+        nemoui_player_rotate(ic->player, easetype, duration, delay, ro);
+    }
+}
+
+void icon_scale(Icon *ic, uint32_t easetype, int duration, int delay, double sx, double sy)
+{
+    if (ic->player) {
+        nemoui_player_scale(ic->player, easetype, duration, delay, sx, sy);
+    }
+}
+
+void icon_translate(Icon *ic, uint32_t easetype, int duration, int delay, double tx, double ty)
+{
+    if (ic->player) {
+        nemoui_player_translate(ic->player, easetype, duration, delay, tx, ty);
+    }
+}
+
+void icon_color(Icon *ic, uint32_t easetype, int duration, int delay, uint32_t color)
+{
+    if (ic->one) {
+        _nemoshow_item_motion(ic->one, easetype, duration, delay,
+                "fill", color,
+                NULL);
+    }
+}
+
+void icon_show(Icon *ic, uint32_t easetype, int duration, int delay)
+{
+    if (ic->anim_timer) {
+        nemotimer_set_timeout(ic->anim_timer, 10);
+    }
+    if (ic->player) {
+        nemoui_player_play(ic->player);
+        nemoui_player_show(ic->player, easetype, duration, delay);
+    }
+}
+
+void icon_hide(Icon *ic, uint32_t easetype, int duration, int delay)
+{
+    if (ic->anim_timer) {
+        nemotimer_set_timeout(ic->anim_timer, 0);
+    }
+    if (ic->player) {
+        nemoui_player_stop(ic->player);
+        nemoui_player_hide(ic->player, easetype, duration, delay);
+    }
+}
+
+static void _icon_anim_timer(struct nemotimer *timer, void *userdata)
+{
+    Icon *ic = userdata;
+    RET_IF(!ic->one);
+
+    FileInfo *file = LIST_DATA(list_get_nth(ic->anim_files, ic->anim_idx));
+
+    if (!file_is_exist(file->path) || file_is_null(file->path)) {
+        ERR("No animation thumbnail: %s", file->path);
+        nemotimer_set_timeout(timer, 0);
+        return;
+    }
+
+    nemoshow_item_set_uri(ic->one, file->path);
+    nemoshow_dispatch_frame(ic->one->show);
+
+    ic->anim_idx++;
+    if (ic->anim_idx >= list_count(ic->anim_files)) ic->anim_idx = 0;
+    nemotimer_set_timeout(timer, VIDEO_INTERVAL);
+}
+
+Icon *icon_create(struct nemotool *tool, NemoWidget *widget, struct showone *parent, const char *uri, double rx, double ry)
+{
+    Icon *ic = calloc(sizeof(Icon), 1);
+    ic->show = parent->show;
+    ic->uri = strdup(uri);
+
+    if (file_is_dir(uri)) {
+        ic->anim_files = fileinfo_readdir_sorted(uri);
+        if (!ic->anim_files) {
+            ERR("No files in dir (%s)", uri);
+            return NULL;
+        }
+
+        FileInfo *file = LIST_DATA(LIST_FIRST(ic->anim_files));
+        if (!fileinfo_is_image(file)) {
+            ERR("Not supported file(%s) in the dir(%s)", file->path, uri);
+            LIST_FREE(ic->anim_files, file) fileinfo_destroy(file);
+            return NULL;
+        }
+
+        int ww, hh;
+        image_get_wh(file->path, &ww, &hh);
+        ic->width = ww * rx;
+        ic->height = hh * ry;
+
+        struct showone *one;
+        ITEM_CREATE(one, parent, NEMOSHOW_IMAGE_ITEM);
+        nemoshow_item_set_width(one, ic->width);
+        nemoshow_item_set_height(one, ic->height);
+        ic->one = one;
+        ic->anim_timer = TOOL_ADD_TIMER(tool, 0, _icon_anim_timer, ic);
+    } else if (file_is_svg(uri)) {
+        double ww, hh;
+        svg_get_wh(uri, &ww, &hh);
+        ic->width = ww * rx;
+        ic->height = hh * ry;
+        ic->one = SVG_PATH_GROUP_CREATE(parent, ic->width, ic->height, uri);
+    } else if (file_is_image(uri)) {
+        int ww, hh;
+        image_get_wh(uri, &ww, &hh);
+        ic->width = ww * rx;
+        ic->height = hh * ry;
+        ic->one = IMAGE_CREATE(parent, ic->width, ic->height, uri);
+    } else if (file_is_video(uri)) {
+        int ww, hh;
+        nemoplay_get_video_info(uri, &ww, &hh);
+        ic->width = ww * rx;
+        ic->height = hh * ry;
+
+        PlayerUI *player;
+        // for event
+        ic->player = player = nemoui_player_create(widget,
+                ic->width, ic->height, uri, false, -1, false);
+        nemoui_player_set_repeat(player, -1);
+    } else {
+        ERR("Not supported file type: %s", uri);
+        free(ic);
+        free(ic->uri);
+        return NULL;
+    }
+
+    return ic;
+}
 
 static void _icon_color_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     int idx = WELLRNG512()%(sizeof(COL)/sizeof(COL[0]));
-    _nemoshow_item_motion(icon->one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "fill", COL[idx],
-            NULL);
+    icon_color(icon->ic, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, COL[idx]);
     nemotimer_set_timeout(timer, 550);
 }
 
@@ -167,183 +330,114 @@ static void _icon_move_timeout(struct nemotimer *timer, void *userdata)
             "tx", tx, "ty", ty,
             "sx", sxy, "sy", sxy,
             "ro", ro, NULL);
-    if (icon->player) {
-        nemoui_player_translate(icon->player, NEMOEASE_LINEAR_TYPE, t, 0,
-                tx, ty);
-    }
+    icon_translate(icon->ic, NEMOEASE_LINEAR_TYPE, t, 0, tx, ty);
 
     nemotimer_set_timeout(timer, t + 100);
     nemoshow_dispatch_frame(view->show);
 }
 
-static void _icon_timeout(struct nemotimer *timer, void *userdata)
+static void _icon_lotte_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
-    struct nemoshow *show = icon->one->show;
+    Icon *ic = icon->ic;
+    RET_IF(!ic->one);
+
+    struct nemoshow *show = ic->show;
     int timeout = 0;
-    if (strstr(icon->uri, "shopguide")) {
+    if (strstr(ic->uri, "shopguide")) {
         timeout = 2000 * 2;
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_OUT_TYPE, timeout, 0);
         nemomotion_attach(m, 0.5,
-                icon->one, "sx", 0.5,
-                icon->one, "sy", 0.5, NULL);
+                ic->one, "sx", 0.5,
+                ic->one, "sy", 0.5, NULL);
         nemomotion_attach(m, 1.0,
-                icon->one, "sx", 1.0,
-                icon->one, "sy", 1.0,
+                ic->one, "sx", 1.0,
+                ic->one, "sy", 1.0,
                 NULL);
         nemomotion_run(m);
-    } else if (strstr(icon->uri, "shoppingnews")) {
+    } else if (strstr(ic->uri, "shoppingnews")) {
         timeout = 1500 * 2;
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_INOUT_TYPE, timeout, 0);
         nemomotion_attach(m, 0.5,
-                icon->one, "alpha", 0.25, NULL);
+                ic->one, "alpha", 0.25, NULL);
         nemomotion_attach(m, 1.0,
-                icon->one, "alpha", 1.0, NULL);
+                ic->one, "alpha", 1.0, NULL);
         nemomotion_run(m);
-    } else if (strstr(icon->uri, "smartshopping")) {
+    } else if (strstr(ic->uri, "smartshopping")) {
         timeout = 2000 * 2;
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_LINEAR_TYPE, timeout, 0);
         nemomotion_attach(m, 0.5,
-                icon->one, "ro", -45.0, NULL);
+                ic->one, "ro", -45.0, NULL);
         nemomotion_attach(m, 1.0,
-                icon->one, "ro", 45.0, NULL);
+                ic->one, "ro", 45.0, NULL);
         nemomotion_run(m);
-    } else if (strstr(icon->uri, "culturecenter")) {
+    } else if (strstr(ic->uri, "culturecenter")) {
         timeout = 5000 * 2;
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_LINEAR_TYPE, timeout, 0);
-        nemoshow_item_rotate(icon->one, 0.0);
+        nemoshow_item_rotate(ic->one, 0.0);
         nemomotion_attach(m, 1.0,
-                icon->one, "ro", 360.0, NULL);
+                ic->one, "ro", 360.0, NULL);
         nemomotion_run(m);
-    } else if (strstr(icon->uri, "entertainment")) {
+    } else if (strstr(ic->uri, "entertainment")) {
         timeout = 2500 * 2;
         NemoMotion *m = nemomotion_create(show,
                 NEMOEASE_CUBIC_INOUT_TYPE, timeout, 0);
         nemomotion_attach(m, 0.5,
-                icon->one, "ty", icon->width/2 + icon->height * 0.3 - 25,
-                icon->one, "sy", 0.5, NULL);
+                ic->one, "ty", ic->width/2 + ic->height * 0.3 - 25,
+                ic->one, "sy", 0.5, NULL);
         nemomotion_attach(m, 1.0,
-                icon->one, "ty", icon->width/2 + icon->height * 0.3 - 50,
-                icon->one, "sy", 1.0, NULL);
+                ic->one, "ty", ic->width/2 + ic->height * 0.3 - 50,
+                ic->one, "sy", 1.0, NULL);
         nemomotion_run(m);
     }
     nemotimer_set_timeout(timer, timeout + 100);
     nemoshow_dispatch_frame(icon->view->show);
 }
 
-static void _icon_anim_timer(struct nemotimer *timer, void *userdata)
-{
-    BgIcon *icon = userdata;
-
-    FileInfo *file = LIST_DATA(list_get_nth(icon->anim_files, icon->anim_idx));
-
-    if (!file_is_exist(file->path) || file_is_null(file->path)) {
-        ERR("No animation thumbnail: %s", file->path);
-        nemotimer_set_timeout(timer, 0);
-        return;
-    }
-
-    nemoshow_item_set_uri(icon->one, file->path);
-    nemoshow_dispatch_frame(icon->view->show);
-
-    icon->anim_idx++;
-    if (icon->anim_idx >= list_count(icon->anim_files)) icon->anim_idx = 0;
-    nemotimer_set_timeout(timer, VIDEO_INTERVAL);
-}
-
 BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const char *uri0, double rx, double ry)
 {
     BgIcon *icon = calloc(sizeof(BgIcon), 1);
     icon->view = view;
-    icon->uri = strdup(uri);
-    icon->uri0 = strdup(uri0);
-
-    if (file_is_dir(uri)) {
-        icon->anim_files = fileinfo_readdir_sorted(uri);
-        if (!icon->anim_files) {
-            ERR("No files in dir (%s)", uri);
-            return NULL;
-        }
-
-        FileInfo *file = LIST_DATA(LIST_FIRST(icon->anim_files));
-        if (!fileinfo_is_image(file)) {
-            ERR("Not supported file(%s) in the dir(%s)", file->path, uri);
-            LIST_FREE(icon->anim_files, file) fileinfo_destroy(file);
-            return NULL;
-        }
-
-        int ww, hh;
-        image_get_wh(file->path, &ww, &hh);
-        icon->width = ww * rx;
-        icon->height = hh * ry;
-    } else if (file_is_svg(uri)) {
-        double ww, hh;
-        svg_get_wh(uri, &ww, &hh);
-        icon->width = ww * rx;
-        icon->height = hh * ry;
-    } else if (file_is_image(uri)) {
-        int ww, hh;
-        image_get_wh(uri, &ww, &hh);
-        icon->width = ww * rx;
-        icon->height = hh * ry;
-    } else if (file_is_video(uri)) {
-        int ww, hh;
-        nemoplay_get_video_info(uri, &ww, &hh);
-        icon->width = ww * rx;
-        icon->height = hh * ry;
-    } else {
-        ERR("Not supported file type: %s", uri);
-        free(icon);
-        return NULL;
-    }
 
     struct showone *group;
     struct showone *one;
     icon->group = group = GROUP_CREATE(view->icon_group);
-    nemoshow_item_set_width(group, icon->width);
-    nemoshow_item_set_height(group, icon->height);
-    nemoshow_item_pivot(group, 0.5, 0.5);
+    //nemoshow_item_pivot(group, 0.5, 0.5);
+    nemoshow_item_set_anchor(group, 0.5, 0.5);
     nemoshow_item_set_alpha(group, 0.0);
 
-    icon->timer = TOOL_ADD_TIMER(view->tool, 0, _icon_timeout, icon);
+    if (strstr(uri, "shopguide") ||
+            strstr(uri, "shoppingnews") ||
+            strstr(uri, "smartshopping") ||
+            strstr(uri, "culturecenter") ||
+            strstr(uri, "entertainment")) {
+        icon->lotte_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_lotte_timeout, icon);
+    }
     icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_move_timeout, icon);
     icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_color_timeout, icon);
 
-    if (file_is_dir(uri)) {
-        ITEM_CREATE(one, group, NEMOSHOW_IMAGE_ITEM);
-        nemoshow_item_set_width(one, icon->width);
-        nemoshow_item_set_height(one, icon->height);
-        icon->one = one;
-        icon->anim_timer = TOOL_ADD_TIMER(view->tool, 0, _icon_anim_timer, icon);
-    } else if (file_is_svg(uri)) {
-        icon->one = one = SVG_PATH_GROUP_CREATE(group, icon->width, icon->height, uri);
-    } else if (file_is_image(uri)) {
-        icon->one = one = IMAGE_CREATE(group, icon->width, icon->height, uri);
-    } else if (file_is_video(uri)) {
-        PlayerUI *player;
-        icon->one = one = RECT_CREATE(group, icon->width, icon->height);
-        nemoshow_item_set_alpha(one, 0.0);
-        icon->player = player = nemoui_player_create(view->icon_widget,
-                icon->width, icon->height, uri, false, -1, false);
-        nemoui_player_set_repeat(player, -1);
-    } else {
-        ERR("Not supported file type: %s", uri);
-        free(icon);
-        return NULL;
-    }
+    Icon *ic;
+    icon->ic = ic = icon_create(view->tool, view->icon_widget, group, uri, rx, ry);
+    nemoshow_item_set_width(group, ic->width);
+    nemoshow_item_set_height(group, ic->height);
+
+    icon->event = one = RECT_CREATE(group, ic->width, ic->height);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_tag(one, 0x111);
     nemoshow_one_set_userdata(one, icon);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, ic->width/2, ic->height/2);
+    nemoshow_item_set_alpha(one, 0.0);
     //nemoshow_item_set_fill_color(one, RGBA(WHITE));
+
     return icon;
 }
 
-void icon_revoke(BgIcon *icon)
+void bgicon_revoke(BgIcon *icon)
 {
     struct nemoshow *show = icon->group->show;
     nemoshow_revoke_transition_one(show, icon->group, "tx");
@@ -352,24 +446,10 @@ void icon_revoke(BgIcon *icon)
     nemoshow_revoke_transition_one(show, icon->group, "sy");
     nemoshow_revoke_transition_one(show, icon->group, "ro");
 
-    nemoshow_revoke_transition_one(show, icon->one, "sx");
-    nemoshow_revoke_transition_one(show, icon->one, "sy");
-    nemoshow_revoke_transition_one(show, icon->one, "tx");
-    nemoshow_revoke_transition_one(show, icon->one, "ty");
-    nemoshow_revoke_transition_one(show, icon->one, "alpha");
-    nemoshow_revoke_transition_one(show, icon->one, "ro");
-
-    /*
-    if (icon->player) {
-        nemoui_player_revoke_translate(icon->player);
-        nemoui_player_revoke_scale(icon->player);
-        nemoui_player_revoke_rotate(icon->player);
-        nemoui_player_revoke_alpha(icon->player);
-    }
-    */
+    icon_revoke(icon->ic);
 }
 
-void icon_show(BgIcon *icon, uint32_t easetype, int duration, int delay)
+void bgicon_show(BgIcon *icon, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -378,18 +458,12 @@ void icon_show(BgIcon *icon, uint32_t easetype, int duration, int delay)
     } else {
         nemoshow_item_set_alpha(icon->group, 0.5);
     }
-    if (icon->anim_timer) {
-        nemotimer_set_timeout(icon->anim_timer, 10);
-    }
-    if (icon->player) {
-        nemoui_player_play(icon->player);
-        nemoui_player_show(icon->player, easetype, duration, delay);
-    }
-    nemotimer_set_timeout(icon->timer, 100 + delay);
+    if (icon->lotte_timer) nemotimer_set_timeout(icon->lotte_timer, 100 + delay);
     nemotimer_set_timeout(icon->move_timer, 100 + delay);
+    icon_show(icon->ic, easetype, duration, delay);
 }
 
-void icon_hide(BgIcon *icon, uint32_t easetype, int duration, int delay)
+void bgicon_hide(BgIcon *icon, uint32_t easetype, int duration, int delay)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -398,18 +472,12 @@ void icon_hide(BgIcon *icon, uint32_t easetype, int duration, int delay)
     } else {
         nemoshow_item_set_alpha(icon->group, 0.0);
     }
-    if (icon->anim_timer) {
-        nemotimer_set_timeout(icon->anim_timer, 0);
-    }
-    if (icon->player) {
-        nemoui_player_stop(icon->player);
-        nemoui_player_hide(icon->player, easetype, duration, delay);
-    }
-    nemotimer_set_timeout(icon->timer, 0);
+    if (icon->lotte_timer) nemotimer_set_timeout(icon->lotte_timer, 0);
     nemotimer_set_timeout(icon->move_timer, 0);
+    icon_hide(icon->ic, easetype, duration, delay);
 }
 
-void icon_rotate(BgIcon *icon, uint32_t easetype, int duration, int delay, double ro)
+void bgicon_rotate(BgIcon *icon, uint32_t easetype, int duration, int delay, double ro)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -418,12 +486,10 @@ void icon_rotate(BgIcon *icon, uint32_t easetype, int duration, int delay, doubl
     } else {
         nemoshow_item_rotate(icon->group, ro);
     }
-    if (icon->player) {
-        nemoui_player_rotate(icon->player, easetype, duration, delay, ro);
-    }
+    icon_rotate(icon->ic, easetype, duration, delay, ro);
 }
 
-void icon_scale(BgIcon *icon, uint32_t easetype, int duration, int delay, double sx, double sy)
+void bgicon_scale(BgIcon *icon, uint32_t easetype, int duration, int delay, double sx, double sy)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -432,12 +498,10 @@ void icon_scale(BgIcon *icon, uint32_t easetype, int duration, int delay, double
     } else {
         nemoshow_item_scale(icon->group, sx, sy);
     }
-    if (icon->player) {
-        nemoui_player_scale(icon->player, easetype, duration, delay, sx, sy);
-    }
+    icon_scale(icon->ic, easetype, duration, delay, sx, sy);
 }
 
-void icon_translate(BgIcon *icon, uint32_t easetype, int duration, int delay, double tx, double ty)
+void bgicon_translate(BgIcon *icon, uint32_t easetype, int duration, int delay, double tx, double ty)
 {
     if (duration > 0) {
         _nemoshow_item_motion(icon->group, easetype, duration, delay,
@@ -446,12 +510,10 @@ void icon_translate(BgIcon *icon, uint32_t easetype, int duration, int delay, do
     } else {
         nemoshow_item_translate(icon->group, tx, ty);
     }
-    if (icon->player) {
-        nemoui_player_translate(icon->player, easetype, duration, delay, tx, ty);
-    }
+    icon_translate(icon->ic, easetype, duration, delay, tx, ty);
 }
 
-void icon_get_center(BgIcon *icon, void *event, double *cx, double *cy)
+void bgicon_get_center(BgIcon *icon, void *event, double *cx, double *cy)
 {
     RET_IF(!icon);
     int cnt = list_count(icon->grabs);
@@ -474,7 +536,7 @@ void icon_get_center(BgIcon *icon, void *event, double *cx, double *cy)
     if (cy) *cy = sumy/cnt;
 }
 
-void icon_rotate_init(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_rotate_init(BgIcon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
@@ -524,7 +586,7 @@ void icon_rotate_init(BgIcon *icon, NemoWidget *widget, void *event)
     icon->grab_ro = nemoshow_item_get_rotate(icon->group) + atan2f(x0 - x1, y0 - y1) * 180/M_PI;
 }
 
-void icon_do_rotate(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_do_rotate(BgIcon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
@@ -544,15 +606,15 @@ void icon_do_rotate(BgIcon *icon, NemoWidget *widget, void *event)
         }
     }
     double r1 = atan2f(x0 - x1, y0 - y1);
-    icon_rotate(icon, 0, 0, 0, icon->grab_ro - r1 * 180/M_PI);
+    bgicon_rotate(icon, 0, 0, 0, icon->grab_ro - r1 * 180/M_PI);
 }
 
-void icon_do_scale(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_do_scale(BgIcon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
     double cx, cy;
-    icon_get_center(icon, event, &cx, &cy);
+    bgicon_get_center(icon, event, &cx, &cy);
 
     // Scale
     int k = 0;
@@ -580,19 +642,19 @@ void icon_do_scale(BgIcon *icon, NemoWidget *widget, void *event)
             icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff <= 5.0 &&
             icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff >= 0.5 &&
             icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff >= 0.5) {
-        icon_scale(icon, 0, 0, 0,
+        bgicon_scale(icon, 0, 0, 0,
                 icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff,
                 icon->grab_scale_y + (double)(scale - icon->grab_scale_sum) * coeff);
     }
 }
 
-void icon_scale_init(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_scale_init(BgIcon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
     //nemoshow_item_set_anchor(icon->group, cx, cy);
 
     double cx, cy;
-    icon_get_center(icon, event, &cx, &cy);
+    bgicon_get_center(icon, event, &cx, &cy);
 
     int k = 0;
     double sum = 0;
@@ -615,10 +677,10 @@ void icon_scale_init(BgIcon *icon, NemoWidget *widget, void *event)
     icon->grab_scale_y = nemoshow_item_get_scale_y(icon->group);
 }
 
-void icon_do_move(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_do_move(BgIcon *icon, NemoWidget *widget, void *event)
 {
     double cx, cy;
-    icon_get_center(icon, event, &cx, &cy);
+    bgicon_get_center(icon, event, &cx, &cy);
 
     // history update
     icon->prev_t[icon->prev_idx] = nemoshow_event_get_time(event);
@@ -629,19 +691,19 @@ void icon_do_move(BgIcon *icon, NemoWidget *widget, void *event)
         icon->prev_idx = 0;
     }
 
-    icon_translate(icon, 0, 0, 0,
+    bgicon_translate(icon, 0, 0, 0,
             cx + icon->grab_diff_x,
             cy + icon->grab_diff_y);
 }
 
-void icon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
 {
     BackgroundView *view = icon->view;
     int history_cnt = icon->view->icon_history_cnt;
     // Move
     if (list_count(icon->grabs) >= 1) {
         double cx = 0, cy = 0;
-        icon_get_center(icon, event, &cx, &cy);
+        bgicon_get_center(icon, event, &cx, &cy);
 
         // diff update
         double tx, ty;
@@ -731,11 +793,11 @@ void icon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
     }
 }
 
-void icon_move_init(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_move_init(BgIcon *icon, NemoWidget *widget, void *event)
 {
     // diff update
     double cx, cy;
-    icon_get_center(icon, event, &cx, &cy);
+    bgicon_get_center(icon, event, &cx, &cy);
 
     double tx, ty;
     tx = nemoshow_item_get_translate_x(icon->group);
@@ -754,17 +816,17 @@ void icon_move_init(BgIcon *icon, NemoWidget *widget, void *event)
     nemotimer_set_timeout(icon->color_timer, 20);
 }
 
-void icon_append_grab(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_append_grab(BgIcon *icon, NemoWidget *widget, void *event)
 {
     Grab *g = grab_create(nemoshow_event_get_device(event));
     icon->grabs = list_append(icon->grabs, g);
 
-    icon_move_init(icon, widget, event);
-    icon_rotate_init(icon, widget, event);
-    icon_scale_init(icon, widget, event);
+    bgicon_move_init(icon, widget, event);
+    bgicon_rotate_init(icon, widget, event);
+    bgicon_scale_init(icon, widget, event);
 }
 
-void icon_remove_grab(BgIcon *icon, NemoWidget *widget, void *event)
+void bgicon_remove_grab(BgIcon *icon, NemoWidget *widget, void *event)
 {
     List *l;
     Grab *g;
@@ -776,9 +838,9 @@ void icon_remove_grab(BgIcon *icon, NemoWidget *widget, void *event)
     RET_IF(!g);
     icon->grabs = list_remove(icon->grabs, g);
 
-    icon_rotate_init(icon, widget, event);
-    icon_scale_init(icon, widget, event);
-    icon_do_move_up(icon, widget, event);
+    bgicon_rotate_init(icon, widget, event);
+    bgicon_scale_init(icon, widget, event);
+    bgicon_do_move_up(icon, widget, event);
 }
 
 static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
@@ -789,7 +851,7 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
     struct nemoshow *show = nemowidget_get_show(widget);
 
     if (nemoshow_event_is_down(show, event)) {
-        icon_append_grab(icon, widget, event);
+        bgicon_append_grab(icon, widget, event);
         if (list_count(icon->grabs) == 1) {
             // Revoke all transitions
             nemoshow_revoke_transition_one(show, icon->group, "tx");
@@ -804,12 +866,12 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
         Grab *g = LIST_DATA(LIST_FIRST(icon->grabs));
         // XXX: To reduce duplicated caclulation
         if (g->device == nemoshow_event_get_device(event)) {
-            icon_do_move(icon, widget, event);
-            icon_do_scale(icon, widget, event);
-            icon_do_rotate(icon, widget, event);
+            bgicon_do_move(icon, widget, event);
+            bgicon_do_scale(icon, widget, event);
+            bgicon_do_rotate(icon, widget, event);
         }
     } else if (nemoshow_event_is_up(show, event)) {
-        icon_remove_grab(icon, widget, event);
+        bgicon_remove_grab(icon, widget, event);
     }
     nemoshow_dispatch_frame(view->show);
 }
@@ -986,7 +1048,7 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
 
             BgIcon *icon;
             icon = backgroundview_create_icon(view, config_icon->path, config_icon->path0, rx, ry);
-            icon_translate(icon, 0, 0, 0, tx, ty);
+            bgicon_translate(icon, 0, 0, 0, tx, ty);
             view->icons = list_append(view->icons, icon);
         }
     }
@@ -1026,7 +1088,7 @@ void background_show(BackgroundView *view)
     List *l;
     BgIcon *icon;
     LIST_FOR_EACH(view->icons, l, icon) {
-        icon_show(icon, NEMOEASE_CUBIC_OUT_TYPE, 1000, delay);
+        bgicon_show(icon, NEMOEASE_CUBIC_OUT_TYPE, 1000, delay);
         delay += 250;
     }
 
@@ -1054,13 +1116,13 @@ void background_hide(BackgroundView *view)
     }
 
     if (view->icon_widget)
-        nemowidget_show(view->icon_widget, 0, 0, 0);
+        nemowidget_hide(view->icon_widget, 0, 0, 0);
 
     List *l;
     BgIcon *icon;
     LIST_FOR_EACH(view->icons, l, icon) {
-        icon_revoke(icon);
-        icon_hide(icon, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+        bgicon_revoke(icon);
+        bgicon_hide(icon, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
     }
 
     nemoshow_dispatch_frame(view->show);
@@ -1194,9 +1256,9 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     LIST_FOR_EACH(tags, l, tag) {
         List *ll;
         XmlAttr *attr;
-        LIST_FOR_EACH(tag->attrs, ll, attr) {
-            ConfigIcon *icon = calloc(sizeof(ConfigIcon), 1);
+        ConfigIcon *icon = calloc(sizeof(ConfigIcon), 1);
 
+        LIST_FOR_EACH(tag->attrs, ll, attr) {
             if (!strcmp(attr->key, "path")) {
                 if (attr->val) {
                     icon->path = strdup(attr->val);
@@ -1205,13 +1267,14 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
                 if (attr->val) {
                     icon->path0 = strdup(attr->val);
                 }
-            } else {
-                ERR("Not path in the icons:%s", attr->key);
-                free(icon);
-                continue;
             }
-            app->icons = list_append(app->icons, icon);
         }
+        if (!icon->path) {
+            ERR("No path in the icons:%s", tag->name);
+            free(icon);
+            continue;
+        }
+        app->icons = list_append(app->icons, icon);
     }
 
     xml_unload(xml);
