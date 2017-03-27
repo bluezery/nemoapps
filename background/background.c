@@ -46,6 +46,8 @@ struct _ConfigApp {
     int icon_throw;
     int icon_throw_coeff;
     int icon_throw_duration;
+    int icon_motion_move_time_coeff;
+    int icon_motion_scale_coeff;
 };
 
 typedef struct _BackgroundView BackgroundView;
@@ -77,6 +79,8 @@ struct _BackgroundView {
     int icon_throw_min_dist;
     int icon_throw_coeff;
     int icon_throw_duration;
+    int icon_motion_move_time_coeff;
+    int icon_motion_scale_coeff;
     NemoWidget *icon_widget;
     struct showone *icon_group;
     List *icons;
@@ -145,7 +149,7 @@ struct _BgIcon {
     struct showone *group;
     struct showone *event;
     struct nemotimer *lotte_timer;
-    struct nemotimer *move_timer;
+    struct nemotimer *motion_timer;
     struct nemotimer *color_timer;
     struct nemotimer *change_timer;
     Icon *ic;
@@ -358,16 +362,16 @@ static void _bgicon_change_timeout(struct nemotimer *timer, void *userdata)
     icon->cur_ic = icon->ic;
 }
 
-static void _bgicon_move_timeout(struct nemotimer *timer, void *userdata)
+static void _bgicon_motion_timeout(struct nemotimer *timer, void *userdata)
 {
     BgIcon *icon = userdata;
     BackgroundView *view = icon->view;
 
     double t, tx, ty, sxy, ro;
-    t = (WELLRNG512() % 60) * 1000 + 20000;
+    t = (WELLRNG512() % 60) * view->icon_motion_move_time_coeff + 20000;
     tx = WELLRNG512()%view->width;
     ty = WELLRNG512()%view->height;
-    sxy = (WELLRNG512() % 200)/100.0 + 0.5;
+    sxy = (WELLRNG512() % view->icon_motion_scale_coeff)/100.0 + 0.5;
     ro = WELLRNG512() % 360;
 
     _nemoshow_item_motion(icon->group, NEMOEASE_LINEAR_TYPE, t, 0,
@@ -461,7 +465,7 @@ BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const 
             strstr(uri, "entertainment")) {
         icon->lotte_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_lotte_timeout, icon);
     }
-    icon->move_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_move_timeout, icon);
+    icon->motion_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_motion_timeout, icon);
     icon->color_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_color_timeout, icon);
     icon->change_timer = TOOL_ADD_TIMER(view->tool, 0, _bgicon_change_timeout, icon);
 
@@ -510,7 +514,7 @@ void bgicon_show(BgIcon *icon, uint32_t easetype, int duration, int delay)
         nemoshow_item_set_alpha(icon->group, 0.5);
     }
     if (icon->lotte_timer) nemotimer_set_timeout(icon->lotte_timer, 100 + delay);
-    nemotimer_set_timeout(icon->move_timer, 100 + delay);
+    nemotimer_set_timeout(icon->motion_timer, 100 + delay);
     icon_show(icon->ic, easetype, duration, delay);
 }
 
@@ -524,7 +528,7 @@ void bgicon_hide(BgIcon *icon, uint32_t easetype, int duration, int delay)
         nemoshow_item_set_alpha(icon->group, 0.0);
     }
     if (icon->lotte_timer) nemotimer_set_timeout(icon->lotte_timer, 0);
-    nemotimer_set_timeout(icon->move_timer, 0);
+    nemotimer_set_timeout(icon->motion_timer, 0);
     icon_hide(icon->ic, easetype, duration, delay);
 }
 
@@ -815,7 +819,7 @@ void bgicon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
         } while (i != icon->prev_idx);
 
         if (k < 5) {
-            nemotimer_set_timeout(icon->move_timer, 100);
+            nemotimer_set_timeout(icon->motion_timer, 100);
         } else {
             double dir = atan2f((icon->prev_y[start] - icon->prev_y[end]),
                     (icon->prev_x[start] - icon->prev_x[end]));
@@ -838,7 +842,7 @@ void bgicon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
                     nemosound_play(BACKGROUND_SOUND_DIR"/throwing.wav");
                 }
             }
-            nemotimer_set_timeout(icon->move_timer, view->icon_throw_duration + 100);
+            nemotimer_set_timeout(icon->motion_timer, view->icon_throw_duration + 100);
         }
         nemotimer_set_timeout(icon->color_timer, 0);
     }
@@ -910,7 +914,7 @@ static void _icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct sh
             nemoshow_revoke_transition_one(show, icon->group, "sx");
             nemoshow_revoke_transition_one(show, icon->group, "sy");
             nemoshow_revoke_transition_one(show, icon->group, "ro");
-            nemotimer_set_timeout(icon->move_timer, 0);
+            nemotimer_set_timeout(icon->motion_timer, 0);
             if (icon->ic0) {
                 if (icon->cur_ic != icon->ic0) {
                     icon->cur_ic = icon->ic0;
@@ -1021,6 +1025,8 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
     view->icon_throw_min_dist = app->icon_throw_min_dist;
     view->icon_throw_coeff = app->icon_throw_coeff;
     view->icon_throw_duration = app->icon_throw_duration;
+    view->icon_motion_move_time_coeff = app->icon_motion_move_time_coeff;
+    view->icon_motion_scale_coeff = app->icon_motion_scale_coeff;
 
     NemoWidget *widget;
 
@@ -1218,6 +1224,8 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     app->icon_throw_min_dist = 100;
     app->icon_throw_coeff = 200;
     app->icon_throw_duration = 1000;
+    app->icon_motion_move_time_coeff = 1000;
+    app->icon_motion_scale_coeff = 100;
 
     app->config = config_load(domain, appname, filename, argc, argv);
 
@@ -1306,6 +1314,14 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     temp = xml_get_value(xml, buf, "throw_duration");
     if (temp) {
         app->icon_throw_duration = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "motion_move_time_coeff");
+    if (temp) {
+        app->icon_motion_move_time_coeff = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "motion_scale_coeff");
+    if (temp) {
+        app->icon_motion_scale_coeff = atoi(temp);
     }
 
     snprintf(buf, PATH_MAX, "%s/icons", appname);
