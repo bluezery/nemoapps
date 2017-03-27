@@ -448,6 +448,8 @@ static void _bgicon_lotte_timeout(struct nemotimer *timer, void *userdata)
 
 BgIcon *backgroundview_create_icon(BackgroundView *view, const char *uri, const char *uri0, double rx, double ry)
 {
+    RET_IF(!file_is_exist(uri), NULL)
+
     BgIcon *icon = calloc(sizeof(BgIcon), 1);
     icon->view = view;
 
@@ -1113,6 +1115,7 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
 
             BgIcon *icon;
             icon = backgroundview_create_icon(view, config_icon->path, config_icon->path0, rx, ry);
+            if (!icon) continue;
             bgicon_translate(icon, 0, 0, 0, tx, ty);
             view->icons = list_append(view->icons, icon);
         }
