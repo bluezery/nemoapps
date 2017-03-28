@@ -13,9 +13,11 @@
     <icons path="@MUNHAK_OVERLAY_DIR@/motion1"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/motion2"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/motion3"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/ball.png"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/bat.png"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/helmet.png"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/trophy.png"/>
-    <icons path="@MUNHAK_OVERLAY_DIR@/win.png"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/motion4"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/motion5"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/ball.svg"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/bat.svg"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/helmet.svg"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/trophy.svg"/>
+    <icons path="@MUNHAK_OVERLAY_DIR@/win.svg"/>
 </nemobackground>
