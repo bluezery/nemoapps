@@ -33,7 +33,6 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
     -->
     <!-- SKT RTSP
-    -->
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:556/002"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:555/001"/>
@@ -50,6 +49,7 @@
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:567/013"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:568/014"/>
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:569/015"/>
+    -->
     <!-- CCTV Demo
     <file path="rtsp://nemoux:nemoux1234@180.67.220.155:554/000"/>
     <file path="/opt/contents/skt/livestream/assault detection day.avi"/>
@@ -81,6 +81,7 @@
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/bigbuckbunny_450.mp4"/>    
     -->
     <!-- Nemoux samples
+    -->
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
@@ -97,7 +98,6 @@
     <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
-    -->
     <!-- Futuristic
     <file path="/opt/contents/TEST/VIDEO/FUTURE/MS 2011.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
