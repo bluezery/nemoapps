@@ -49,7 +49,7 @@ LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 #INCLUDE_DIRECTORIES(${HARFBUZZ_INCLUDE_DIRS})
 #LINK_DIRECTORIES(${HARFBUZZ_LIBRARY_DIRS})
 
-PKG_CHECK_MODULES(COMMON REQUIRED expat pixman-1 json-c libcurl MagickWand sqlite3 ao libudev mount libprocps dbus-1 
+PKG_CHECK_MODULES(COMMON REQUIRED expat pixman-1 json-c libcurl MagickWand sqlite3 ao libudev mount libprocps dbus-1
     libcrypto
     libavutil libavcodec
     sndfile

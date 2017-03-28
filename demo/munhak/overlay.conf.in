@@ -3,7 +3,7 @@
     <window layer="underlay_icon"/>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
-    <icon count="16" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000" motion_move_time_coeff="1000" motion_scale_coeff="100"/>
+    <icon count="16" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000" motion_move_time_coeff="1000" scale_max="2.0" scale_min="1.0"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/eievui/000.png" path0="@MUNHAK_OVERLAY_DIR@/eievui"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/esang/000.png" path0="@MUNHAK_OVERLAY_DIR@/esang"/>
     <icons path="@MUNHAK_OVERLAY_DIR@/ggoboogi/000.png" path0="@MUNHAK_OVERLAY_DIR@/ggoboogi"/>

@@ -20,7 +20,7 @@
 #include "nemoui.h"
 #include "sound.h"
 
-#define ANIM_INTERVAL (1000.0/24)
+#define ANIM_INTERVAL (1000.0/60)
 #define CHANGE_TIMEOUT 10000
 
 typedef struct _ConfigIcon ConfigIcon;
@@ -46,8 +46,9 @@ struct _ConfigApp {
     int icon_throw;
     int icon_throw_coeff;
     int icon_throw_duration;
+    double icon_scale_max;
+    double icon_scale_min;
     int icon_motion_move_time_coeff;
-    int icon_motion_scale_coeff;
 };
 
 typedef struct _BackgroundView BackgroundView;
@@ -79,8 +80,9 @@ struct _BackgroundView {
     int icon_throw_min_dist;
     int icon_throw_coeff;
     int icon_throw_duration;
+    double icon_scale_max;
+    double icon_scale_min;
     int icon_motion_move_time_coeff;
-    int icon_motion_scale_coeff;
     NemoWidget *icon_widget;
     struct showone *icon_group;
     List *icons;
@@ -371,7 +373,12 @@ static void _bgicon_motion_timeout(struct nemotimer *timer, void *userdata)
     t = (WELLRNG512() % 60) * view->icon_motion_move_time_coeff + 20000;
     tx = WELLRNG512()%view->width;
     ty = WELLRNG512()%view->height;
-    sxy = (WELLRNG512() % view->icon_motion_scale_coeff)/100.0 + 0.5;
+    int divisor = (int)((view->icon_scale_max - view->icon_scale_min) * 100);
+    if (divisor > 0) {
+        sxy = (WELLRNG512() % divisor)/100.0 + view->icon_scale_min;
+    } else {
+        sxy = 1.0;
+    }
     ro = WELLRNG512() % 360;
 
     _nemoshow_item_motion(icon->group, NEMOEASE_LINEAR_TYPE, t, 0,
@@ -670,6 +677,7 @@ void bgicon_do_scale(BgIcon *icon, NemoWidget *widget, void *event)
 {
     if (list_count(icon->grabs) < 2) return;
 
+    BackgroundView *view = icon->view;
     double cx, cy;
     bgicon_get_center(icon, event, &cx, &cy);
 
@@ -695,10 +703,10 @@ void bgicon_do_scale(BgIcon *icon, NemoWidget *widget, void *event)
 
     double coeff = 0.02;
     double scale = sumdiff/k;
-    if (icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff <= 5.0 &&
-            icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff <= 5.0 &&
-            icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff >= 0.5 &&
-            icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff >= 0.5) {
+    if (icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff <= view->icon_scale_max &&
+            icon->grab_scale_y + (double)(scale - icon->grab_scale_sum) * coeff <= view->icon_scale_max &&
+            icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff >= view->icon_scale_min &&
+            icon->grab_scale_y + (double)(scale - icon->grab_scale_sum) * coeff >= view->icon_scale_min) {
         bgicon_scale(icon, 0, 0, 0,
                 icon->grab_scale_x + (double)(scale - icon->grab_scale_sum) * coeff,
                 icon->grab_scale_y + (double)(scale - icon->grab_scale_sum) * coeff);
@@ -1027,8 +1035,9 @@ BackgroundView *background_create(NemoWidget *parent, ConfigApp *app)
     view->icon_throw_min_dist = app->icon_throw_min_dist;
     view->icon_throw_coeff = app->icon_throw_coeff;
     view->icon_throw_duration = app->icon_throw_duration;
+    view->icon_scale_min = app->icon_scale_min;
+    view->icon_scale_max = app->icon_scale_max;
     view->icon_motion_move_time_coeff = app->icon_motion_move_time_coeff;
-    view->icon_motion_scale_coeff = app->icon_motion_scale_coeff;
 
     NemoWidget *widget;
 
@@ -1227,8 +1236,9 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     app->icon_throw_min_dist = 100;
     app->icon_throw_coeff = 200;
     app->icon_throw_duration = 1000;
-    app->icon_motion_move_time_coeff = 1000;
-    app->icon_motion_scale_coeff = 100;
+    app->icon_scale_min = 1.0;
+    app->icon_scale_max = 3.0;
+    app->icon_motion_move_time_coeff = 1000; // micro seconds
 
     app->config = config_load(domain, appname, filename, argc, argv);
 
@@ -1318,13 +1328,17 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     if (temp) {
         app->icon_throw_duration = atoi(temp);
     }
+    temp = xml_get_value(xml, buf, "scale_min");
+    if (temp) {
+        app->icon_scale_min = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "scale_max");
+    if (temp) {
+        app->icon_scale_max = atoi(temp);
+    }
     temp = xml_get_value(xml, buf, "motion_move_time_coeff");
     if (temp) {
         app->icon_motion_move_time_coeff = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "motion_scale_coeff");
-    if (temp) {
-        app->icon_motion_scale_coeff = atoi(temp);
     }
 
     snprintf(buf, PATH_MAX, "%s/icons", appname);
