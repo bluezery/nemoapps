@@ -63,6 +63,7 @@ char *file_get_magic(const char *path, int flags)
         return NULL;
     }
     char *magic_str = strdup(str);
+    magic_close(_magic);
     return magic_str;
 }
 
