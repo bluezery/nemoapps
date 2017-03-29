@@ -37,17 +37,20 @@ static SkBitmap *_image_decode_skbitmap(const char *path)
 {
     SkBitmap *bitmap = new SkBitmap;
 
-	sk_sp<SkData> data(SkData::MakeFromFileName(path));
-	SkCodec *codec(SkCodec::NewFromData(data));
+    sk_sp<SkData> data(SkData::MakeFromFileName(path));
+    SkCodec *codec(SkCodec::NewFromData(data));
     if (!codec) {
         ERR("No codec from data: %s", path);
         return NULL;
     }
 
-    bitmap->setInfo(codec->getInfo());
+    SkImageInfo info = codec->getInfo().makeColorSpace(NULL);
+
+    bitmap->setInfo(info);
     bitmap->allocPixels();
 
-    SkCodec::Result r = codec->getPixels(codec->getInfo(), bitmap->getPixels(), bitmap->rowBytes());
+    SkCodec::Result r = codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
+    delete codec;
     if (r != SkCodec::kSuccess) {
         ERR("getPixels failed(%d): %s", r, path);
         return NULL;
@@ -295,6 +298,7 @@ void image_destroy(Image *img)
     if (img->clip) nemoshow_one_destroy(img->clip);
     image_unload(img);
     nemoshow_item_destroy(img->one);
+    nemoshow_item_destroy(img->group);
     free(img);
 }
 
@@ -310,15 +314,6 @@ int image_get_height(Image *img)
 
 void image_load_sync(Image *img, const char *uri, int width, int height)
 {
-    if (!file_is_exist(uri)) {
-        ERR("file is not existed: %s", uri);
-        return;
-    }
-    if (file_is_null(uri)) {
-        ERR("file size is zero: %s", uri);
-        return;
-    }
-
     ImageBitmap *bitmap = image_bitmap_create(uri);
     if (!bitmap) {
         ERR("image_bitmap_create failed");
