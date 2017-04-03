@@ -250,7 +250,6 @@ struct _Background {
     NemoWidget *widget;
     struct showone *group;
     struct showone *bg0;
-    struct showone *bg1;
     List *star_anims;
 };
 
@@ -356,9 +355,6 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
     else
         bg->bg0 = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back.png");
 
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, width/2, height/2);
-    bg->bg1 = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back_star.png");
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, width/2, height/2);
 

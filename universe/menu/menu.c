@@ -594,6 +594,7 @@ void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay)
 static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
 {
     MenuView *view = userdata;
+    return;
 
     int duration = 0;
     List *l;
@@ -614,6 +615,8 @@ static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
 
 static void _menu_view_planet_timeout(struct nemotimer *timer, void *userdata)
 {
+    return;
+
     MenuView *view = userdata;
     int duration = 15000;
     nemoshow_item_rotate(view->planet, 0.0);
