@@ -251,26 +251,6 @@ struct _Background {
     struct showone *bg;
 };
 
-static void _animation_done(Animation *anim, void *userdata)
-{
-    Background *bg = userdata;
-    animation_set_repeat(anim, 1);
-
-    double x, y, scale;
-    int ro;
-    x = (double)rand()/RAND_MAX * bg->width;
-    y = (double)rand()/RAND_MAX * bg->height;
-    scale = (double)rand()/RAND_MAX * 0.5 + 0.5;
-    ro = (double)rand()/RAND_MAX * 360;
-
-    animation_translate(anim, 0, 0, 0, x, y);
-    animation_rotate(anim, 0, 0, 0, ro);
-    animation_scale(anim, 0, 0, 0, scale, scale);
-
-    animation_show(anim, NEMOEASE_CUBIC_INOUT_TYPE, 3000, 0);
-    nemoshow_dispatch_frame(bg->show);
-}
-
 static void _background_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     StarSign *sign = userdata;
@@ -334,8 +314,8 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
         bg->bg = one = IMAGE_CREATE(group, width, height, bgpath);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
         nemoshow_item_translate(one, width/3, height/2);
-    } else if (file_is_exist(BACKGROUND_RES_DIR"/back.png")) {
-        bg->bg = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back.png");
+    } else if (file_is_exist(APPDATA_ROOT"/back.png")) {
+        bg->bg = one = IMAGE_CREATE(group, width, height, APPDATA_ROOT"/back.png");
         nemoshow_item_set_anchor(one, 0.5, 0.5);
         nemoshow_item_translate(one, width/2, height/2);
     }
@@ -383,10 +363,10 @@ void background_view_show(BackgroundView *view, uint32_t easetype, int duration,
     background_show(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 }
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -402,20 +382,21 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
     int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No size width in %s", appname);
+        ERR("No size width in %s", prefix);
     } else {
         width = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No size height in %s", appname);
+        ERR("No size height in %s", prefix);
     } else {
         height = atoi(temp);
     }
@@ -457,7 +438,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     struct nemotool *tool = TOOL_CREATE();

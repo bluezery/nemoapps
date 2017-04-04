@@ -60,91 +60,91 @@ struct _KeyCoord {
 KeyCoord keycoords[] =
 {
     // 0 (esc)
-    {12,8,12,0, "FOCUS", 0, KEYBOARD_ICON_DIR"/key-78.svg", NULL, NULL, NULL, NULL},
-    {875,8,13,0, "QUIT", 1, KEYBOARD_ICON_DIR"/key-00.svg", NULL, NULL, NULL, NULL},
+    {12,8,12,0, "FOCUS", 0, APP_ICON_DIR"/key-78.svg", NULL, NULL, NULL, NULL},
+    {875,8,13,0, "QUIT", 1, APP_ICON_DIR"/key-00.svg", NULL, NULL, NULL, NULL},
     // 1 (2)
-    {12,44,1,1, "ESC", 1, KEYBOARD_ICON_DIR"/key-01.svg", NULL, NULL, NULL, NULL},
-    {76,44,1,1, "F1", 59, KEYBOARD_ICON_DIR"/key-02.svg", NULL, NULL, NULL, NULL},
-    {140,44,1,1, "F2", 60, KEYBOARD_ICON_DIR"/key-03.svg", NULL, NULL, NULL, NULL},
-    {204,44,1,1, "F3", 61, KEYBOARD_ICON_DIR"/key-04.svg", NULL, NULL, NULL, NULL},
-    {268,44,1,1, "F4", 62, KEYBOARD_ICON_DIR"/key-05.svg", NULL, NULL, NULL, NULL},
-    {332,44,1,1, "F5", 63, KEYBOARD_ICON_DIR"/key-06.svg", NULL, NULL, NULL, NULL},
-    {396,44,1,1, "F6", 64, KEYBOARD_ICON_DIR"/key-07.svg", NULL, NULL, NULL, NULL},
-    {460,44,1,1, "F7", 65, KEYBOARD_ICON_DIR"/key-08.svg", NULL, NULL, NULL, NULL},
-    {524,44,1,1, "F8", 66, KEYBOARD_ICON_DIR"/key-09.svg", NULL, NULL, NULL, NULL},
-    {588,44,1,1, "F9", 67, KEYBOARD_ICON_DIR"/key-10.svg", NULL, NULL, NULL, NULL},
-    {652,44,1,1, "F10", 68, KEYBOARD_ICON_DIR"/key-11.svg", NULL, NULL, NULL, NULL},
-    {716,44,1,1, "F11", 87, KEYBOARD_ICON_DIR"/key-12.svg", NULL, NULL, NULL, NULL},
-    {780,44,1,1, "F12", 88, KEYBOARD_ICON_DIR"/key-13.svg", NULL, NULL, NULL, NULL},
-    {844,44,2,1, "DEL", 111, KEYBOARD_ICON_DIR"/key-14.svg", NULL, NULL, NULL, NULL},
+    {12,44,1,1, "ESC", 1, APP_ICON_DIR"/key-01.svg", NULL, NULL, NULL, NULL},
+    {76,44,1,1, "F1", 59, APP_ICON_DIR"/key-02.svg", NULL, NULL, NULL, NULL},
+    {140,44,1,1, "F2", 60, APP_ICON_DIR"/key-03.svg", NULL, NULL, NULL, NULL},
+    {204,44,1,1, "F3", 61, APP_ICON_DIR"/key-04.svg", NULL, NULL, NULL, NULL},
+    {268,44,1,1, "F4", 62, APP_ICON_DIR"/key-05.svg", NULL, NULL, NULL, NULL},
+    {332,44,1,1, "F5", 63, APP_ICON_DIR"/key-06.svg", NULL, NULL, NULL, NULL},
+    {396,44,1,1, "F6", 64, APP_ICON_DIR"/key-07.svg", NULL, NULL, NULL, NULL},
+    {460,44,1,1, "F7", 65, APP_ICON_DIR"/key-08.svg", NULL, NULL, NULL, NULL},
+    {524,44,1,1, "F8", 66, APP_ICON_DIR"/key-09.svg", NULL, NULL, NULL, NULL},
+    {588,44,1,1, "F9", 67, APP_ICON_DIR"/key-10.svg", NULL, NULL, NULL, NULL},
+    {652,44,1,1, "F10", 68, APP_ICON_DIR"/key-11.svg", NULL, NULL, NULL, NULL},
+    {716,44,1,1, "F11", 87, APP_ICON_DIR"/key-12.svg", NULL, NULL, NULL, NULL},
+    {780,44,1,1, "F12", 88, APP_ICON_DIR"/key-13.svg", NULL, NULL, NULL, NULL},
+    {844,44,2,1, "DEL", 111, APP_ICON_DIR"/key-14.svg", NULL, NULL, NULL, NULL},
     // 2 (16)
-    {12,88,3,2, "`", 41, KEYBOARD_ICON_DIR"/key-15.svg", KEYBOARD_ICON_DIR"/key-15_S.svg", NULL, NULL, NULL},
-    {76,88,3,2, "1", 2, KEYBOARD_ICON_DIR"/key-16.svg", KEYBOARD_ICON_DIR"/key-16_S.svg", NULL, NULL, NULL},
-    {140,88,3,2, "2", 3, KEYBOARD_ICON_DIR"/key-17.svg", KEYBOARD_ICON_DIR"/key-17_S.svg", NULL, NULL, NULL},
-    {204,88,3,2, "3", 4, KEYBOARD_ICON_DIR"/key-18.svg", KEYBOARD_ICON_DIR"/key-18_S.svg", NULL, NULL, NULL},
-    {268,88,3,2, "4", 5, KEYBOARD_ICON_DIR"/key-19.svg", KEYBOARD_ICON_DIR"/key-19_S.svg", NULL, NULL, NULL},
-    {332,88,3,2, "5", 6, KEYBOARD_ICON_DIR"/key-20.svg", KEYBOARD_ICON_DIR"/key-20_S.svg", NULL, NULL, NULL},
-    {396,88,3,2, "6", 7, KEYBOARD_ICON_DIR"/key-21.svg", KEYBOARD_ICON_DIR"/key-21_S.svg", NULL, NULL, NULL},
-    {460,88,3,2, "7", 8, KEYBOARD_ICON_DIR"/key-22.svg", KEYBOARD_ICON_DIR"/key-22_S.svg", NULL, NULL, NULL},
-    {524,88,3,2, "8", 9, KEYBOARD_ICON_DIR"/key-23.svg", KEYBOARD_ICON_DIR"/key-23_S.svg", NULL, NULL, NULL},
-    {588,88,3,2, "9", 10, KEYBOARD_ICON_DIR"/key-24.svg", KEYBOARD_ICON_DIR"/key-24_S.svg", NULL, NULL, NULL},
-    {652,88,3,2, "0", 11, KEYBOARD_ICON_DIR"/key-25.svg", KEYBOARD_ICON_DIR"/key-25_S.svg", NULL, NULL, NULL},
-    {716,88,3,2, "-", 12, KEYBOARD_ICON_DIR"/key-26.svg", KEYBOARD_ICON_DIR"/key-26_S.svg", NULL, NULL, NULL},
-    {780,88,3,2, "=", 13, KEYBOARD_ICON_DIR"/key-27.svg", KEYBOARD_ICON_DIR"/key-27_S.svg", NULL, NULL, NULL},
-    {844,88,4,2, "BACK", 14, KEYBOARD_ICON_DIR"/key-28.svg", NULL, NULL, NULL, NULL},
+    {12,88,3,2, "`", 41, APP_ICON_DIR"/key-15.svg", APP_ICON_DIR"/key-15_S.svg", NULL, NULL, NULL},
+    {76,88,3,2, "1", 2, APP_ICON_DIR"/key-16.svg", APP_ICON_DIR"/key-16_S.svg", NULL, NULL, NULL},
+    {140,88,3,2, "2", 3, APP_ICON_DIR"/key-17.svg", APP_ICON_DIR"/key-17_S.svg", NULL, NULL, NULL},
+    {204,88,3,2, "3", 4, APP_ICON_DIR"/key-18.svg", APP_ICON_DIR"/key-18_S.svg", NULL, NULL, NULL},
+    {268,88,3,2, "4", 5, APP_ICON_DIR"/key-19.svg", APP_ICON_DIR"/key-19_S.svg", NULL, NULL, NULL},
+    {332,88,3,2, "5", 6, APP_ICON_DIR"/key-20.svg", APP_ICON_DIR"/key-20_S.svg", NULL, NULL, NULL},
+    {396,88,3,2, "6", 7, APP_ICON_DIR"/key-21.svg", APP_ICON_DIR"/key-21_S.svg", NULL, NULL, NULL},
+    {460,88,3,2, "7", 8, APP_ICON_DIR"/key-22.svg", APP_ICON_DIR"/key-22_S.svg", NULL, NULL, NULL},
+    {524,88,3,2, "8", 9, APP_ICON_DIR"/key-23.svg", APP_ICON_DIR"/key-23_S.svg", NULL, NULL, NULL},
+    {588,88,3,2, "9", 10, APP_ICON_DIR"/key-24.svg", APP_ICON_DIR"/key-24_S.svg", NULL, NULL, NULL},
+    {652,88,3,2, "0", 11, APP_ICON_DIR"/key-25.svg", APP_ICON_DIR"/key-25_S.svg", NULL, NULL, NULL},
+    {716,88,3,2, "-", 12, APP_ICON_DIR"/key-26.svg", APP_ICON_DIR"/key-26_S.svg", NULL, NULL, NULL},
+    {780,88,3,2, "=", 13, APP_ICON_DIR"/key-27.svg", APP_ICON_DIR"/key-27_S.svg", NULL, NULL, NULL},
+    {844,88,4,2, "BACK", 14, APP_ICON_DIR"/key-28.svg", NULL, NULL, NULL, NULL},
     // 3 (30)
-    {12,152,5,3, "TAP", 15, KEYBOARD_ICON_DIR"/key-29.svg", NULL, NULL, NULL, NULL},
-    {106,152,3,3, "q", 16, KEYBOARD_ICON_DIR"/key-30.svg", KEYBOARD_ICON_DIR"/key-30_S.svg", KEYBOARD_ICON_DIR"/key-30_k.svg", KEYBOARD_ICON_DIR"/key-30_k_S.svg", NULL},
-    {170,152,3,3, "w", 17, KEYBOARD_ICON_DIR"/key-31.svg", KEYBOARD_ICON_DIR"/key-31_S.svg", KEYBOARD_ICON_DIR"/key-31_k.svg", KEYBOARD_ICON_DIR"/key-31_k_S.svg", NULL},
-    {234,152,3,3, "e", 18, KEYBOARD_ICON_DIR"/key-32.svg", KEYBOARD_ICON_DIR"/key-32_S.svg", KEYBOARD_ICON_DIR"/key-32_k.svg", KEYBOARD_ICON_DIR"/key-32_k_S.svg", NULL},
-    {298,152,3,3, "r", 19, KEYBOARD_ICON_DIR"/key-33.svg", KEYBOARD_ICON_DIR"/key-33_S.svg", KEYBOARD_ICON_DIR"/key-33_k.svg", KEYBOARD_ICON_DIR"/key-33_k_S.svg", NULL},
-    {362,152,3,3, "t", 20, KEYBOARD_ICON_DIR"/key-34.svg", KEYBOARD_ICON_DIR"/key-34_S.svg", KEYBOARD_ICON_DIR"/key-34_k.svg", KEYBOARD_ICON_DIR"/key-34_k_S.svg", NULL},
-    {426,152,3,3, "y", 21, KEYBOARD_ICON_DIR"/key-35.svg", KEYBOARD_ICON_DIR"/key-35_S.svg", KEYBOARD_ICON_DIR"/key-35_k.svg", NULL, NULL},
-    {490,152,3,3, "u", 22, KEYBOARD_ICON_DIR"/key-36.svg", KEYBOARD_ICON_DIR"/key-36_S.svg", KEYBOARD_ICON_DIR"/key-36_k.svg", NULL, NULL},
-    {554,152,3,3, "i", 23, KEYBOARD_ICON_DIR"/key-37.svg", KEYBOARD_ICON_DIR"/key-37_S.svg", KEYBOARD_ICON_DIR"/key-37_k.svg", NULL, NULL},
-    {618,152,3,3, "o", 24, KEYBOARD_ICON_DIR"/key-38.svg", KEYBOARD_ICON_DIR"/key-38_S.svg", KEYBOARD_ICON_DIR"/key-38_k.svg", KEYBOARD_ICON_DIR"/key-38_k_S.svg", NULL},
-    {682,152,3,3, "p", 25, KEYBOARD_ICON_DIR"/key-39.svg", KEYBOARD_ICON_DIR"/key-39_S.svg", KEYBOARD_ICON_DIR"/key-39_k.svg", KEYBOARD_ICON_DIR"/key-39_k_S.svg", NULL},
-    {746,152,3,3, "[", 26, KEYBOARD_ICON_DIR"/key-40.svg", KEYBOARD_ICON_DIR"/key-40_S.svg", NULL, NULL, NULL},
-    {810,152,3,3, "]", 27, KEYBOARD_ICON_DIR"/key-41.svg", KEYBOARD_ICON_DIR"/key-41_S.svg", NULL, NULL, NULL},
-    {874,152,6,3, "\\", 43, KEYBOARD_ICON_DIR"/key-42.svg", KEYBOARD_ICON_DIR"/key-42_S.svg", NULL, NULL, NULL},
+    {12,152,5,3, "TAP", 15, APP_ICON_DIR"/key-29.svg", NULL, NULL, NULL, NULL},
+    {106,152,3,3, "q", 16, APP_ICON_DIR"/key-30.svg", APP_ICON_DIR"/key-30_S.svg", APP_ICON_DIR"/key-30_k.svg", APP_ICON_DIR"/key-30_k_S.svg", NULL},
+    {170,152,3,3, "w", 17, APP_ICON_DIR"/key-31.svg", APP_ICON_DIR"/key-31_S.svg", APP_ICON_DIR"/key-31_k.svg", APP_ICON_DIR"/key-31_k_S.svg", NULL},
+    {234,152,3,3, "e", 18, APP_ICON_DIR"/key-32.svg", APP_ICON_DIR"/key-32_S.svg", APP_ICON_DIR"/key-32_k.svg", APP_ICON_DIR"/key-32_k_S.svg", NULL},
+    {298,152,3,3, "r", 19, APP_ICON_DIR"/key-33.svg", APP_ICON_DIR"/key-33_S.svg", APP_ICON_DIR"/key-33_k.svg", APP_ICON_DIR"/key-33_k_S.svg", NULL},
+    {362,152,3,3, "t", 20, APP_ICON_DIR"/key-34.svg", APP_ICON_DIR"/key-34_S.svg", APP_ICON_DIR"/key-34_k.svg", APP_ICON_DIR"/key-34_k_S.svg", NULL},
+    {426,152,3,3, "y", 21, APP_ICON_DIR"/key-35.svg", APP_ICON_DIR"/key-35_S.svg", APP_ICON_DIR"/key-35_k.svg", NULL, NULL},
+    {490,152,3,3, "u", 22, APP_ICON_DIR"/key-36.svg", APP_ICON_DIR"/key-36_S.svg", APP_ICON_DIR"/key-36_k.svg", NULL, NULL},
+    {554,152,3,3, "i", 23, APP_ICON_DIR"/key-37.svg", APP_ICON_DIR"/key-37_S.svg", APP_ICON_DIR"/key-37_k.svg", NULL, NULL},
+    {618,152,3,3, "o", 24, APP_ICON_DIR"/key-38.svg", APP_ICON_DIR"/key-38_S.svg", APP_ICON_DIR"/key-38_k.svg", APP_ICON_DIR"/key-38_k_S.svg", NULL},
+    {682,152,3,3, "p", 25, APP_ICON_DIR"/key-39.svg", APP_ICON_DIR"/key-39_S.svg", APP_ICON_DIR"/key-39_k.svg", APP_ICON_DIR"/key-39_k_S.svg", NULL},
+    {746,152,3,3, "[", 26, APP_ICON_DIR"/key-40.svg", APP_ICON_DIR"/key-40_S.svg", NULL, NULL, NULL},
+    {810,152,3,3, "]", 27, APP_ICON_DIR"/key-41.svg", APP_ICON_DIR"/key-41_S.svg", NULL, NULL, NULL},
+    {874,152,6,3, "\\", 43, APP_ICON_DIR"/key-42.svg", APP_ICON_DIR"/key-42_S.svg", NULL, NULL, NULL},
     // 4 (44)
-    {12,216,7,4, "CAPS", 58, KEYBOARD_ICON_DIR"/key-43.svg", NULL, NULL, NULL, NULL},
-    {123,216,3,4, "a", 30, KEYBOARD_ICON_DIR"/key-44.svg", KEYBOARD_ICON_DIR"/key-44_S.svg", KEYBOARD_ICON_DIR"/key-44_k.svg", NULL, NULL},
-    {187,216,3,4, "s", 31, KEYBOARD_ICON_DIR"/key-45.svg", KEYBOARD_ICON_DIR"/key-45_S.svg", KEYBOARD_ICON_DIR"/key-45_k.svg", NULL, NULL},
-    {251,216,3,4, "d", 32, KEYBOARD_ICON_DIR"/key-46.svg", KEYBOARD_ICON_DIR"/key-46_S.svg", KEYBOARD_ICON_DIR"/key-46_k.svg", NULL, NULL},
-    {315,216,3,4, "f", 33, KEYBOARD_ICON_DIR"/key-47.svg", KEYBOARD_ICON_DIR"/key-47_S.svg", KEYBOARD_ICON_DIR"/key-47_k.svg", NULL, NULL},
-    {379,216,3,4, "g", 34, KEYBOARD_ICON_DIR"/key-48.svg", KEYBOARD_ICON_DIR"/key-48_S.svg", KEYBOARD_ICON_DIR"/key-48_k.svg", NULL, NULL},
-    {443,216,3,4, "h", 35, KEYBOARD_ICON_DIR"/key-49.svg", KEYBOARD_ICON_DIR"/key-49_S.svg", KEYBOARD_ICON_DIR"/key-49_k.svg", NULL, NULL},
-    {507,216,3,4, "j", 36, KEYBOARD_ICON_DIR"/key-50.svg", KEYBOARD_ICON_DIR"/key-50_S.svg", KEYBOARD_ICON_DIR"/key-50_k.svg", NULL, NULL},
-    {571,216,3,4, "k", 37 , KEYBOARD_ICON_DIR"/key-51.svg", KEYBOARD_ICON_DIR"/key-51_S.svg", KEYBOARD_ICON_DIR"/key-51_k.svg", NULL, NULL},
-    {635,216,3,4, "l", 38, KEYBOARD_ICON_DIR"/key-52.svg", KEYBOARD_ICON_DIR"/key-52_S.svg", KEYBOARD_ICON_DIR"/key-52_k.svg", NULL, NULL},
-    {699,216,3,4, ";", 39, KEYBOARD_ICON_DIR"/key-53.svg", KEYBOARD_ICON_DIR"/key-53_S.svg", NULL, NULL, NULL},
-    {763,216,3,4, "'", 40, KEYBOARD_ICON_DIR"/key-54.svg", KEYBOARD_ICON_DIR"/key-54_S.svg", NULL, NULL, NULL},
-    {827,216,8,4, "ENTER", 28, KEYBOARD_ICON_DIR"/key-55.svg", NULL, NULL, NULL, NULL},
+    {12,216,7,4, "CAPS", 58, APP_ICON_DIR"/key-43.svg", NULL, NULL, NULL, NULL},
+    {123,216,3,4, "a", 30, APP_ICON_DIR"/key-44.svg", APP_ICON_DIR"/key-44_S.svg", APP_ICON_DIR"/key-44_k.svg", NULL, NULL},
+    {187,216,3,4, "s", 31, APP_ICON_DIR"/key-45.svg", APP_ICON_DIR"/key-45_S.svg", APP_ICON_DIR"/key-45_k.svg", NULL, NULL},
+    {251,216,3,4, "d", 32, APP_ICON_DIR"/key-46.svg", APP_ICON_DIR"/key-46_S.svg", APP_ICON_DIR"/key-46_k.svg", NULL, NULL},
+    {315,216,3,4, "f", 33, APP_ICON_DIR"/key-47.svg", APP_ICON_DIR"/key-47_S.svg", APP_ICON_DIR"/key-47_k.svg", NULL, NULL},
+    {379,216,3,4, "g", 34, APP_ICON_DIR"/key-48.svg", APP_ICON_DIR"/key-48_S.svg", APP_ICON_DIR"/key-48_k.svg", NULL, NULL},
+    {443,216,3,4, "h", 35, APP_ICON_DIR"/key-49.svg", APP_ICON_DIR"/key-49_S.svg", APP_ICON_DIR"/key-49_k.svg", NULL, NULL},
+    {507,216,3,4, "j", 36, APP_ICON_DIR"/key-50.svg", APP_ICON_DIR"/key-50_S.svg", APP_ICON_DIR"/key-50_k.svg", NULL, NULL},
+    {571,216,3,4, "k", 37 , APP_ICON_DIR"/key-51.svg", APP_ICON_DIR"/key-51_S.svg", APP_ICON_DIR"/key-51_k.svg", NULL, NULL},
+    {635,216,3,4, "l", 38, APP_ICON_DIR"/key-52.svg", APP_ICON_DIR"/key-52_S.svg", APP_ICON_DIR"/key-52_k.svg", NULL, NULL},
+    {699,216,3,4, ";", 39, APP_ICON_DIR"/key-53.svg", APP_ICON_DIR"/key-53_S.svg", NULL, NULL, NULL},
+    {763,216,3,4, "'", 40, APP_ICON_DIR"/key-54.svg", APP_ICON_DIR"/key-54_S.svg", NULL, NULL, NULL},
+    {827,216,8,4, "ENTER", 28, APP_ICON_DIR"/key-55.svg", NULL, NULL, NULL, NULL},
     // 5 (5r7)
-    {12,280,4,5, "SHIFT", 42, KEYBOARD_ICON_DIR"/key-56.svg", NULL, NULL, NULL, NULL},
-    {140,280,3,5, "z", 44, KEYBOARD_ICON_DIR"/key-57.svg", KEYBOARD_ICON_DIR"/key-57_S.svg", KEYBOARD_ICON_DIR"/key-57_k.svg", NULL, NULL},
-    {204,280,3,5, "x", 45, KEYBOARD_ICON_DIR"/key-58.svg", KEYBOARD_ICON_DIR"/key-58_S.svg", KEYBOARD_ICON_DIR"/key-58_k.svg", NULL, NULL},
-    {268,280,3,5, "c", 46, KEYBOARD_ICON_DIR"/key-59.svg", KEYBOARD_ICON_DIR"/key-59_S.svg", KEYBOARD_ICON_DIR"/key-59_k.svg", NULL, NULL},
-    {332,280,3,5, "y", 47, KEYBOARD_ICON_DIR"/key-60.svg", KEYBOARD_ICON_DIR"/key-60_S.svg", KEYBOARD_ICON_DIR"/key-60_k.svg", NULL, NULL},
-    {396,280,3,5, "b", 48, KEYBOARD_ICON_DIR"/key-61.svg", KEYBOARD_ICON_DIR"/key-61_S.svg", KEYBOARD_ICON_DIR"/key-61_k.svg", NULL, NULL},
-    {460,280,3,5, "n", 49, KEYBOARD_ICON_DIR"/key-62.svg", KEYBOARD_ICON_DIR"/key-62_S.svg", KEYBOARD_ICON_DIR"/key-62_k.svg", NULL, NULL},
-    {524,280,3,5, "m", 50, KEYBOARD_ICON_DIR"/key-63.svg", KEYBOARD_ICON_DIR"/key-63_S.svg", KEYBOARD_ICON_DIR"/key-63_k.svg", NULL, NULL},
-    {588,280,3,5, ",", 51, KEYBOARD_ICON_DIR"/key-64.svg", KEYBOARD_ICON_DIR"/key-64_S.svg", NULL, NULL, NULL},
-    {652,280,3,5, ".", 52, KEYBOARD_ICON_DIR"/key-65.svg", KEYBOARD_ICON_DIR"/key-65_S.svg", NULL, NULL, NULL},
-    {716,280,3,5, "/", 53, KEYBOARD_ICON_DIR"/key-66.svg", KEYBOARD_ICON_DIR"/key-66_S.svg", NULL, NULL, NULL},
-    {780,280,9,5, "SHIFT", 54, KEYBOARD_ICON_DIR"/key-67.svg", NULL, NULL, NULL, NULL},
+    {12,280,4,5, "SHIFT", 42, APP_ICON_DIR"/key-56.svg", NULL, NULL, NULL, NULL},
+    {140,280,3,5, "z", 44, APP_ICON_DIR"/key-57.svg", APP_ICON_DIR"/key-57_S.svg", APP_ICON_DIR"/key-57_k.svg", NULL, NULL},
+    {204,280,3,5, "x", 45, APP_ICON_DIR"/key-58.svg", APP_ICON_DIR"/key-58_S.svg", APP_ICON_DIR"/key-58_k.svg", NULL, NULL},
+    {268,280,3,5, "c", 46, APP_ICON_DIR"/key-59.svg", APP_ICON_DIR"/key-59_S.svg", APP_ICON_DIR"/key-59_k.svg", NULL, NULL},
+    {332,280,3,5, "y", 47, APP_ICON_DIR"/key-60.svg", APP_ICON_DIR"/key-60_S.svg", APP_ICON_DIR"/key-60_k.svg", NULL, NULL},
+    {396,280,3,5, "b", 48, APP_ICON_DIR"/key-61.svg", APP_ICON_DIR"/key-61_S.svg", APP_ICON_DIR"/key-61_k.svg", NULL, NULL},
+    {460,280,3,5, "n", 49, APP_ICON_DIR"/key-62.svg", APP_ICON_DIR"/key-62_S.svg", APP_ICON_DIR"/key-62_k.svg", NULL, NULL},
+    {524,280,3,5, "m", 50, APP_ICON_DIR"/key-63.svg", APP_ICON_DIR"/key-63_S.svg", APP_ICON_DIR"/key-63_k.svg", NULL, NULL},
+    {588,280,3,5, ",", 51, APP_ICON_DIR"/key-64.svg", APP_ICON_DIR"/key-64_S.svg", NULL, NULL, NULL},
+    {652,280,3,5, ".", 52, APP_ICON_DIR"/key-65.svg", APP_ICON_DIR"/key-65_S.svg", NULL, NULL, NULL},
+    {716,280,3,5, "/", 53, APP_ICON_DIR"/key-66.svg", APP_ICON_DIR"/key-66_S.svg", NULL, NULL, NULL},
+    {780,280,9,5, "SHIFT", 54, APP_ICON_DIR"/key-67.svg", NULL, NULL, NULL, NULL},
     // 6 (69)
-    {12,344,4,6, "CTRL", 29, KEYBOARD_ICON_DIR"/key-68.svg", NULL, NULL, NULL, NULL},
-    {140,344,3,6, "ALT", 56, KEYBOARD_ICON_DIR"/key-69.svg", NULL, NULL, NULL, NULL},
-    {204,344,10,6, "SPACE", 57, KEYBOARD_ICON_DIR"/key-70.svg", NULL, NULL, NULL, NULL},
-    {588,344,3,6, "KOR", 100, KEYBOARD_ICON_DIR"/key-71.svg", NULL, NULL, NULL, KEYBOARD_ICON_DIR"/key-71-2.svg"},
-    {652,344,3,6, "ALT", 56, KEYBOARD_ICON_DIR"/key-72.svg", NULL, NULL, NULL, NULL},
-    {716,344,3,6, "CTRL", 29, KEYBOARD_ICON_DIR"/key-73.svg", NULL, NULL, NULL, NULL},
-    {780,344,3,6, "LEFT", 105, KEYBOARD_ICON_DIR"/key-74.svg", NULL, NULL, NULL, NULL},
-    {844,344,11,6, "UP", 103, KEYBOARD_ICON_DIR"/key-75.svg", NULL, NULL, NULL, NULL},
-    {844,376,11,6, "DOWN", 108, KEYBOARD_ICON_DIR"/key-76.svg", NULL, NULL, NULL, NULL},
-    {908,344,3, 6, "RIGHT", 106, KEYBOARD_ICON_DIR"/key-77.svg", NULL, NULL, NULL, NULL},
+    {12,344,4,6, "CTRL", 29, APP_ICON_DIR"/key-68.svg", NULL, NULL, NULL, NULL},
+    {140,344,3,6, "ALT", 56, APP_ICON_DIR"/key-69.svg", NULL, NULL, NULL, NULL},
+    {204,344,10,6, "SPACE", 57, APP_ICON_DIR"/key-70.svg", NULL, NULL, NULL, NULL},
+    {588,344,3,6, "KOR", 100, APP_ICON_DIR"/key-71.svg", NULL, NULL, NULL, APP_ICON_DIR"/key-71-2.svg"},
+    {652,344,3,6, "ALT", 56, APP_ICON_DIR"/key-72.svg", NULL, NULL, NULL, NULL},
+    {716,344,3,6, "CTRL", 29, APP_ICON_DIR"/key-73.svg", NULL, NULL, NULL, NULL},
+    {780,344,3,6, "LEFT", 105, APP_ICON_DIR"/key-74.svg", NULL, NULL, NULL, NULL},
+    {844,344,11,6, "UP", 103, APP_ICON_DIR"/key-75.svg", NULL, NULL, NULL, NULL},
+    {844,376,11,6, "DOWN", 108, APP_ICON_DIR"/key-76.svg", NULL, NULL, NULL, NULL},
+    {908,344,3, 6, "RIGHT", 106, APP_ICON_DIR"/key-77.svg", NULL, NULL, NULL, NULL},
 };
 
 typedef struct _Key Key;
@@ -212,9 +212,9 @@ Key *key_create(struct nemotool *tool, struct showone *parent, int x, int y, Key
 
     char path[PATH_MAX];
     if (key->frametype == 0) {
-        snprintf(path, PATH_MAX, KEYBOARD_ICON_DIR"/quit.svg");
+        snprintf(path, PATH_MAX, APP_ICON_DIR"/quit.svg");
     } else {
-        snprintf(path, PATH_MAX, KEYBOARD_ICON_DIR"/Frame-%02d.svg", key->frametype);
+        snprintf(path, PATH_MAX, APP_ICON_DIR"/Frame-%02d.svg", key->frametype);
     }
     key->frame = one = SVG_PATH_CREATE(group, w, h, path);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
@@ -909,7 +909,7 @@ Keyboard *keyboard_create(NemoWidget *parent, int width, int height, const char 
     STOP_CREATE(gradient, GRADIENT0, 0.0);
     STOP_CREATE(gradient, GRADIENT1, 0.5);
     STOP_CREATE(gradient, GRADIENT2, 1.0);
-    keyboard->bg0 = one = SVG_PATH_CREATE(group, width, height, KEYBOARD_ICON_DIR"/BG-01.svg");
+    keyboard->bg0 = one = SVG_PATH_CREATE(group, width, height, APP_ICON_DIR"/BG-01.svg");
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, width/2, height/2);
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
@@ -921,7 +921,7 @@ Keyboard *keyboard_create(NemoWidget *parent, int width, int height, const char 
     STOP_CREATE(gradient, GRADIENT2, 0.0);
     STOP_CREATE(gradient, GRADIENT1, 0.5);
     STOP_CREATE(gradient, GRADIENT0, 1.0);
-    keyboard->bg1 = one = SVG_PATH_CREATE(group, width, height, KEYBOARD_ICON_DIR"/BG-02.svg");
+    keyboard->bg1 = one = SVG_PATH_CREATE(group, width, height, APP_ICON_DIR"/BG-02.svg");
     nemoshow_item_translate(one, width/2, height/2);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(BLACK));
@@ -952,10 +952,10 @@ struct _ConfigApp {
     char *layout;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -966,11 +966,11 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
     if (xml) {
-
+        char *prefix = "config";
         char buf[PATH_MAX];
         const char *temp;
 
-        snprintf(buf, PATH_MAX, "%s/layout", appname);
+        snprintf(buf, PATH_MAX, "%s/layout", prefix);
         temp = xml_get_value(xml, buf, "name");
         if (temp && strlen(temp) > 0) {
             app->layout = strdup(temp);
@@ -1010,7 +1010,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);

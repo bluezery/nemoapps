@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<nemocard>
+<config>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
     <launch type="table"/>
     <log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>
     <guide duration="5000"/>
     <item count="8" area_width="2160" area_height="1080" duration="10000" width="431" height="731" grab_min_time="500"/>
-    <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_wifihome.svg" txt="@SGE_ICON_DIR@/name/wifihouse_smarthome.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/SKT SmartHome.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_LHlogo.svg" txt="@SGE_ICON_DIR@/name/LHlogo_promotion.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Promotional Video.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_city.svg" txt="@SGE_ICON_DIR@/name/city_smartcity.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Smart City.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_house.svg" txt="@SGE_ICON_DIR@/name/house_myhome2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/My Home.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_map.svg" txt="@SGE_ICON_DIR@/name/worldmap2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Onnara.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_car.svg" txt="@SGE_ICON_DIR@/name/car_autonomous.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Autonomous Cooperative Vehicle Highway System.mp4"/>
-    <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_map.svg" txt="@SGE_ICON_DIR@/name/worldmap.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/7" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-08.png" icon="@SGE_ICON_DIR@/icon_house.svg" txt="@SGE_ICON_DIR@/name/house_myhome.svg" type="app" exec="/usr/bin/nemobrowser;--no-sandbox;--url;https://www.myhome.go.kr/hws/portal/dgn/selectSelfDiagnosisIntroView.do#"/>
-    <items bg="@SGE_IMG_DIR@/back-09.png" icon="@SGE_ICON_DIR@/icon_building.svg" txt="@SGE_ICON_DIR@/name/building_seumter.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/9" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_hongdo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/10" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_island2.svg" txt="@SGE_ICON_DIR@/name/island2_dokdojeju.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/11" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_falls.svg" txt="@SGE_ICON_DIR@/name/falls_biryoung.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/12" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_rock.svg" txt="@SGE_ICON_DIR@/name/rock_ulsan.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/13" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_mountain.svg" txt="@SGE_ICON_DIR@/name/mountain_daecheong.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/14" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_forest.svg" txt="@SGE_ICON_DIR@/name/forest_gombae.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/15" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_palace.svg" txt="@SGE_ICON_DIR@/name/palace_kyungbok.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/16" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-08.png" icon="@SGE_ICON_DIR@/icon_camping.svg" txt="@SGE_ICON_DIR@/name/camping_nanji.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/17" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-09.png" icon="@SGE_ICON_DIR@/icon_river.svg" txt="@SGE_ICON_DIR@/name/river_danyang.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/18" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_cave.svg" txt="@SGE_ICON_DIR@/name/cave_hwanseon.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/19" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_farm.svg" txt="@SGE_ICON_DIR@/name/farm_sheep.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/20" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_hanokvillage.svg" txt="@SGE_ICON_DIR@/name/hanokvillage_jeonju.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/21" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_marsh.svg" txt="@SGE_ICON_DIR@/name/marsh_suncheon.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/22" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_bamboo.svg" txt="@SGE_ICON_DIR@/name/bamboo_park.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/23" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_gwanganri.svg" txt="@SGE_ICON_DIR@/name/gwanganri.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/24" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_seopjikoji.svg" txt="@SGE_ICON_DIR@/name/seopjikoji.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/25" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-01.png" icon="@APP_ICON_DIR@/icon_wifihome.svg" txt="@APP_ICON_DIR@/name/wifihouse_smarthome.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/SKT SmartHome.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-02.png" icon="@APP_ICON_DIR@/icon_LHlogo.svg" txt="@APP_ICON_DIR@/name/LHlogo_promotion.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Promotional Video.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-03.png" icon="@APP_ICON_DIR@/icon_city.svg" txt="@APP_ICON_DIR@/name/city_smartcity.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/LH Smart City.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-04.png" icon="@APP_ICON_DIR@/icon_house.svg" txt="@APP_ICON_DIR@/name/house_myhome2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/My Home.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_map.svg" txt="@APP_ICON_DIR@/name/worldmap2.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Onnara.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-06.png" icon="@APP_ICON_DIR@/icon_car.svg" txt="@APP_ICON_DIR@/name/car_autonomous.svg" type="app" exec="/usr/bin/nemoplayer;-f;/opt/contents/sge/Autonomous Cooperative Vehicle Highway System.mp4"/>
+    <items bg="@APP_IMG_DIR@/back-07.png" icon="@APP_ICON_DIR@/icon_map.svg" txt="@APP_ICON_DIR@/name/worldmap.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/7" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-08.png" icon="@APP_ICON_DIR@/icon_house.svg" txt="@APP_ICON_DIR@/name/house_myhome.svg" type="app" exec="/usr/bin/nemobrowser;--no-sandbox;--url;https://www.myhome.go.kr/hws/portal/dgn/selectSelfDiagnosisIntroView.do#"/>
+    <items bg="@APP_IMG_DIR@/back-09.png" icon="@APP_ICON_DIR@/icon_building.svg" txt="@APP_ICON_DIR@/name/building_seumter.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/9" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-01.png" icon="@APP_ICON_DIR@/icon_island.svg" txt="@APP_ICON_DIR@/name/island_hongdo.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/10" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-02.png" icon="@APP_ICON_DIR@/icon_island2.svg" txt="@APP_ICON_DIR@/name/island2_dokdojeju.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/11" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-03.png" icon="@APP_ICON_DIR@/icon_falls.svg" txt="@APP_ICON_DIR@/name/falls_biryoung.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/12" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-04.png" icon="@APP_ICON_DIR@/icon_rock.svg" txt="@APP_ICON_DIR@/name/rock_ulsan.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/13" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_mountain.svg" txt="@APP_ICON_DIR@/name/mountain_daecheong.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/14" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-06.png" icon="@APP_ICON_DIR@/icon_forest.svg" txt="@APP_ICON_DIR@/name/forest_gombae.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/15" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-07.png" icon="@APP_ICON_DIR@/icon_palace.svg" txt="@APP_ICON_DIR@/name/palace_kyungbok.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/16" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-08.png" icon="@APP_ICON_DIR@/icon_camping.svg" txt="@APP_ICON_DIR@/name/camping_nanji.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/17" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-09.png" icon="@APP_ICON_DIR@/icon_river.svg" txt="@APP_ICON_DIR@/name/river_danyang.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/18" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-01.png" icon="@APP_ICON_DIR@/icon_cave.svg" txt="@APP_ICON_DIR@/name/cave_hwanseon.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/19" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-02.png" icon="@APP_ICON_DIR@/icon_farm.svg" txt="@APP_ICON_DIR@/name/farm_sheep.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/20" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-03.png" icon="@APP_ICON_DIR@/icon_hanokvillage.svg" txt="@APP_ICON_DIR@/name/hanokvillage_jeonju.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/21" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-04.png" icon="@APP_ICON_DIR@/icon_marsh.svg" txt="@APP_ICON_DIR@/name/marsh_suncheon.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/22" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_bamboo.svg" txt="@APP_ICON_DIR@/name/bamboo_park.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/23" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-06.png" icon="@APP_ICON_DIR@/icon_gwanganri.svg" txt="@APP_ICON_DIR@/name/gwanganri.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/24" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-07.png" icon="@APP_ICON_DIR@/icon_seopjikoji.svg" txt="@APP_ICON_DIR@/name/seopjikoji.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/25" resize="off" sxy="1.0"/>
 
 
 <!--
-    <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_camping.svg" txt="@SGE_ICON_DIR@/name/camping_jara.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/03" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_hanokvillage.svg" txt="@SGE_ICON_DIR@/name/hanokvillage_bukchon.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/05" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_ohido.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/07" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-08.png" icon="@SGE_ICON_DIR@/icon_beach.svg" txt="@SGE_ICON_DIR@/name/beach_wangri.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/08" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-09.png" icon="@SGE_ICON_DIR@/icon_forest.svg" txt="@SGE_ICON_DIR@/name/forest_ahnmyeondo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/09" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_forest.svg" txt="@SGE_ICON_DIR@/name/forest_nami.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/10" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-03.png" icon="@SGE_ICON_DIR@/icon_river.svg" txt="@SGE_ICON_DIR@/name/river_pocheon.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/12" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_forest.svg" txt="@SGE_ICON_DIR@/name/forest_geumgang.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/13" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_river.svg" txt="@SGE_ICON_DIR@/name/river_baekUn.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/14" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-01.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_ohdongdo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/19" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-02.png" icon="@SGE_ICON_DIR@/icon_forest.svg" txt="@SGE_ICON_DIR@/name/forest_metasequoia.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/20" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_palace.svg" txt="@SGE_ICON_DIR@/name/palace_mungyeongsaejae.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/23" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_geojedo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/24" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-07.png" icon="@SGE_ICON_DIR@/icon_cablecar.svg" txt="@SGE_ICON_DIR@/name/cablecar_marin.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/25" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-09.png" icon="@SGE_ICON_DIR@/icon_falls.svg" txt="@SGE_ICON_DIR@/name/falls_chunjiyeon.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/27" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-04.png" icon="@SGE_ICON_DIR@/icon_river.svg" txt="@SGE_ICON_DIR@/name/river_soesokkak.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/28" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-05.png" icon="@SGE_ICON_DIR@/icon_mountain.svg" txt="@SGE_ICON_DIR@/name/mountain_hanra.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/29" resize="off" sxy="1.0"/>
-    <items bg="@SGE_IMG_DIR@/back-06.png" icon="@SGE_ICON_DIR@/icon_island.svg" txt="@SGE_ICON_DIR@/name/island_ulleungdo.svg" type="xapp" exec="/usr/bin/electron;@SGE_LINK_DIR@/30" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-03.png" icon="@APP_ICON_DIR@/icon_camping.svg" txt="@APP_ICON_DIR@/name/camping_jara.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/03" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_hanokvillage.svg" txt="@APP_ICON_DIR@/name/hanokvillage_bukchon.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/05" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-07.png" icon="@APP_ICON_DIR@/icon_island.svg" txt="@APP_ICON_DIR@/name/island_ohido.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/07" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-08.png" icon="@APP_ICON_DIR@/icon_beach.svg" txt="@APP_ICON_DIR@/name/beach_wangri.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/08" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-09.png" icon="@APP_ICON_DIR@/icon_forest.svg" txt="@APP_ICON_DIR@/name/forest_ahnmyeondo.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/09" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-01.png" icon="@APP_ICON_DIR@/icon_forest.svg" txt="@APP_ICON_DIR@/name/forest_nami.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/10" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-03.png" icon="@APP_ICON_DIR@/icon_river.svg" txt="@APP_ICON_DIR@/name/river_pocheon.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/12" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-04.png" icon="@APP_ICON_DIR@/icon_forest.svg" txt="@APP_ICON_DIR@/name/forest_geumgang.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/13" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_river.svg" txt="@APP_ICON_DIR@/name/river_baekUn.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/14" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-01.png" icon="@APP_ICON_DIR@/icon_island.svg" txt="@APP_ICON_DIR@/name/island_ohdongdo.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/19" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-02.png" icon="@APP_ICON_DIR@/icon_forest.svg" txt="@APP_ICON_DIR@/name/forest_metasequoia.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/20" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_palace.svg" txt="@APP_ICON_DIR@/name/palace_mungyeongsaejae.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/23" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-06.png" icon="@APP_ICON_DIR@/icon_island.svg" txt="@APP_ICON_DIR@/name/island_geojedo.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/24" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-07.png" icon="@APP_ICON_DIR@/icon_cablecar.svg" txt="@APP_ICON_DIR@/name/cablecar_marin.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/25" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-09.png" icon="@APP_ICON_DIR@/icon_falls.svg" txt="@APP_ICON_DIR@/name/falls_chunjiyeon.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/27" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-04.png" icon="@APP_ICON_DIR@/icon_river.svg" txt="@APP_ICON_DIR@/name/river_soesokkak.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/28" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-05.png" icon="@APP_ICON_DIR@/icon_mountain.svg" txt="@APP_ICON_DIR@/name/mountain_hanra.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/29" resize="off" sxy="1.0"/>
+    <items bg="@APP_IMG_DIR@/back-06.png" icon="@APP_ICON_DIR@/icon_island.svg" txt="@APP_ICON_DIR@/name/island_ulleungdo.svg" type="xapp" exec="/usr/bin/electron;@APP_LINK_DIR@/30" resize="off" sxy="1.0"/>
 -->
-</nemocard>
+</config>

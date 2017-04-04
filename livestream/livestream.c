@@ -35,12 +35,12 @@ struct _ConfigApp {
     int col, row;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->enable_audio = true;
     app->repeat = -1;
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -59,19 +59,20 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     char buf[PATH_MAX];
     const char *temp;
 
+    const char *prefix = "config";
     double sx = 1.0;
     double sy = 1.0;
     int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No size width in %s", appname);
+        ERR("No size width in %s", prefix);
     } else {
         width = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No size height in %s", appname);
+        ERR("No size height in %s", prefix);
     } else {
         height = atoi(temp);
     }
@@ -82,24 +83,24 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
 
     temp = xml_get_value(xml, buf, "col");
     if (!temp) {
-        ERR("No size col in %s", appname);
+        ERR("No size col in %s", prefix);
     } else {
         app->col = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "row");
     if (!temp) {
-        ERR("No size row in %s", appname);
+        ERR("No size row in %s", prefix);
     } else {
         app->row = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/play", appname);
+    snprintf(buf, PATH_MAX, "%s/play", prefix);
     temp = xml_get_value(xml, buf, "repeat");
     if (temp && strlen(temp) > 0) {
         app->repeat = atoi(temp);
     }
 
-    List *tags  = xml_search_tags(xml, APPNAME"/file");
+    List *tags  = xml_search_tags(xml, "config/file");
     List *l;
     XmlTag *tag;
     LIST_FOR_EACH(tags, l, tag) {
@@ -669,7 +670,7 @@ int main(int argc, char *argv[])
     avformat_network_init();
     ao_initialize();
 
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->paths) {
         ERR("No playable resources are provided");

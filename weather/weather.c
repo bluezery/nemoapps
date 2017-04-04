@@ -2702,10 +2702,10 @@ struct _ConfigApp {
     char *country;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -2716,9 +2716,10 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
     if (xml) {
+        const char *root = "config";
         char buf[PATH_MAX];
         const char *temp;
-        snprintf(buf, PATH_MAX, APPNAME"/geometry");
+        snprintf(buf, PATH_MAX, "%s/geometry", root);
 
         temp = xml_get_value(xml, buf, "city");
         if (temp && strlen(temp) > 0) {
@@ -2753,7 +2754,7 @@ static void _config_unload(ConfigApp *app)
 int main(int argc, char *argv[])
 {
     int sw = 1024, sh = 1024;
-    ConfigApp *config = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *config = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!config, -1);
 
     con_init();

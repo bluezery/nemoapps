@@ -254,7 +254,7 @@ void playerview_volume_enable(PlayerView *view)
     view->is_mute = false;
     nemosound_set_current_mute(view->tool, view->is_mute);
     button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            0, PLAYER_ICON_DIR"/volume.svg", -1, -1);
+            0, APP_ICON_DIR"/volume.svg", -1, -1);
     button_set_fill(view->vol_mute, 0, 0, 0, 0, COLOR1);
     _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "stroke", COLOR1,
@@ -268,7 +268,7 @@ void playerview_volume_disable(PlayerView *view)
     view->is_mute = true;
     nemosound_set_current_mute(view->tool, view->is_mute);
     button_change_svg(view->vol_mute, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            0, PLAYER_ICON_DIR"/volume_mute.svg", -1, -1);
+            0, APP_ICON_DIR"/volume_mute.svg", -1, -1);
     button_set_fill(view->vol_mute, 0, 0, 0, 0, GRAY);
     _nemoshow_item_motion(view->vol, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "stroke", GRAY,
@@ -850,13 +850,13 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     nemoshow_item_translate(one, rx, ry);
     view->playbar = one;
 
-    one = SVG_PATH_CREATE(bottom, r/2, r/2, PLAYER_ICON_DIR"/stop.svg");
+    one = SVG_PATH_CREATE(bottom, r/2, r/2, APP_ICON_DIR"/stop.svg");
     nemoshow_item_set_fill_color(one, RGBA(COLOR0));
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, rx, ry);
     view->ss0 = one;
 
-    one = SVG_PATH_CREATE(bottom, r/2, r/2, PLAYER_ICON_DIR"/play.svg");
+    one = SVG_PATH_CREATE(bottom, r/2, r/2, APP_ICON_DIR"/play.svg");
     nemoshow_item_set_fill_color(one, RGBA(COLOR0));
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, rx, ry);
@@ -965,7 +965,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     Button *btn;
     btn = button_create(bottom, "player", 2);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/fr.svg", ww, ww);
+    button_add_svg_path(btn, APP_ICON_DIR"/fr.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, width/2 - ww/2 - gap/2, pos_y);
     button_set_userdata(btn, view);
@@ -973,7 +973,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     btn = button_create(bottom, "player", 3);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/ff.svg", ww, ww);
+    button_add_svg_path(btn, APP_ICON_DIR"/ff.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, width/2 + ww/2 + gap/2, pos_y);
     button_set_userdata(btn, view);
@@ -981,7 +981,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     btn = button_create(bottom, "player", 0);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/pf.svg", ww, ww);
+    button_add_svg_path(btn, APP_ICON_DIR"/pf.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, GRAY);
     button_translate(btn, 0, 0, 0, width/2 - ww/2 - ww - gap, pos_y);
     button_set_userdata(btn, view);
@@ -989,7 +989,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     btn = button_create(bottom, "player", 0);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/nf.svg", ww, ww);
+    button_add_svg_path(btn, APP_ICON_DIR"/nf.svg", ww, ww);
     button_set_fill(btn, 0, 0, 0, 0, GRAY);
     button_translate(btn, 0, 0, 0, width/2 + ww/2 + ww + gap, pos_y);
     button_set_userdata(btn, view);
@@ -998,7 +998,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     // Voume
     btn = button_create(bottom, "player", 4);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/volume_up.svg", ww * 0.75, hh * 0.75);
+    button_add_svg_path(btn, APP_ICON_DIR"/volume_up.svg", ww * 0.75, hh * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2, pos_y);
     button_set_userdata(btn, view);
@@ -1009,7 +1009,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     hhh = hh * 1.25;
     btn = button_create(bottom, "player", 5);
     button_enable_bg(btn, www/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/volume.svg", www * 0.75, www * 0.75);
+    button_add_svg_path(btn, APP_ICON_DIR"/volume.svg", www * 0.75, www * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2 - ww * 1.5, pos_y);
     button_set_userdata(btn, view);
@@ -1027,7 +1027,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
 
     btn = button_create(bottom, "player", 6);
     button_enable_bg(btn, ww/2, COLORBACK);
-    button_add_svg_path(btn, PLAYER_ICON_DIR"/volume_down.svg", ww * 0.75, hh * 0.75);
+    button_add_svg_path(btn, APP_ICON_DIR"/volume_down.svg", ww * 0.75, hh * 0.75);
     button_set_fill(btn, 0, 0, 0, 0, COLOR1);
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2 - ww * 3, pos_y);
     button_set_userdata(btn, view);
@@ -1169,12 +1169,12 @@ struct _ConfigApp {
     bool no_drop;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->enable_audio = true;
     app->repeat = -1;
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -1189,20 +1189,21 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         free(app);
         return NULL;
     }
+    const char *root = "config";
     char buf[PATH_MAX];
     const char *temp;
 
-    snprintf(buf, PATH_MAX, "%s/play", appname);
+    snprintf(buf, PATH_MAX, "%s/play", root);
     temp = xml_get_value(xml, buf, "repeat");
     if (temp && strlen(temp) > 0) {
         app->repeat = atoi(temp);
     }
-    snprintf(buf, PATH_MAX, "%s/threads", appname);
+    snprintf(buf, PATH_MAX, "%s/threads", root);
     temp = xml_get_value(xml, buf, "count");
     if (temp && strlen(temp) > 0) {
         app->num_threads = atoi(temp);
     }
-    snprintf(buf, PATH_MAX, "%s/frame", appname);
+    snprintf(buf, PATH_MAX, "%s/frame", root);
     temp = xml_get_value(xml, buf, "no_drop");
     if (temp && strlen(temp) > 0) {
         app->no_drop = !strcmp(temp, "off") ? false : true;
@@ -1254,7 +1255,7 @@ int main(int argc, char *argv[])
     avformat_network_init();
     ao_initialize();
 
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->path) {
         ERR("Usage: %s -f FILENAME [-a off] [-r -1/0/1]", APPNAME);

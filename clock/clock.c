@@ -317,7 +317,7 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
 int main(int argc, char *argv[])
 {
     Config *config;
-    config = config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    config = config_load(PROJECT_NAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, config);

@@ -397,7 +397,7 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
 
         double ww, hh;
         const char *uri;
-        uri = KARIM_ICON_DIR"/viewer/3d button-background.svg";
+        uri = APP_ICON_DIR"/viewer/3d button-background.svg";
         svg_get_wh(uri, &ww, &hh);
         ww = ww * sx;
         hh = hh * sy;
@@ -412,7 +412,7 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
 
         x = 0;
         y = 0;
-        uri = KARIM_ICON_DIR"/viewer/3d button-3d.svg";
+        uri = APP_ICON_DIR"/viewer/3d button-3d.svg";
         svg_get_wh(uri, &ww, &hh);
         ww = ww * sx;
         hh = hh * sy;
@@ -463,11 +463,11 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     int i;
     for (i = 1 ; i <= cnt ; i++) {
         char uri[PATH_MAX];
-        snprintf(uri, PATH_MAX, "%s/viewer/%d.png", KARIM_IMG_DIR, i);
+        snprintf(uri, PATH_MAX, "%s/viewer/%d.png", APP_IMG_DIR, i);
 
         ViewerItem *item;
         const char *url = NULL;
-        if (i == 2) url = KARIM_LINK_DIR"/2";
+        if (i == 2) url = APP_LINK_DIR"/2";
         item = viewer_view_create_item(view, parent, uri, url, (double)view->w/cnt);
         view->items = list_append(view->items, item);
     }
@@ -485,7 +485,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     const char *uri;
     x = 0;
     y = 0;
-    uri = KARIM_ICON_DIR"/viewer/pink background.svg";
+    uri = APP_ICON_DIR"/viewer/pink background.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -499,7 +499,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
 
     x = 70;
     y = 70;
-    uri = KARIM_ICON_DIR"/viewer/title.svg";
+    uri = APP_ICON_DIR"/viewer/title.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -513,7 +513,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
 
     x = 100;
     y = 370;
-    uri = KARIM_ICON_DIR"/viewer/subtitle.svg";
+    uri = APP_ICON_DIR"/viewer/subtitle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -774,14 +774,14 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     const char *uri;
-    uri = KARIM_IMG_DIR"/honey/background0.png";
+    uri = APP_IMG_DIR"/honey/background0.png";
 
     Image *img;
     view->bg0 = img = image_create(nemowidget_get_canvas(widget));
     image_load_full(img, view->tool, uri, view->w, view->h, NULL, NULL);
 
     int w, h;
-    uri = KARIM_IMG_DIR"/honey/background.png";
+    uri = APP_IMG_DIR"/honey/background.png";
     file_get_image_wh(uri, &w, &h);
 
     view->widget_w = w = w * sx;
@@ -806,7 +806,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
 
     double x, y;
     double ww, hh;
-    uri = KARIM_ICON_DIR"/honey/icon-selected.svg";
+    uri = APP_ICON_DIR"/honey/icon-selected.svg";
     svg_get_wh(uri, &ww, &hh);
     ww = ww * sx;
     hh = hh * sy;
@@ -1156,7 +1156,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_fill_color(view->bg, RGBA(WHITE));
 
     int w, h;
-    const char *uri = KARIM_IMG_DIR"/year/year-background.png";
+    const char *uri = APP_IMG_DIR"/year/year-background.png";
     file_get_image_wh(uri, &w, &h);
     int cnt_x, cnt_y;
     view->bg_w = w;
@@ -1187,7 +1187,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     double pw, ph;
     sx = view->w/1920.0;
     sy = view->h/1080.0;
-    uri = KARIM_ICON_DIR"/year/year-pink.svg";
+    uri = APP_ICON_DIR"/year/year-pink.svg";
     svg_get_wh(uri, &ww, &hh);
     ww = ww * sx;
     hh = hh * sy;
@@ -1197,7 +1197,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     view->btn_h = ph = hh;
 
     x = 11.443, y = 35.751;
-    uri = KARIM_ICON_DIR"/year/year-button-1994_1998.svg";
+    uri = APP_ICON_DIR"/year/year-button-1994_1998.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1214,7 +1214,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_scale(one, 0.0, 0.0);
 
     x = 195.548, y = 247.52;
-    uri = KARIM_ICON_DIR"/year/year-button-1999_2003.svg";
+    uri = APP_ICON_DIR"/year/year-button-1999_2003.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1231,7 +1231,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_scale(one, 0.0, 0.0);
 
     x = 351.828, y = 13.397;
-    uri = KARIM_ICON_DIR"/year/year-button-2004_2008.svg";
+    uri = APP_ICON_DIR"/year/year-button-2004_2008.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1250,7 +1250,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/year-button-2004_2008-selected.svg";
+    uri = APP_ICON_DIR"/year/year-button-2004_2008-selected.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1261,7 +1261,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_alpha(one, 0.0);
 
     x = 550.017, y = 329.35;
-    uri = KARIM_ICON_DIR"/year/year-button-2009_2013.svg";
+    uri = APP_ICON_DIR"/year/year-button-2009_2013.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1278,7 +1278,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_scale(one, 0.0, 0.0);
 
     x = 752.957, y = 21.982;
-    uri = KARIM_ICON_DIR"/year/year-button-2014_2016.svg";
+    uri = APP_ICON_DIR"/year/year-button-2014_2016.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1295,7 +1295,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_scale(one, 0.0, 0.0);
 
     x = 287, y = -55;
-    uri = KARIM_ICON_DIR"/year/year-subline.svg";
+    uri = APP_ICON_DIR"/year/year-subline.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1309,7 +1309,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     // 2004
     x = 263.129, y = 26.468;
-    uri = KARIM_ICON_DIR"/year/year-subline-subcircle.svg";
+    uri = APP_ICON_DIR"/year/year-subline-subcircle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1321,7 +1321,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/2004.svg";
+    uri = APP_ICON_DIR"/year/2004.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1334,7 +1334,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     // 2005
     x = 309.026, y = -43.416;
-    uri = KARIM_ICON_DIR"/year/year-subline-subcircle.svg";
+    uri = APP_ICON_DIR"/year/year-subline-subcircle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1346,7 +1346,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/2005.svg";
+    uri = APP_ICON_DIR"/year/2005.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1359,7 +1359,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     // 2006
     x = 383.705, y = -81.006;
-    uri = KARIM_ICON_DIR"/year/year-subline-subcircle.svg";
+    uri = APP_ICON_DIR"/year/year-subline-subcircle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1371,7 +1371,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/2006.svg";
+    uri = APP_ICON_DIR"/year/2006.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1384,7 +1384,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     // 2007
     x = 467.174, y = -76.213;
-    uri = KARIM_ICON_DIR"/year/year-subline-subcircle.svg";
+    uri = APP_ICON_DIR"/year/year-subline-subcircle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1396,7 +1396,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/2007.svg";
+    uri = APP_ICON_DIR"/year/2007.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1409,7 +1409,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     // 2008
     x = 537.074, y = -30.317;
-    uri = KARIM_ICON_DIR"/year/year-subline-subcircle.svg";
+    uri = APP_ICON_DIR"/year/year-subline-subcircle.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -1421,7 +1421,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    uri = KARIM_ICON_DIR"/year/2008.svg";
+    uri = APP_ICON_DIR"/year/2008.svg";
     svg_get_wh(uri, &ww, &hh);
     // Designed for 1920x1080
     ww = ww * sx;
@@ -2006,7 +2006,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     int w, h;
     const char *uri;
     Image *img;
-    uri = KARIM_IMG_DIR"/region/BG.png";
+    uri = APP_IMG_DIR"/region/BG.png";
     file_get_image_wh(uri, &w, &h);
     w = w * sx;
     h = h * sy;
@@ -2016,7 +2016,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     int i;
     for (i = 1 ; i <= 25 ; i++) {
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/map/%02d-", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/map/%02d-", i);
         RegionMap *map;
         map = region_map_create(view, group, buf, width, height);
 
@@ -2048,7 +2048,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     for (i = 1 ; i <= sizeof(REGION_LOGO_COORDS)/sizeof(REGION_LOGO_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/logo/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/logo/%02d.svg", i);
         if (!file_is_exist(buf)) {
             ERR("%s does not exist!", buf);
             continue;
@@ -2071,7 +2071,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
         ERR("%d", i);
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/X/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/X/%02d.svg", i);
         if (!file_is_exist(buf)) {
             ERR("%s does not exist!", buf);
             continue;
@@ -2094,7 +2094,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     for (i = 1 ; i <= sizeof(REGION_LINE_COORDS)/sizeof(REGION_LINE_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/line/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/line/%02d.svg", i);
         if (!file_is_exist(buf)) {
             ERR("%s does not exist!", buf);
             continue;
@@ -2117,7 +2117,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     for (i = 1 ; i <= sizeof(REGION_ICON_COORDS)/sizeof(REGION_ICON_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/icon/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/icon/%02d.svg", i);
         if (!file_is_exist(buf)) {
             ERR("%s does not exist!", buf);
             continue;
@@ -2140,7 +2140,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     for (i = 1 ; i <= sizeof(REGION_TXT_COORDS)/sizeof(REGION_TXT_COORDS[0]) ; i++) {
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/text/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/text/%02d.svg", i);
         svg_get_wh(buf, &w, &h);
         w *= sx;
         h *= sy;
@@ -2187,7 +2187,7 @@ static void region_view_show(RegionView *view, uint32_t easetype, int duration, 
     LIST_FOR_EACH(view->logos, l, one) {
         double w, h;
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, KARIM_ICON_DIR"/region/logo/%02d.svg", i);
+        snprintf(buf, PATH_MAX, APP_ICON_DIR"/region/logo/%02d.svg", i);
         svg_get_wh(buf, &w, &h);
         h *= sy;
         _nemoshow_item_motion(one, easetype, 300, delay + _delay,
@@ -2857,8 +2857,8 @@ WorkView *work_view_create(Karim *karim, NemoWidget *parent, int width, int heig
     int i;
     for (i = 1 ; i <= 5; i++) {
         char buf0[PATH_MAX], buf1[PATH_MAX];
-        snprintf(buf0, PATH_MAX, KARIM_ICON_DIR"/work/karim-workwave-%d-1.svg", i);
-        snprintf(buf1, PATH_MAX, KARIM_ICON_DIR"/work/karim-workwave-%d-2.svg", i);
+        snprintf(buf0, PATH_MAX, APP_ICON_DIR"/work/karim-workwave-%d-1.svg", i);
+        snprintf(buf1, PATH_MAX, APP_ICON_DIR"/work/karim-workwave-%d-2.svg", i);
         WorkWave *wave;
         if (i%2 == 0) {
             wave = work_view_create_wave(view, buf1, buf0);
@@ -2880,9 +2880,9 @@ WorkView *work_view_create(Karim *karim, NemoWidget *parent, int width, int heig
 
     for (i = 1 ; i <= 13 ; i++) {
         char buf0[PATH_MAX], buf1[PATH_MAX], buf2[PATH_MAX];
-        snprintf(buf0, PATH_MAX, KARIM_IMG_DIR"/work/icon-%02d.png", i);
-        snprintf(buf1, PATH_MAX, KARIM_IMG_DIR"/work/icon-%02d-1.png", i);
-        snprintf(buf2, PATH_MAX, KARIM_ICON_DIR"/work/text/work-text%02d.svg", i);
+        snprintf(buf0, PATH_MAX, APP_IMG_DIR"/work/icon-%02d.png", i);
+        snprintf(buf1, PATH_MAX, APP_IMG_DIR"/work/icon-%02d-1.png", i);
+        snprintf(buf2, PATH_MAX, APP_ICON_DIR"/work/text/work-text%02d.svg", i);
         WorkIcon *icon;
         if (i == 1) {
             icon = work_view_create_icon(view, "tabletop",
@@ -3126,7 +3126,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     int i;
     for (i = 2; i <= 7 ; i++) {
         char uri[PATH_MAX];
-        snprintf(uri, PATH_MAX, "%s%d.svg", KARIM_ICON_DIR"/menu/karim-buttonoutline-", i);
+        snprintf(uri, PATH_MAX, "%s%d.svg", APP_ICON_DIR"/menu/karim-buttonoutline-", i);
         double w, h;
         svg_get_wh(uri, &w, &h);
         w = w * sx;
@@ -3144,7 +3144,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     double w, h;
     const char *uri;
-    uri =  KARIM_ICON_DIR"/menu/karim-buttonoutline-1.svg";
+    uri =  APP_ICON_DIR"/menu/karim-buttonoutline-1.svg";
     svg_get_wh(uri, &w, &h);
     w = w * sx;
     h = h * sx;
@@ -3152,7 +3152,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_anchor(one, 0.5, 0.5);
 
     double ww, hh;
-    uri =  KARIM_ICON_DIR"/menu/karim-button-1.svg";
+    uri =  APP_ICON_DIR"/menu/karim-button-1.svg";
     svg_get_wh(uri, &ww, &hh);
     ww = ww * sx;
     hh = hh * sx;
@@ -3164,7 +3164,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_translate(one, 53 * sx - (w - ww)/2, 25 * sy - (h - hh)/2);
     nemoshow_item_set_fill_color(one, RGBA(0xF7ACB87F));
 
-    uri =  KARIM_ICON_DIR"/menu/karim-button-2.svg";
+    uri =  APP_ICON_DIR"/menu/karim-button-2.svg";
     svg_get_wh(uri, &ww, &hh);
     ww = ww * sx;
     hh = hh * sx;
@@ -3176,7 +3176,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_translate(one, 175 * sx - (w - ww)/2, 25 * sy - (h - hh)/2);
     nemoshow_item_set_fill_color(one, RGBA(0xF7ACB87F));
 
-    uri =  KARIM_ICON_DIR"/menu/karim-button-3.svg";
+    uri =  APP_ICON_DIR"/menu/karim-button-3.svg";
     svg_get_wh(uri, &ww, &hh);
     ww = ww * sx;
     hh = hh * sx;
@@ -3556,9 +3556,9 @@ static IntroView *intro_view_create(Karim *karim, NemoWidget *parent, int width,
     view->h = height;
 
     const char *uri;
-    uri = KARIM_ICON_DIR"/intro/intro-motion1.svg";
+    uri = APP_ICON_DIR"/intro/intro-motion1.svg";
     view->path0 = svg_get_path(uri);
-    uri = KARIM_ICON_DIR"/intro/intro-motion2.svg";
+    uri = APP_ICON_DIR"/intro/intro-motion2.svg";
     view->path1 = svg_get_path(uri);
     view->paths = path_get_median(view->path0, view->path1, 10);
 
@@ -3582,7 +3582,7 @@ static IntroView *intro_view_create(Karim *karim, NemoWidget *parent, int width,
 
     double w, h;
 
-    uri = KARIM_ICON_DIR"/intro/intro-karimlogo.svg";
+    uri = APP_ICON_DIR"/intro/intro-karimlogo.svg";
     svg_get_wh(uri, &w, &h);
     view->logo = one = SVG_PATH_GROUP_CREATE(group, w, h, uri);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
@@ -3707,7 +3707,7 @@ SaverWave *saver_view_create_wave(SaverView *view, const char *uri0, const char 
 
     double w, h;
     const char *uri;
-    uri = KARIM_ICON_DIR"/saver/BG-logo.svg";
+    uri = APP_ICON_DIR"/saver/BG-logo.svg";
     svg_get_wh(uri, &w, &h);
     w = w * sx;
     h = h * sy;
@@ -3848,7 +3848,7 @@ SaverView *saver_view_create(Karim *karim, NemoWidget *parent, int width, int he
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     int w, h;
-    const char *uri = KARIM_IMG_DIR"/saver/BG-base.png";
+    const char *uri = APP_IMG_DIR"/saver/BG-base.png";
     file_get_image_wh(uri, &w, &h);
     w *= sx;
     h *= sy;
@@ -3869,8 +3869,8 @@ SaverView *saver_view_create(Karim *karim, NemoWidget *parent, int width, int he
     int i;
     for (i = 1 ; i <= 5; i++) {
         char buf0[PATH_MAX], buf1[PATH_MAX];
-        snprintf(buf0, PATH_MAX, KARIM_ICON_DIR"/saver/BG-%d-1.svg", i);
-        snprintf(buf1, PATH_MAX, KARIM_ICON_DIR"/saver/BG-%d-2.svg", i);
+        snprintf(buf0, PATH_MAX, APP_ICON_DIR"/saver/BG-%d-1.svg", i);
+        snprintf(buf1, PATH_MAX, APP_ICON_DIR"/saver/BG-%d-2.svg", i);
         double a0, a1;
         if (i == 1) {
             a0 = 1.0;
@@ -4173,7 +4173,7 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
 int main(int argc, char *argv[])
 {
     Config *config;
-    config = config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    config = config_load(PROJECT_NAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, config);

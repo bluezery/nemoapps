@@ -139,7 +139,7 @@ static CardGuide *card_create_guide(struct nemotool *tool, struct showone *paren
     guide->duration = duration;
     guide->ro = ro;
 
-    const char *uri = CARD_ICON_DIR"/menu_drag.svg";
+    const char *uri = APP_ICON_DIR"/menu_drag.svg";
     double ww, hh;
     svg_get_wh(uri, &ww, &hh);
     ww *= rx;
@@ -881,7 +881,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             }
             NEMOMSG_SEND(bus, msg);
 
-            nemosound_play(CARD_SOUND_DIR"/show.wav");
+            nemosound_play(APP_SOUND_DIR"/show.wav");
 
             char buff[PATH_MAX];
             Clock now;
@@ -1120,10 +1120,10 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
     return item;
 }
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
     app->item_px = 0.5;
     app->item_py = 0.5;
     app->item_icon_px = 0.5;
@@ -1145,22 +1145,23 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
     double sx = 1.0;
     double sy = 1.0;
     int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No size width in %s", appname);
+        ERR("No size width in %s", prefix);
     } else {
         width = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No size height in %s", appname);
+        ERR("No size height in %s", prefix);
     } else {
         height = atoi(temp);
     }
@@ -1185,56 +1186,56 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         app->mirrors = list_append(app->mirrors, mirror);
     }
 
-    snprintf(buf, PATH_MAX, "%s/item", appname);
+    snprintf(buf, PATH_MAX, "%s/item", prefix);
     temp = xml_get_value(xml, buf, "count");
     if (!temp) {
-        ERR("No item count in %s", appname);
+        ERR("No item count in %s", prefix);
     } else {
         app->item_cnt = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "area_width");
     if (!temp) {
-        ERR("No item area width in %s", appname);
+        ERR("No item area width in %s", prefix);
     } else {
         app->item_area_width = atoi(temp);
     }
     app->item_area_width *= app->sxy;
     temp = xml_get_value(xml, buf, "area_height");
     if (!temp) {
-        ERR("No item area height in %s", appname);
+        ERR("No item area height in %s", prefix);
     } else {
         app->item_area_height = atoi(temp);
     }
     app->item_area_height *= app->sxy;
     temp = xml_get_value(xml, buf, "duration");
     if (!temp) {
-        ERR("No item duration in %s", appname);
+        ERR("No item duration in %s", prefix);
     } else {
         app->item_duration = atoi(temp);
     }
 
     temp = xml_get_value(xml, buf, "px");
     if (!temp) {
-        ERR("No item px in %s", appname);
+        ERR("No item px in %s", prefix);
     } else {
         app->item_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "py");
     if (!temp) {
-        ERR("No item py in %s", appname);
+        ERR("No item py in %s", prefix);
     } else {
         app->item_py = atof(temp);
     }
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No item width in %s", appname);
+        ERR("No item width in %s", prefix);
     } else {
         app->item_width = atoi(temp);
     }
     app->item_width *= app->sxy;
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No item height in %s", appname);
+        ERR("No item height in %s", prefix);
     } else {
         app->item_height = atoi(temp);
     }
@@ -1243,56 +1244,56 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     // Position
     temp = xml_get_value(xml, buf, "icon_px");
     if (!temp) {
-        ERR("No item icon_px in %s", appname);
+        ERR("No item icon_px in %s", prefix);
     } else {
         app->item_icon_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "icon_py");
     if (!temp) {
-        ERR("No item icon_py in %s", appname);
+        ERR("No item icon_py in %s", prefix);
     } else {
         app->item_icon_py = atof(temp);
     }
     temp = xml_get_value(xml, buf, "txt_px");
     if (!temp) {
-        ERR("No item txt_px in %s", appname);
+        ERR("No item txt_px in %s", prefix);
     } else {
         app->item_txt_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "txt_py");
     if (!temp) {
-        ERR("No item txt_py in %s", appname);
+        ERR("No item txt_py in %s", prefix);
     } else {
         app->item_txt_py = atof(temp);
     }
 
     temp = xml_get_value(xml, buf, "grab_min_time");
     if (!temp) {
-        ERR("No item grab_min_time in %s", appname);
+        ERR("No item grab_min_time in %s", prefix);
     } else {
         app->item_grab_min_time = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/guide", appname);
+    snprintf(buf, PATH_MAX, "%s/guide", prefix);
     temp = xml_get_value(xml, buf, "duration");
     if (!temp) {
-        ERR("No guide duration in %s", appname);
+        ERR("No guide duration in %s", prefix);
     } else {
         app->guide_duration = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/launch", appname);
+    snprintf(buf, PATH_MAX, "%s/launch", prefix);
     temp = xml_get_value(xml, buf, "type");
     if (!temp) {
-        ERR("No launch type in %s", appname);
+        ERR("No launch type in %s", prefix);
     } else {
         app->launch_type = strdup(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/log", appname);
+    snprintf(buf, PATH_MAX, "%s/log", prefix);
     temp = xml_get_value(xml, buf, "file");
     if (!temp) {
-        ERR("No log file in %s", appname);
+        ERR("No log file in %s", prefix);
     } else {
         app->logfile = strdup(temp);
     }
@@ -1344,7 +1345,7 @@ static void _card_win_layer(NemoWidget *win, const char *id, void *info, void *u
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     if (app->logfile) _log = log_create(app->logfile);

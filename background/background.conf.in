@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<nemobackground>
+<config>
     <window layer="background"/>
     <size width="3240" height="1920"/>
     <frame rate="30"/>
@@ -12,4 +12,4 @@
     <icons path="@ICON_DIR@/smartshopping_icon.svg"/>
     <icons path="@ICON_DIR@/culturecenter_icon.svg"/>
     <icons path="@ICON_DIR@/entertainment_icon.svg"/>
-</nemobackground>
+</config>

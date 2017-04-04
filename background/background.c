@@ -847,9 +847,9 @@ void bgicon_do_move_up(BgIcon *icon, NemoWidget *widget, void *event)
                 _nemoshow_item_motion(icon->group, NEMOEASE_CUBIC_OUT_TYPE, view->icon_throw_duration, 0,
                         "tx", tx, "ty", ty, NULL);
                 if (WELLRNG512()%2 == 0) {
-                    nemosound_play(BACKGROUND_SOUND_DIR"/boom.wav");
+                    nemosound_play(APP_SOUND_DIR"/boom.wav");
                 } else {
-                    nemosound_play(BACKGROUND_SOUND_DIR"/throwing.wav");
+                    nemosound_play(APP_SOUND_DIR"/throwing.wav");
                 }
             }
             nemotimer_set_timeout(icon->motion_timer, view->icon_throw_duration + 100);
@@ -1222,7 +1222,7 @@ static void _background_win_layer(NemoWidget *win, const char *id, void *info, v
     }
 }
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->bgtimeout = 60000;
@@ -1240,7 +1240,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     app->icon_scale_max = 3.0;
     app->icon_motion_move_time_coeff = 1000; // micro seconds
 
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -1256,50 +1256,51 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
-    snprintf(buf, PATH_MAX, "%s/background", appname);
+    snprintf(buf, PATH_MAX, "%s/background", prefix);
     temp = xml_get_value(xml, buf, "path");
     if (!temp) {
-        ERR("No background path in %s", appname);
+        ERR("No background path in %s", prefix);
     } else {
         app->bgpath = strdup(temp);
     }
     temp = xml_get_value(xml, buf, "timeout");
     if (!temp) {
-        ERR("No background timeout in %s", appname);
+        ERR("No background timeout in %s", prefix);
     } else {
         app->bgtimeout = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "duration");
     if (!temp) {
-        ERR("No background duration in %s", appname);
+        ERR("No background duration in %s", prefix);
     } else {
         app->bgduration = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/sketch", appname);
+    snprintf(buf, PATH_MAX, "%s/sketch", prefix);
     temp = xml_get_value(xml, buf, "timeout");
     if (!temp) {
-        ERR("No sketch timeout in %s", appname);
+        ERR("No sketch timeout in %s", prefix);
     } else {
         app->sketch_timeout = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "min_distance");
     if (!temp) {
-        ERR("No sketch min_distance in %s", appname);
+        ERR("No sketch min_distance in %s", prefix);
     } else {
         app->sketch_min_dist = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "dot_count");
     if (!temp) {
-        ERR("No sketch dot_count in %s", appname);
+        ERR("No sketch dot_count in %s", prefix);
     } else {
         app->sketch_dot_cnt = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/icon", appname);
+    snprintf(buf, PATH_MAX, "%s/icon", prefix);
     temp = xml_get_value(xml, buf, "count");
     if (temp) {
         app->icon_cnt = atoi(temp);
@@ -1341,7 +1342,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         app->icon_motion_move_time_coeff = atoi(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/icons", appname);
+    snprintf(buf, PATH_MAX, "%s/icons", prefix);
     List *tags  = xml_search_tags(xml, buf);
     List *l;
     XmlTag *tag;
@@ -1389,7 +1390,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     WELLRNG512_INIT();

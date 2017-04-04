@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<nemocard>
+<config>
     <size width="3240" height="1920"/>
     <frame rate="30"/>
     <launch type="table"/>
     <log file="/opt/log/@PROJECT_NAME@/@SUBPROJECT@/@SUBPROJECT@.log"/>
     <guide duration="5000"/>
     <item count="5" area_width="1620" area_height="640" duration="10000" width="269" height="457" grab_min_time="500"/>
-    <items bg="@LOTTE_IMG_DIR@/shopguide_bg.png"     icon_anim="shopguide"    icon="@LOTTE_ICON_DIR@/shopguide_icon.svg" txt="@LOTTE_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/shoppingnews_bg.png"  icon_anim="shoppingnews" icon="@LOTTE_ICON_DIR@/shoppingnews_icon.svg" txt="@LOTTE_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/smartshopping_bg.png" icon_anim="smartshopping" icon="@LOTTE_ICON_DIR@/smartshopping_icon.svg" txt="@LOTTE_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/culturecenter_bg.png" icon_anim="culturecenter" icon="@LOTTE_ICON_DIR@/culturecenter_icon.svg" txt="@LOTTE_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/entertainment_bg.png" icon_anim="entertainment" icon="@LOTTE_ICON_DIR@/entertainment_icon.svg" txt="@LOTTE_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/shopguide_bg.png"     icon_anim="shopguide"    icon="@LOTTE_ICON_DIR@/shopguide_icon.svg" txt="@LOTTE_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/shoppingnews_bg.png"  icon_anim="shoppingnews" icon="@LOTTE_ICON_DIR@/shoppingnews_icon.svg" txt="@LOTTE_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/smartshopping_bg.png" icon_anim="smartshopping" icon="@LOTTE_ICON_DIR@/smartshopping_icon.svg" txt="@LOTTE_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/culturecenter_bg.png" icon_anim="culturecenter" icon="@LOTTE_ICON_DIR@/culturecenter_icon.svg" txt="@LOTTE_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
-    <items bg="@LOTTE_IMG_DIR@/entertainment_bg.png" icon_anim="entertainment" icon="@LOTTE_ICON_DIR@/entertainment_icon.svg" txt="@LOTTE_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@LOTTE_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
-</nemocard>
+    <items bg="@APP_IMG_DIR@/shopguide_bg.png"     icon_anim="shopguide"    icon="@APP_ICON_DIR@/shopguide_icon.svg" txt="@APP_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/shoppingnews_bg.png"  icon_anim="shoppingnews" icon="@APP_ICON_DIR@/shoppingnews_icon.svg" txt="@APP_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/smartshopping_bg.png" icon_anim="smartshopping" icon="@APP_ICON_DIR@/smartshopping_icon.svg" txt="@APP_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/culturecenter_bg.png" icon_anim="culturecenter" icon="@APP_ICON_DIR@/culturecenter_icon.svg" txt="@APP_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/entertainment_bg.png" icon_anim="entertainment" icon="@APP_ICON_DIR@/entertainment_icon.svg" txt="@APP_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/shopguide_bg.png"     icon_anim="shopguide"    icon="@APP_ICON_DIR@/shopguide_icon.svg" txt="@APP_ICON_DIR@/shopguide.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/shopguide" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/shoppingnews_bg.png"  icon_anim="shoppingnews" icon="@APP_ICON_DIR@/shoppingnews_icon.svg" txt="@APP_ICON_DIR@/shoppingnews.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/shoppingnews" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/smartshopping_bg.png" icon_anim="smartshopping" icon="@APP_ICON_DIR@/smartshopping_icon.svg" txt="@APP_ICON_DIR@/smartshopping.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/smartshopping" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/culturecenter_bg.png" icon_anim="culturecenter" icon="@APP_ICON_DIR@/culturecenter_icon.svg" txt="@APP_ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
+    <items bg="@APP_IMG_DIR@/entertainment_bg.png" icon_anim="entertainment" icon="@APP_ICON_DIR@/entertainment_icon.svg" txt="@APP_ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@APP_LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
+</config>
 

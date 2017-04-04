@@ -430,7 +430,7 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
 
     // XXX: There should be icon with same name as group name
     char uri[PATH_MAX];
-    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/%s.png", grp->name);
+    snprintf(uri, PATH_MAX, APPDATA_ROOT"/main/%s.png", grp->name);
     file_get_image_wh(uri, &it->w, &it->h);
     it->w *= view->app->sxy;
     it->h *= view->app->sxy;
@@ -451,14 +451,14 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
 
-    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/%s_active.png", grp->name);
+    snprintf(uri, PATH_MAX, APPDATA_ROOT"/main/%s_active.png", grp->name);
     it->one_active = one = IMAGE_CREATE(group, it->w, it->h, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, it->w/2, it->h/2);
     nemoshow_item_scale(one, 0.0, 0.0);
     nemoshow_item_set_alpha(one, 0.0);
 
-    snprintf(uri, PATH_MAX, MENU_RES_DIR"/main/event/%s.svg", grp->name);
+    snprintf(uri, PATH_MAX, APPDATA_ROOT"/main/event/%s.svg", grp->name);
 
     double ww, hh;
     svg_get_wh(uri, &ww, &hh);
@@ -670,10 +670,10 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     return view;
 }
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -689,20 +689,21 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
     int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No size width in %s", appname);
+        ERR("No size width in %s", prefix);
     } else {
         width = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No size height in %s", appname);
+        ERR("No size height in %s", prefix);
     } else {
         height = atoi(temp);
     }
@@ -714,7 +715,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
 
-    snprintf(buf, PATH_MAX, "%s/items", appname);
+    snprintf(buf, PATH_MAX, "%s/items", prefix);
     List *tags  = xml_search_tags(xml, buf);
     List *l;
     XmlTag *tag;
@@ -780,7 +781,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     ERR("%d %d %lf", app->config->width, app->config->height, app->sxy);

@@ -49,8 +49,6 @@ struct _PlanetView {
     Animation *sun_anim;
     List *items;
     List *planets;
-
-    struct nemotimer *planet_timer;
 };
 
 struct _Planet {
@@ -123,14 +121,14 @@ Planet *planet_dup(Planet *planet)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = PLANET_RES_DIR"/ring/0.png";
-        uri1 = PLANET_RES_DIR"/ring/1.png";
+        uri0 = APPDATA_ROOT"/ring/0.png";
+        uri1 = APPDATA_ROOT"/ring/1.png";
     } else if (ran == 1) {
-        uri0 = PLANET_RES_DIR"/ring/b0.png";
-        uri1 = PLANET_RES_DIR"/ring/b1.png";
+        uri0 = APPDATA_ROOT"/ring/b0.png";
+        uri1 = APPDATA_ROOT"/ring/b1.png";
     } else {
-        uri0 = PLANET_RES_DIR"/ring/p0.png";
-        uri1 = PLANET_RES_DIR"/ring/p1.png";
+        uri0 = APPDATA_ROOT"/ring/p0.png";
+        uri1 = APPDATA_ROOT"/ring/p1.png";
     }
 
     file_get_image_wh(uri0, &iw, &ih);
@@ -147,7 +145,7 @@ Planet *planet_dup(Planet *planet)
     dup->width = iww;
     dup->height = ihh;
 
-    uri = PLANET_RES_DIR"/ring/shine.png";
+    uri = APPDATA_ROOT"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -235,14 +233,14 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
     const char *uri0, *uri1;
     int ran = rand()%3;
     if (ran == 0) {
-        uri0 = PLANET_RES_DIR"/ring/0.png";
-        uri1 = PLANET_RES_DIR"/ring/1.png";
+        uri0 = APPDATA_ROOT"/ring/0.png";
+        uri1 = APPDATA_ROOT"/ring/1.png";
     } else if (ran == 1) {
-        uri0 = PLANET_RES_DIR"/ring/b0.png";
-        uri1 = PLANET_RES_DIR"/ring/b1.png";
+        uri0 = APPDATA_ROOT"/ring/b0.png";
+        uri1 = APPDATA_ROOT"/ring/b1.png";
     } else {
-        uri0 = PLANET_RES_DIR"/ring/p0.png";
-        uri1 = PLANET_RES_DIR"/ring/p1.png";
+        uri0 = APPDATA_ROOT"/ring/p0.png";
+        uri1 = APPDATA_ROOT"/ring/p1.png";
     }
 
     file_get_image_wh(uri0, &iw, &ih);
@@ -259,7 +257,7 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
     planet->width = iww;
     planet->height = ihh;
 
-    uri = PLANET_RES_DIR"/ring/shine.png";
+    uri = APPDATA_ROOT"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -440,31 +438,6 @@ static void _planet_viewplanet_frame(NemoWidget *widget, const char *id, void *i
         planet_translate(planet, 0, 0, 0, px, py);
 
     }
-    //nemoshow_dispatch_frame(view->show);
-}
-
-static void _planet_viewplanet_timeout(struct nemotimer *timer, void *userdata)
-{
-    PlanetView *view = userdata;
-    List *l;
-    Planet *planet;
-    LIST_FOR_EACH(view->planets, l, planet) {
-        planet->position_t += 0.000025;
-        if (planet->position_t >= 1.0) planet->position_t = 0.0;
-
-        if (planet->position_t >= 0.5) {
-            nemoshow_one_above_one(planet->group, view->sun_anim->group);
-        } else if (planet->position_t >= 0.0) {
-            nemoshow_one_below_one(planet->group, view->sun_anim->group);
-        }
-        double px, py, tx, ty;
-        nemoshow_item_path_get_position(view->orbit[planet->orbit_idx],
-                planet->position_t, &px, &py, &tx, &ty);
-        planet_translate(planet, 0, 0, 0, px, py);
-
-    }
-    nemoshow_dispatch_frame(view->show);
-    nemotimer_set_timeout(timer, (1000.0/view->app->config->framerate));
 }
 
 PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigApp *app)
@@ -490,7 +463,7 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
 
     int iw, ih;
     char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, PLANET_RES_DIR"/sun/%05d.png", 0);
+    snprintf(buf, PATH_MAX, APPDATA_ROOT"/sun/%05d.png", 0);
     file_get_image_wh(buf, &iw, &ih);
     iw *= app->sxy;
     ih *= app->sxy;
@@ -516,14 +489,14 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
 
     i = 0;
     do {
-        snprintf(buf, PATH_MAX, PLANET_RES_DIR"/sun/%05d.png", i++);
+        snprintf(buf, PATH_MAX, APPDATA_ROOT"/sun/%05d.png", i++);
         if (!file_is_exist(buf)) break;
         animation_append_item(anim, buf);
     } while (1);
     animation_set_anchor(anim, 0.5, 0.5);
 
 
-    files = fileinfo_readdir(PLANET_RES_DIR"/planet");
+    files = fileinfo_readdir(APPDATA_ROOT"/planet");
     int cnt = 0;
     List *l;
     LIST_FOR_EACH(files, l, file) {
@@ -549,7 +522,6 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
         fileinfo_destroy(file);
     }
     nemowidget_append_callback(view->widget, "frame", _planet_viewplanet_frame, view);
-    //view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _planet_viewplanet_timeout, view);
 
     return view;
 }
@@ -566,15 +538,14 @@ void planet_viewshow(PlanetView *view, uint32_t easetype, int duration, int dela
         i++;
     }
     animation_show(view->sun_anim, NEMOEASE_CUBIC_INOUT_TYPE, duration, delay);
-    //nemotimer_set_timeout(view->planet_timer, 100);
 
     nemoshow_dispatch_frame(view->show);
 }
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -590,20 +561,21 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
     int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
-        ERR("No size width in %s", appname);
+        ERR("No size width in %s", prefix);
     } else {
         width = atoi(temp);
     }
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
-        ERR("No size height in %s", appname);
+        ERR("No size height in %s", prefix);
     } else {
         height = atoi(temp);
     }
@@ -634,7 +606,7 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         }
     }
 
-    app->backline_path = strdup_printf("%s/backline%d", PLANET_RES_DIR, id);
+    app->backline_path = strdup_printf("%s/backline%d", APPDATA_ROOT, id);
 
     return app;
 }
@@ -648,7 +620,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
     struct nemotool *tool = TOOL_CREATE();

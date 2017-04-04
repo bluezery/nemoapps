@@ -26,35 +26,36 @@ void config_unload(Config *config)
     free(config);
 }
 
-static void _config_override(Config *config, Xml *xml, const char *appname)
+static void _config_override(Config *config, Xml *xml)
 {
     double sx = 1.0, sy = 1.0;
     double max_sx = 0.0, max_sy = 0.0;
     double min_sx = 0.0, min_sy = 0.0;
     double exit_sx = 0.0, exit_sy = 0.0;
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
-    if (!xml_search_tags(xml, appname)) {
-        ERR("%s does not exist in the xml", appname);
+    if (!xml_search_tags(xml, prefix)) {
+        ERR("%s tag does not exist in the xml", prefix);
         return;
     }
 
-    snprintf(buf, PATH_MAX, "%s/window", appname);
+    snprintf(buf, PATH_MAX, "%s/window", prefix);
     temp = xml_get_value(xml, buf, "layer");
     if (temp && strlen(temp) > 0) {
         if (config->layer) free(config->layer);
         config->layer = strdup(temp);
     }
 
-    snprintf(buf, PATH_MAX, "%s/size", appname);
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (temp && strlen(temp) > 0)  config->width = atoi(temp);
     temp = xml_get_value(xml, buf, "height");
     if (temp && (strlen(temp) > 0)) config->height = atoi(temp);
 
-    snprintf(buf, PATH_MAX, "%s/scale", appname);
+    snprintf(buf, PATH_MAX, "%s/scale", prefix);
     temp = xml_get_value(xml, buf, "x");
     if (temp && (strlen(temp) > 0)) sx = atof(temp);
     temp = xml_get_value(xml, buf, "y");
@@ -75,13 +76,13 @@ static void _config_override(Config *config, Xml *xml, const char *appname)
     temp = xml_get_value(xml, buf, "exit_y");
     if (temp && (strlen(temp) > 0)) exit_sy = atof(temp);
 
-    snprintf(buf, PATH_MAX, "%s/scene", appname);
+    snprintf(buf, PATH_MAX, "%s/scene", prefix);
     temp = xml_get_value(xml, buf, "width");
     if (temp && (strlen(temp) > 0)) config->scene_width = atoi(temp);
     temp = xml_get_value(xml, buf, "height");
     if (temp && (strlen(temp) > 0)) config->scene_height = atoi(temp);
 
-    snprintf(buf, PATH_MAX, "%s/frame", appname);
+    snprintf(buf, PATH_MAX, "%s/frame", prefix);
     temp = xml_get_value(xml, buf, "rate");
     if (temp && (strlen(temp) > 0)) config->framerate = atoi(temp);
 
@@ -95,7 +96,7 @@ static void _config_override(Config *config, Xml *xml, const char *appname)
     config->exit_height = (double)config->height * exit_sy;
 }
 
-Config *config_load_from_path(const char *appname, const char *path)
+Config *config_load_from_path(const char *path)
 {
     Config *config = calloc(sizeof(Config), 1);
     config->width = 512;
@@ -107,7 +108,7 @@ Config *config_load_from_path(const char *appname, const char *path)
     if (!xml) {
         ERR("Load configuration failed: %s", path);
     } else {
-        _config_override(config, xml, appname);
+        _config_override(config, xml);
         xml_unload(xml);
     }
 
@@ -121,7 +122,7 @@ Config *config_load_from_path(const char *appname, const char *path)
     return config;
 }
 
-Config *config_load_from_domain(const char *domain, const char *appname, const char *filename)
+Config *config_load_from_domain(const char *domain, const char *filename)
 {
     Config *config = calloc(sizeof(Config), 1);
     config->width = 512;
@@ -133,7 +134,7 @@ Config *config_load_from_domain(const char *domain, const char *appname, const c
     if (!xml) {
         ERR("Load configuration failed: %s", "base.conf");
     } else {
-        _config_override(config, xml, "base");
+        _config_override(config, xml);
         xml_unload(xml);
     }
 
@@ -141,7 +142,7 @@ Config *config_load_from_domain(const char *domain, const char *appname, const c
     if (!xml) {
         ERR("Load configuration failed: %s:%s", domain, filename);
     } else {
-        _config_override(config, xml, appname);
+        _config_override(config, xml);
         xml_unload(xml);
     }
 
@@ -235,15 +236,15 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
     optind = 1;
 }
 
-Config *config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+Config *config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     char *configpath = get_configpath_from_parameter(argc, argv);
 
     Config *config;
     if (configpath) {
-        config = config_load_from_path(appname, configpath);
+        config = config_load_from_path(configpath);
     } else {
-        config = config_load_from_domain(domain, appname, filename);
+        config = config_load_from_domain(domain, filename);
     }
     config->path = configpath;
     config_override_from_parameter(config, argc, argv);

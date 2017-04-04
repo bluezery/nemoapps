@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<base>
+<config>
     <window layer=""/>
     <size width="512" height="512"/>
     <scale x="1.0" y="1.0"/>
@@ -8,4 +8,4 @@
     <!--<scale max_x="2.0" max_y="2.0"/>-->
     <!--<scale exit_x="0.27" exit_y="0.27"/>-->
     <!--<scene width="512" height="512"/>-->
-</base>
+</config>

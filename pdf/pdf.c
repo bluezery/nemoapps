@@ -911,13 +911,13 @@ struct _ConfigApp {
     int repeat;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->is_slideshow = false;
     app->slideshow_timeout = 0;
     app->repeat = 0;
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -933,10 +933,11 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
+    const char *prefix = "config";
     char buf[PATH_MAX];
     const char *temp;
 
-    snprintf(buf, PATH_MAX, "%s/slideshow", appname);
+    snprintf(buf, PATH_MAX, "%s/slideshow", prefix);
     temp = xml_get_value(xml, buf, "slideshow");
     if (temp && strlen(temp) > 0) {
         app->is_slideshow = !strcmp(temp, "on") ? true : false;
@@ -992,7 +993,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->path) {
         ERR("Usage: %s [-f FILENAME | DIRNAME] [-s on] [-t seconds] [-p -1/0/1]", APPNAME);

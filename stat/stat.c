@@ -813,7 +813,7 @@ static void _win_exit(NemoWidget *win, const char *id, void *data, void *userdat
 int main(int argc, char *argv[])
 {
     Config *base;
-    base = config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    base = config_load(PROJECT_NAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win(tool, APPNAME, base->width, base->height);

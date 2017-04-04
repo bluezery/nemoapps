@@ -530,10 +530,10 @@ struct _ConfigApp {
     char *mount_exec;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -549,11 +549,9 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         return NULL;
     }
 
-    char buf[PATH_MAX];
     const char *temp;
 
-    snprintf(buf, PATH_MAX, "%s/mount", appname);
-    temp = xml_get_value(xml, buf, "exec");
+    temp = xml_get_value(xml, "config/mount", "exec");
     if (temp && strlen(temp) > 0) {
         app->mount_exec = strdup(temp);
     } else {
@@ -574,7 +572,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     RET_IF(!app->mount_exec, -1);
 

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<nemobackground>
+<config>
     <window layer="background"/>
     <size width="3840" height="2160"/>
     <frame rate="30"/>
-    <background path="@SGE_IMG_DIR@/background" timeout="30000" duration="2000"/>
+    <background path="@APP_IMG_DIR@/background" timeout="30000" duration="2000"/>
     <sketch timeout="3000" min_distance="10.0" dot_count="60"/>
     <icon count="12" history_count="30" history_min_distance="10" throw_min_distance="100" throw="200" throw_coefficient="200" throw_duration="1000"/>
-    <icons path="@SGE_ICON_DIR@/icon0.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon1.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon2.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon3.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon4.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon5.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon6.svg"/>
-    <icons path="@SGE_ICON_DIR@/icon7.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo0.svg"/>
-    <icons path="@SGE_ICON_DIR@/logo1.svg"/>
-</nemobackground>
+    <icons path="@APP_ICON_DIR@/icon0.svg"/>
+    <icons path="@APP_ICON_DIR@/icon1.svg"/>
+    <icons path="@APP_ICON_DIR@/icon2.svg"/>
+    <icons path="@APP_ICON_DIR@/icon3.svg"/>
+    <icons path="@APP_ICON_DIR@/icon4.svg"/>
+    <icons path="@APP_ICON_DIR@/icon5.svg"/>
+    <icons path="@APP_ICON_DIR@/icon6.svg"/>
+    <icons path="@APP_ICON_DIR@/icon7.svg"/>
+    <icons path="@APP_ICON_DIR@/logo.svg"/>
+    <icons path="@APP_ICON_DIR@/logo0.svg"/>
+    <icons path="@APP_ICON_DIR@/logo1.svg"/>
+</config>

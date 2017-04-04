@@ -34,9 +34,9 @@ static inline void config_dump(Config *config)
 
 Xml *xml_load_from_domain(const char *domain, const char *filename);
 void config_unload(Config *config);
-Config *config_load_from_path(const char *appname, const char *path);
-Config *config_load_from_domain(const char *domain, const char *appname, const char *filename);
-Config *config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[]);
+Config *config_load_from_path(const char *path);
+Config *config_load_from_domain(const char *domain, const char *filename);
+Config *config_load(const char *domain, const char *filename, int argc, char *argv[]);
 
 #ifdef __cplusplus
 }

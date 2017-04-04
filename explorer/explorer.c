@@ -133,15 +133,55 @@ static char *_explorer_get_thumb_url(const char *path, const char *ext)
     char *dir = file_get_dirname(path);
     char *ret;
     if (ext)  {
-        ret = strdup_printf("%s/%s/%s.%s", dir, EXP_THUMB_DIR, base, ext);
+        ret = strdup_printf("%s/%s/%s.%s", dir, THUMB_DIR, base, ext);
     } else {
-        ret = strdup_printf("%s/%s/%s", dir, EXP_THUMB_DIR, base);
+        ret = strdup_printf("%s/%s/%s", dir, THUMB_DIR, base);
     }
     free(base);
     free(dir);
     return ret;
 }
 
+typedef struct _Exec Exec;
+struct _Exec {
+    char *type;
+    char *path;
+};
+static Exec *exec_parse_tag(XmlTag *tag)
+{
+    List *ll;
+    XmlAttr *attr;
+    Exec *exec = NULL;
+
+    exec = calloc(sizeof(Exec), 1);
+    LIST_FOR_EACH(tag->attrs, ll, attr) {
+        if (!strcmp(attr->key, "type")) {
+            if (attr->val) {
+                if (exec->type) free(exec->type);
+                exec->type = strdup(attr->val);
+            }
+        }
+        if (!strcmp(attr->key, "path")) {
+            if (attr->val) {
+                if (exec->path) free(exec->path);
+                exec->path = strdup(attr->val);
+            }
+        }
+    }
+    if (!exec->type) {
+        if (exec->path) free(exec->path);
+        free(exec);
+        ERR("No file type specfied: %s", exec->path);
+        return NULL;
+    }
+    if (!exec->path) {
+        if (exec->type) free(exec->type);
+        free(exec);
+        ERR("No file path specfied: %s", exec->type);
+        return NULL;
+    }
+    return exec;
+}
 
 List *__filetypes = NULL;
 typedef struct _FileType FileType;
@@ -179,7 +219,7 @@ static const FileType *_fileinfo_match_filetype(FileInfo *fileinfo)
     return NULL;
 }
 
-static FileType *filetype_parse_tag(XmlTag *tag)
+static FileType *filetype_parse_tag(XmlTag *tag, List *execs)
 {
     List *ll;
     XmlAttr *attr;
@@ -226,6 +266,17 @@ static FileType *filetype_parse_tag(XmlTag *tag)
         ERR("No file ext or magic specfied: type(%s)", filetype->type);
         return NULL;
     }
+    if (!filetype->exec) {
+        List *l;
+        Exec *exec;
+        LIST_FOR_EACH(execs, l, exec) {
+            if (!strcmp(filetype->type, exec->type)) {
+                filetype->exec = strdup(exec->path);
+                break;
+            }
+        }
+    }
+
     return filetype;
 }
 
@@ -1284,18 +1335,18 @@ static Explorer *explorer_create(NemoWidget *parent, int width, int height, cons
 
     ExplorerIcon *icon;
     exp->quit = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_QUIT,
-            EXP_ICON_DIR"/quit.svg", exp->itw/2, exp->ith/2);
+            APP_ICON_DIR"/quit.svg", exp->itw/2, exp->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
     exp->up = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_UP,
-            EXP_ICON_DIR"/up.svg", exp->itw/2, exp->ith/2);
+            APP_ICON_DIR"/up.svg", exp->itw/2, exp->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
 
     exp->prev = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_PREV,
-            EXP_ICON_DIR"/prev.svg", exp->itw/2, exp->ith/2);
+            APP_ICON_DIR"/prev.svg", exp->itw/2, exp->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, exp->itw/3, height/2);
 
     exp->next = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_NEXT,
-            EXP_ICON_DIR"/next.svg", exp->itw/2, exp->ith/2);
+            APP_ICON_DIR"/next.svg", exp->itw/2, exp->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width - exp->itw/3, height/2);
 
     nemowidget_show(widget, 0, 0, 0);
@@ -1383,7 +1434,7 @@ static void explorer_show_page(Explorer *exp, int page_idx)
 
         if (fileinfo_is_dir(fileinfo)) {
             type = EXPLORER_ITEM_TYPE_DIR;
-            icon_uri = EXP_ICON_DIR"/dir.svg";
+            icon_uri = APP_ICON_DIR"/dir.svg";
             exec = NULL;
         } else {
             const FileType *filetype =
@@ -1671,10 +1722,10 @@ struct _ConfigApp {
     char *rootpath;
 };
 
-static ConfigApp *_config_load(const char *domain, const char *appname, const char *filename, int argc, char *argv[])
+static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
-    app->config = config_load(domain, appname, filename, argc, argv);
+    app->config = config_load(domain, filename, argc, argv);
 
     Xml *xml;
     if (app->config->path) {
@@ -1685,10 +1736,11 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
     if (xml) {
+        const char *root= "config";
         char buf[PATH_MAX];
         const char *temp;
 
-        snprintf(buf, PATH_MAX, "%s/background", appname);
+        snprintf(buf, PATH_MAX, "%s/background", root);
         temp = xml_get_value(xml, buf, "localpath");
         if (temp && strlen(temp) > 0) {
             app->bgpath_local = strdup(temp);
@@ -1702,15 +1754,30 @@ static ConfigApp *_config_load(const char *domain, const char *appname, const ch
             ERR("No background path in configuration file");
         }
 
-        snprintf(buf, PATH_MAX, "%s/filetype", appname);
-
-        List *types = xml_search_tags(xml, buf);
+        List *execs = NULL;
+        snprintf(buf, PATH_MAX, "%s/exec", root);
+        List *_execs = xml_search_tags(xml, buf);
         List *l;
         XmlTag *tag;
+        LIST_FOR_EACH(_execs, l, tag) {
+            Exec *exec = exec_parse_tag(tag);
+            if (!exec) continue;
+            execs = list_append(execs, exec);
+        }
+
+        snprintf(buf, PATH_MAX, "%s/filetype", root);
+        List *types = xml_search_tags(xml, buf);
         LIST_FOR_EACH(types, l, tag) {
-            FileType *filetype = filetype_parse_tag(tag);
+            FileType *filetype = filetype_parse_tag(tag, execs);
             if (!filetype) continue;
             __filetypes = list_append(__filetypes, filetype);
+        }
+
+        Exec *exec;
+        LIST_FREE(execs, exec) {
+            free(exec->type);
+            free(exec->path);
+            free(exec);
         }
 
         xml_unload(xml);
@@ -1745,7 +1812,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
-    ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
+    ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->rootpath) {
         app->rootpath = strdup(file_get_homedir());
