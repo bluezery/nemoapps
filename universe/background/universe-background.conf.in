@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
     <size width="7680" height="2160"/>
-    <frame rate="30"/>
+    <blink cnt="45"/>
+    <frame rate="60"/>
 </@APPNAME@>
 

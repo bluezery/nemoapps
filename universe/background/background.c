@@ -246,11 +246,9 @@ struct _Background {
     int framerate;
 
     double ro;
-    struct nemotimer *ro_timer;
     NemoWidget *widget;
     struct showone *group;
-    struct showone *bg0;
-    List *star_anims;
+    struct showone *bg;
 };
 
 static void _animation_done(Animation *anim, void *userdata)
@@ -313,22 +311,6 @@ static void _background_event(NemoWidget *widget, const char *id, void *info, vo
     }
 }
 
-static void _background_ro_timeout(struct nemotimer *timer, void *userdata)
-{
-    Background *bg = userdata;
-
-    struct showone *canvas = nemowidget_get_canvas(bg->widget);
-
-    nemoshow_canvas_rotate(canvas, bg->ro);
-    nemoshow_dispatch_frame(bg->show);
-
-    bg->ro += 0.06;
-    if (bg->ro >= 360) bg->ro = 0;
-
-    if (bg->framerate > 0)
-        nemotimer_set_timeout(timer, 100 * (60.0/bg->framerate));
-}
-
 Background *background_create(NemoWidget *parent, int width, int height, double sxy, char *bgpath, int framerate)
 {
     Background *bg = calloc(sizeof(Background), 1);
@@ -346,53 +328,16 @@ Background *background_create(NemoWidget *parent, int width, int height, double 
     nemowidget_append_callback(widget, "event", _background_event, bg);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
-    bg->ro_timer = TOOL_ADD_TIMER(bg->tool, 0, _background_ro_timeout, bg);
-
     bg->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
-    if (bgpath)
-        bg->bg0 = one = IMAGE_CREATE(group, width, height, bgpath);
-    else
-        bg->bg0 = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back.png");
-
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, width/2, height/2);
-
-    int cnt = 10;
-    int i = 0;
-    for (i = 0 ; i < cnt ; i++) {
-        int w, h;
-        char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, BACKGROUND_RES_DIR"/star/%05d.png", 0);
-        file_get_image_wh(buf, &w, &h);
-        w *= sxy;
-        h *= sxy;
-
-        Animation *anim = animation_create(bg->tool, group, w, h);
-        animation_set_fps(anim, 30);
-        animation_set_repeat(anim, 1);
-        animation_set_done(anim, _animation_done, bg);
-
-        int j = 0;
-        do {
-            snprintf(buf, PATH_MAX, BACKGROUND_RES_DIR"/star/%05d.png", j++);
-            if (!file_is_exist(buf)) break;
-            animation_append_item(anim, buf);
-        } while (1);
-        animation_set_anchor(anim, 0.5, 0.5);
-
-        double x, y, scale;
-        int ro;
-        x = (double)rand()/RAND_MAX * bg->width;
-        y = (double)rand()/RAND_MAX * bg->height;
-        scale = (double)rand()/RAND_MAX * 0.5 + 0.5;
-        ro = (double)rand()/RAND_MAX * 360;
-
-        animation_translate(anim, 0, 0, 0, x, y);
-        animation_rotate(anim, 0, 0, 0, ro);
-        animation_scale(anim, 0, 0, 0, scale, scale);
-
-        bg->star_anims = list_append(bg->star_anims, anim);
+    if (bgpath) {
+        bg->bg = one = IMAGE_CREATE(group, width, height, bgpath);
+        nemoshow_item_set_anchor(one, 0.5, 0.5);
+        nemoshow_item_translate(one, width/3, height/2);
+    } else if (file_is_exist(BACKGROUND_RES_DIR"/back.png")) {
+        bg->bg = one = IMAGE_CREATE(group, width, height, BACKGROUND_RES_DIR"/back.png");
+        nemoshow_item_set_anchor(one, 0.5, 0.5);
+        nemoshow_item_translate(one, width/2, height/2);
     }
 
     return bg;
@@ -408,18 +353,6 @@ void background_show(Background *bg, uint32_t easetype, int duration, int delay)
     nemowidget_show(bg->widget, 0, 0, 0);
     nemowidget_set_alpha(bg->widget, easetype, duration, delay, 1.0);
 
-    nemotimer_set_timeout(bg->ro_timer, 3000 + delay);
-
-    int i = 0;
-    int _delay = 0;
-    List *l;
-    Animation *anim;
-    LIST_FOR_EACH(bg->star_anims, l, anim) {
-        animation_show(anim, easetype, duration, delay + _delay);
-        _delay += 1000;
-        i++;
-    }
-
     nemoshow_dispatch_frame(bg->show);
 }
 
@@ -429,10 +362,6 @@ struct _BackgroundView {
     struct nemoshow *show;
 
     Background *bg;
-    /*
-    NemoWidget *widget_orbit;
-    struct showone *orbit;
-    */
 };
 
 BackgroundView *background_view_create(NemoWidget *parent, int width, int height, ConfigApp *app)
@@ -443,11 +372,8 @@ BackgroundView *background_view_create(NemoWidget *parent, int width, int height
     view->width = width;
     view->height = height;
 
-    int wh = sqrt(width * width + height * height);
-
     Background *bg;
-    view->bg = bg = background_create(parent, wh, wh, app->sxy, app->bgpath, app->config->framerate);
-    background_translate(bg, (width - wh)/2, (height - wh)/2);
+    view->bg = bg = background_create(parent, width, height, app->sxy, app->bgpath, app->config->framerate);
 
     return view;
 }
@@ -536,12 +462,6 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_set_anchor(win, 0, 0);
-    nemowidget_win_set_layer(win, "background");
-    nemowidget_win_enable_move(win, 0);
-    nemowidget_win_enable_rotate(win, 0);
-    nemowidget_win_enable_scale(win, 0);
-    nemowidget_set_framerate(win, 10);
 
     BackgroundView *view = background_view_create(win, app->config->width, app->config->height, app);
     background_view_show(view, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);

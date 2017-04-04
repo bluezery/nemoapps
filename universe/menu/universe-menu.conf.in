@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <@APPNAME@>
-    <size width="950" height="950"/>
+    <size width="540" height="540"/>
     <items group="content" icon="@MENU_RES_DIR@/sub/content/biztworld.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/BizTWorld"/>
     <items group="content" icon="@MENU_RES_DIR@/sub/content/lifeplatform.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/LifePlatform"/>
     <items group="content" icon="@MENU_RES_DIR@/sub/content/lunawatch.png" type="app" exec="/usr/bin/nemoexplorer;-f;/opt/contents/skt/LunaWatch"/>

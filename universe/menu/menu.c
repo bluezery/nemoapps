@@ -229,7 +229,7 @@ void menu_item_set_state(MainItem *it, int state)
         _nemoshow_item_motion(it->one_active, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 1.0, NULL);
 
-        double r = (it->w/2) * 1.25;
+        double r = (it->w/2) * 1.3;
         double s_angle = -90 + 12 + (list_get_idx(it->view->items, it) + 1) * 72;
         int delay = 0;
         List *l;
@@ -238,7 +238,7 @@ void menu_item_set_state(MainItem *it, int state)
             double x, y;
             x = r * cos(s_angle * M_PI / 180.0);
             y = r * sin(s_angle * M_PI / 180.0);
-            s_angle += 24;
+            s_angle += 26;
             sub_item_translate(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 500, delay, x, y);
             sub_item_show(sub_it, NEMOEASE_CUBIC_OUT_TYPE, 500, delay);
             delay += 100;
@@ -783,6 +783,7 @@ int main(int argc, char *argv[])
     ConfigApp *app = _config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
+    ERR("%d %d %lf", app->config->width, app->config->height, app->sxy);
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
     nemowidget_win_enable_scale(win, -1);

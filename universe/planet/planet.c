@@ -152,7 +152,7 @@ Planet *planet_dup(Planet *planet)
     iw *= app->sxy;
     ih *= app->sxy;
     int r = iww/2;
-    int cnt = rand()%3 + 1;
+    int cnt = rand()%4 + 1;
     double rad = 360.0/cnt;
 
     int i = 0;
@@ -245,12 +245,15 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
         uri1 = PLANET_RES_DIR"/ring/p1.png";
     }
 
+    file_get_image_wh(uri0, &iw, &ih);
+    iw *= app->sxy;
+    ih *= app->sxy;
     planet->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
-
-    double iww, ihh;
-    iww = iw;
-    ihh = ih;
+    int iww, ihh;
+    file_get_image_wh(uri1, &iww, &ihh);
+    iww *= app->sxy;
+    ihh *= app->sxy;
     planet->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     planet->width = iww;
@@ -365,6 +368,7 @@ static void _planet_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct 
         bool over = false;
         List *l;
         Planet *_planet;
+
         LIST_FOR_EACH(view->planets, l, _planet) {
             int x, y, w, h;
             x = nemoshow_item_get_translate_x(_planet->group);
@@ -379,7 +383,7 @@ static void _planet_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct 
         if (!over) {
             char args[PATH_MAX];
             snprintf(args, PATH_MAX, "--width;%d;--height;%d;--planet;%s",
-                    (int)(950 * view->app->sxy), (int)(950 * view->app->sxy),
+                    (int)(540 * view->app->sxy), (int)(540 * view->app->sxy),
                     planet->uri);
             nemo_execute(view->uuid, "app", "/usr/bin/nemouniverse-menu", args, "off",
                     ex, ey, 0.0, 1.0, 1.0);
@@ -416,13 +420,13 @@ static void _planet_view_event(NemoWidget *widget, const char *id, void *info, v
     }
 }
 
-static void _planet_viewplanet_timeout(struct nemotimer *timer, void *userdata)
+static void _planet_viewplanet_frame(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
     PlanetView *view = userdata;
     List *l;
     Planet *planet;
     LIST_FOR_EACH(view->planets, l, planet) {
-        planet->position_t += 0.00025;
+        planet->position_t += 0.000025;
         if (planet->position_t >= 1.0) planet->position_t = 0.0;
 
         if (planet->position_t >= 0.5) {
@@ -436,7 +440,31 @@ static void _planet_viewplanet_timeout(struct nemotimer *timer, void *userdata)
         planet_translate(planet, 0, 0, 0, px, py);
 
     }
-    nemotimer_set_timeout(timer, 100);
+    //nemoshow_dispatch_frame(view->show);
+}
+
+static void _planet_viewplanet_timeout(struct nemotimer *timer, void *userdata)
+{
+    PlanetView *view = userdata;
+    List *l;
+    Planet *planet;
+    LIST_FOR_EACH(view->planets, l, planet) {
+        planet->position_t += 0.000025;
+        if (planet->position_t >= 1.0) planet->position_t = 0.0;
+
+        if (planet->position_t >= 0.5) {
+            nemoshow_one_above_one(planet->group, view->sun_anim->group);
+        } else if (planet->position_t >= 0.0) {
+            nemoshow_one_below_one(planet->group, view->sun_anim->group);
+        }
+        double px, py, tx, ty;
+        nemoshow_item_path_get_position(view->orbit[planet->orbit_idx],
+                planet->position_t, &px, &py, &tx, &ty);
+        planet_translate(planet, 0, 0, 0, px, py);
+
+    }
+    nemoshow_dispatch_frame(view->show);
+    nemotimer_set_timeout(timer, (1000.0/view->app->config->framerate));
 }
 
 PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigApp *app)
@@ -520,7 +548,8 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
         if (ran >= backline_cnt) ran = 0;
         fileinfo_destroy(file);
     }
-    view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _planet_viewplanet_timeout, view);
+    nemowidget_append_callback(view->widget, "frame", _planet_viewplanet_frame, view);
+    //view->planet_timer = TOOL_ADD_TIMER(view->tool, 0, _planet_viewplanet_timeout, view);
 
     return view;
 }
@@ -537,7 +566,7 @@ void planet_viewshow(PlanetView *view, uint32_t easetype, int duration, int dela
         i++;
     }
     animation_show(view->sun_anim, NEMOEASE_CUBIC_INOUT_TYPE, duration, delay);
-    nemotimer_set_timeout(view->planet_timer, 100);
+    //nemotimer_set_timeout(view->planet_timer, 100);
 
     nemoshow_dispatch_frame(view->show);
 }
