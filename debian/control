@@ -25,7 +25,16 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse application development files
  <insert long description, indented with spaces>
 
-Package: nemoapps-bin
+Package: nemoapps-dbg
+Priority: extra
+Section: debug
+Architecture: any
+Depends: nemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's core platform debugging symbols
+ <insert long description, indented with spaces>
+
+Package: nemo.clock
 Priority: optional
 Section: graphics
 Architecture: any
@@ -34,11 +43,128 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoapps-dbg
-Priority: extra
-Section: debug
+Package: nemo.stat
+Priority: optional
+Section: graphics
 Architecture: any
-Depends: nemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
+Depends: nemoapps (= ${binary:Version}),
     ${shlibs:Depends}, ${misc:Depends}
-Description: NEMOUX's core platform debugging symbols
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.text
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.weather
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.keyboard
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.explorer
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.player
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.image
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.pdf
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.background
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.livestream
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.screensaver
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.universe
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.card
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
+
+Package: nemo.karim
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
