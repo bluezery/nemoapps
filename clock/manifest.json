@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.clock",
+ "name": "nemoclock",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "Inhouse clock application",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}

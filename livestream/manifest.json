@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.livestream",
+ "name": "nemolivestream",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse livestream application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

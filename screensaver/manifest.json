@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.screensaver",
+ "name": "nemoscreensaver",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse screensaver application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

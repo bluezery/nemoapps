@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.background",
+ "name": "nemobackground",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse background shell application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

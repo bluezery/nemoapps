@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.explorer",
+ "name": "nemoexplorer",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse explorer application",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}

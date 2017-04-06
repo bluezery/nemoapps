@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.card",
+ "name": "nemocard",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse card menu application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

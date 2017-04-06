@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.karim",
+ "name": "nemokarim",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "karim Rashid's launcher",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

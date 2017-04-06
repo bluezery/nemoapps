@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.universe-menu",
+ "name": "nemouniverse-menu",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse universe menu application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}

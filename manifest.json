@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemoapps",
+ "name": "nemoapps",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "This is nemoapps",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}

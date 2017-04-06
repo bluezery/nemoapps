@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.stat",
+ "name": "nemostat",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse system stat application",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}

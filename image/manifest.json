@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.image",
+ "name": "nemoimage",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse image application",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}

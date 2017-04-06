@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.keyboard",
+ "name": "nemokeyboard",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse keyboard application",
+ "version": "0.1.0",
+ "type": "shell",
+ "config": {
+ }
+}
