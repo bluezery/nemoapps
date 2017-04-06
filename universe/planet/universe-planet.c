@@ -424,13 +424,13 @@ static void _planet_viewplanet_frame(NemoWidget *widget, const char *id, void *i
     List *l;
     Planet *planet;
     LIST_FOR_EACH(view->planets, l, planet) {
-        planet->position_t += 0.000025;
+        planet->position_t += 0.0001;
         if (planet->position_t >= 1.0) planet->position_t = 0.0;
 
         if (planet->position_t >= 0.5) {
-            nemoshow_one_above_one(planet->group, view->sun_anim->group);
-        } else if (planet->position_t >= 0.0) {
             nemoshow_one_below_one(planet->group, view->sun_anim->group);
+        } else if (planet->position_t >= 0.0) {
+            nemoshow_one_above_one(planet->group, view->sun_anim->group);
         }
         double px, py, tx, ty;
         nemoshow_item_path_get_position(view->orbit[planet->orbit_idx],
