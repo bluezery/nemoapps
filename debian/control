@@ -34,7 +34,7 @@ Depends: nemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
 Description: NEMOUX's core platform debugging symbols
  <insert long description, indented with spaces>
 
-Package: nemoclock
+Package: nemo.clock
 Priority: optional
 Section: graphics
 Architecture: any
@@ -43,7 +43,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemostat
+Package: nemo.stat
 Priority: optional
 Section: graphics
 Architecture: any
@@ -52,7 +52,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemotext
+Package: nemo.text
 Priority: optional
 Section: graphics
 Architecture: any
@@ -61,7 +61,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoweather
+Package: nemo.weather
 Priority: optional
 Section: graphics
 Architecture: any
@@ -70,7 +70,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemokeyboard
+Package: nemo.keyboard
 Priority: optional
 Section: graphics
 Architecture: any
@@ -79,7 +79,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoexplorer
+Package: nemo.explorer
 Priority: optional
 Section: graphics
 Architecture: any
@@ -88,7 +88,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoplayer
+Package: nemo.player
 Priority: optional
 Section: graphics
 Architecture: any
@@ -97,7 +97,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoimage
+Package: nemo.image
 Priority: optional
 Section: graphics
 Architecture: any
@@ -106,7 +106,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemopdf
+Package: nemo.pdf
 Priority: optional
 Section: graphics
 Architecture: any
@@ -115,7 +115,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemobackground
+Package: nemo.background
 Priority: optional
 Section: graphics
 Architecture: any
@@ -124,7 +124,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemolivestream
+Package: nemo.livestream
 Priority: optional
 Section: graphics
 Architecture: any
@@ -133,7 +133,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemoscreensaver
+Package: nemo.screensaver
 Priority: optional
 Section: graphics
 Architecture: any
@@ -142,7 +142,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemouniverse-background
+Package: nemo.universe-background
 Priority: optional
 Section: graphics
 Architecture: any
@@ -151,7 +151,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemouniverse-planet
+Package: nemo.universe-planet
 Priority: optional
 Section: graphics
 Architecture: any
@@ -160,7 +160,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemouniverse-menu
+Package: nemo.universe-menu
 Priority: optional
 Section: graphics
 Architecture: any
@@ -169,7 +169,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemocard
+Package: nemo.card
 Priority: optional
 Section: graphics
 Architecture: any
@@ -178,7 +178,7 @@ Depends: nemoapps (= ${binary:Version}),
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
 
-Package: nemokarim
+Package: nemo.karim
 Priority: optional
 Section: graphics
 Architecture: any
