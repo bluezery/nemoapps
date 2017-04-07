@@ -5,6 +5,11 @@
  "description": "inhouse weather application",
  "version": "0.1.0",
  "type": "shell",
+ "icons": {
+     "svg": [
+         {"width": 128,, "height": 128,, "path": "icons/128.svg"}
+     ]
+ },
  "config": {
  }
 }
