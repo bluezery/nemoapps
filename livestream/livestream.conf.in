@@ -81,7 +81,6 @@
     <file path="rtmp://65.23.154.147:80/vod/mediaroot/bigbuckbunny_450.mp4"/>    
     -->
     <!-- Nemoux samples
-    -->
     <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
     <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
     <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
@@ -90,14 +89,7 @@
     <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
     <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
     <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
-    <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
-    <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
-    <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
-    <file path="/opt/contents/nemoux/DEMO SKT Table Top Device (with SM Town).mp4"/>
-    file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>    
-    <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
-    <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
-    <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
+    -->
     <!-- Futuristic
     <file path="/opt/contents/TEST/VIDEO/FUTURE/MS 2011.mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
@@ -116,4 +108,20 @@
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass 2- Same Day. Expanded Corning Vision (2012).mp4"/>
     <file path="/opt/contents/TEST/VIDEO/FUTURE/A Day Made of Glass... Made possible by Corning. (2011).mp4"/>
      -->
+    <file path="/opt/contents/nemoux/DEMO Collections 201606.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO IoT Device Interwork.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Karim Rashid Archive Platform.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO SKT Table Top Device (with SM Town).mp4"/>
+    <file path="/opt/contents/nemoux/DEMO Smart Table at Lotte Department.mp4"/>
+    <file path="/opt/contents/nemoux/DEMO WIS2016.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE MBC 20th General Election.mp4"/>
+    <file path="/opt/contents/nemoux/LIVE SKT 5G Innovation Center.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/MS 2011.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/2025- Welcome to Future  #Mind Blown.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Expected future for the Deaf.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Future Technology - Our Digital World 2020.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/FutureVision Town.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/IKEA Kitchen 2025.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Meta Glasses are the future of computing.mp4"/>
+    <file path="/opt/contents/TEST/VIDEO/FUTURE/Microsoft in 2019 [HQ].mp4"/>
 </config>

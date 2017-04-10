@@ -682,7 +682,8 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
     Card *card = userdata;
 
     if (list_count(card->items) <= card->cnt) {
-        ERR("Number of appended item should be bigger than number of viewable items");
+        ERR("Number(%d) of appended item should be bigger than number(%d) of viewable items",
+                card->cnt, list_count(card->items));
         return;
     }
 
@@ -1170,7 +1171,8 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     if (sx > sy) app->sxy = sy;
     else app->sxy = sx;
 
-    List *tags  = xml_search_tags(xml, APPNAME"/items");
+    snprintf(buf, PATH_MAX, "%s/items", prefix);
+    List *tags  = xml_search_tags(xml, buf);
     List *l;
     XmlTag *tag;
     LIST_FOR_EACH(tags, l, tag) {
@@ -1179,7 +1181,8 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         app->menu_items = list_append(app->menu_items, it);
     }
 
-    tags = xml_search_tags(xml, APPNAME"/mirror");
+    snprintf(buf, PATH_MAX, "%s/mirror", prefix);
+    tags = xml_search_tags(xml, buf);
     LIST_FOR_EACH(tags, l, tag) {
         Mirror *mirror = parse_tag_mirror(tag);
         if (!mirror) continue;
