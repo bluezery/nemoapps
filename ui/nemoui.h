@@ -8,5 +8,7 @@
 #include <nemoui-image.h>
 #include <nemoui-path.h>
 #include <nemoui-gesture.h>
+#include <nemoui-button.h>
+#include <nemoui-drawer.h>
 
 #endif

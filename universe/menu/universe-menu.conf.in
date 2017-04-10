@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <size width="540" height="540"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/biztworld.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/BizTWorld"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/lifeplatform.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/LifePlatform"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/lunawatch.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/LunaWatch"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/nemoux.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/Nemoux"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/sktelecom.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/SKTelecom"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/smarthome.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/SmartHome"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/tworld.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/TWorld"/>
-    <items group="content" icon="@APPDATA_ROOT@/sub/content/tum.png" type="app" exec="/opt/pkgs/nemo.explorer/bin/nemo.explorer.bin;-f;/opt/contents/skt/Tum"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/biztworld.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/BizTWorld"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/lifeplatform.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/LifePlatform"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/lunawatch.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/LunaWatch"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/nemoux.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/Nemoux"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/sktelecom.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/SKTelecom"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/smarthome.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/SmartHome"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/tworld.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/TWorld"/>
+    <items group="content" icon="@APPDATA_ROOT@/sub/content/tum.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/Tum"/>
 
     <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/monopoly.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/monopoly"/>
     <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/bmwi8.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/bmwi8"/>
@@ -26,11 +26,11 @@
     <items group="internet" icon="@APPDATA_ROOT@/sub/internet/tworld.png" type="xapp"  exec="/usr/bin/electron;http://www.tworld.co.kr"/>
 
     <items group="setting" icon="@APPDATA_ROOT@/sub/setting/weston-terminal.png" type="xapp" exec="/usr/bin/weston-terminal"/>
-    <items group="setting" icon="@APPDATA_ROOT@/sub/setting/nemokeyboard.png" type="app" exec="/opt/pkgs//nemo.keyboard/bin/nemo.keyboard.bin"/>
+    <items group="setting" icon="@APPDATA_ROOT@/sub/setting/nemokeyboard.png" type="app" exec="@NEMOKEYBOARD@"/>
 
-    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemoclock.png" type="app" exec="/opt/pkgs/nemo.clock/bin/nemo.clock.bin"/>
-    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemoweather.png" type="app" exec="/opt/pkgs/nemo.weather/bin/nemo.weather.bin"/>
-    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemostat.png" type="app" exec="/opt/pkgs/nemo.stat/bin/nemo.stat.bin"/>
-    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemolivestream.png" type="app" exec="/opt/pkgs/nemo.livestream/bin/nemo.livestream.bin"/>
+    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemoclock.png" type="app" exec="@NEMOCLOCK@"/>
+    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemoweather.png" type="app" exec="@NEMOWEATHER@"/>
+    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemostat.png" type="app" exec="@NEMOSTAT@"/>
+    <items group="utility" icon="@APPDATA_ROOT@/sub/utility/nemolivestream.png" type="app" exec="@NEMOLIVESTREAM@"/>
 </config>
 

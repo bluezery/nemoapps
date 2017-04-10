@@ -18,6 +18,10 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-path.h
     nemoui-gesture.c
     nemoui-gesture.h
+    nemoui-drawer.c
+    nemoui-drawer.h
+    nemoui-button.c
+    nemoui-button.h
     nemoui.h
     )
 
@@ -43,4 +47,11 @@ INSTALL(FILES
     )
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}.pc
     DESTINATION ${CMAKE_INSTALL_PKGDIR}
+    )
+
+SET(RES_DIR "${DATA_DIR}/ui/res")
+ADD_DEFINITIONS(-DRES_DIR="${RES_DIR}")
+INSTALL(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/
+    DESTINATION ${RES_DIR}/
     )

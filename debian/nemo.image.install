@@ -1,2 +1,2 @@
-/opt/pkgs/nemo.image/*
+opt/pkgs/nemo.image/*
 etc/nemoapps/image.conf

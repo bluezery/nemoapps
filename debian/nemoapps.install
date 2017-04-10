@@ -1,2 +1,4 @@
 usr/lib/lib*.so
+usr/share/nemoapps/*
 usr/bin/nemoudevd
+etc/nemoapps/udevd.conf

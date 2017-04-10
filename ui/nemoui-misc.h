@@ -7,6 +7,10 @@
 
 #include <nemoui-image.h>
 
+#include <nemoutil.h>
+#include <nemowrapper.h>
+#include <widget.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1677,7 +1681,7 @@ struct _Frameface {
     struct showone *one;
 };
 
-void frameface_destroy(Frameface *face)
+static inline void frameface_destroy(Frameface *face)
 {
     nemoshow_one_destroy(face->gradient);
     nemowidget_destroy(face->widget);
@@ -1813,14 +1817,14 @@ struct _Frameback {
     struct showone *one;
 };
 
-void frameback_destroy(Frameback *back)
+static inline void frameback_destroy(Frameback *back)
 {
     nemoshow_one_destroy(back->gradient);
     nemowidget_destroy(back->widget);
     free(back);
 }
 
-Frameback *frameback_create(NemoWidget *parent, int width, int height)
+static inline Frameback *frameback_create(NemoWidget *parent, int width, int height)
 {
     Frameback *back = (Frameback *)calloc(sizeof(Frameback), 1);
 
@@ -2607,7 +2611,7 @@ struct _SketchDot {
     int idx;
 };
 
-SketchDot *sketch_create_dot(struct nemotool *tool, struct showone *parent, int r, uint32_t color, int cnt)
+static inline SketchDot *sketch_create_dot(struct nemotool *tool, struct showone *parent, int r, uint32_t color, int cnt)
 {
     SketchDot *dot = (SketchDot *)malloc(sizeof(SketchDot));
     dot->tool = tool;
@@ -2635,33 +2639,33 @@ SketchDot *sketch_create_dot(struct nemotool *tool, struct showone *parent, int 
     return dot;
 }
 
-void sketch_dot_show(SketchDot *dot, uint32_t easetype, int duration, int delay)
+static inline void sketch_dot_show(SketchDot *dot, uint32_t easetype, int duration, int delay)
 {
     _nemoshow_item_motion(dot->group, easetype, duration, delay,
             "alpha", 1.0, NULL);
 }
 
-void sketch_dot_hide(SketchDot *dot, uint32_t easetype, int duration, int delay)
+static inline void sketch_dot_hide(SketchDot *dot, uint32_t easetype, int duration, int delay)
 {
     _nemoshow_item_motion(dot->group, easetype, duration, delay,
             "alpha", 0.0, NULL);
 }
 
-void sketch_dot_destroy(SketchDot *dot)
+static inline void sketch_dot_destroy(SketchDot *dot)
 {
     nemoshow_one_destroy(dot->blur);
     nemoshow_one_destroy(dot->group);
     free(dot);
 }
 
-void _sketch_dot_destroy(struct nemotimer *timer, void *userdata)
+static inline void _sketch_dot_destroy(struct nemotimer *timer, void *userdata)
 {
     SketchDot *dot = (SketchDot *)userdata;
     sketch_dot_destroy(dot);
     nemotimer_destroy(timer);
 }
 
-void sketch_dot_hide_destroy(SketchDot *dot, uint32_t easetype, int duration, int delay)
+static inline void sketch_dot_hide_destroy(SketchDot *dot, uint32_t easetype, int duration, int delay)
 {
     sketch_dot_hide(dot, easetype, duration, delay);
     if (duration > 0) {
@@ -2671,7 +2675,7 @@ void sketch_dot_hide_destroy(SketchDot *dot, uint32_t easetype, int duration, in
     }
 }
 
-void sketch_dot_translate(SketchDot *dot, int tx, int ty)
+static inline void sketch_dot_translate(SketchDot *dot, int tx, int ty)
 {
     int dur = 500;
 
@@ -3069,595 +3073,6 @@ static inline void gallery_destroy(Gallery *gallery)
     nemoshow_one_destroy(gallery->bg);
     nemoshow_one_destroy(gallery->group);
     free(gallery);
-}
-
-typedef struct _ButtonIcon ButtonIcon;
-struct _ButtonIcon
-{
-    int w, h;
-    struct showone *one;
-    struct showone *old;
-};
-
-typedef struct _Button Button;
-struct _Button
-{
-    int w, h;
-    struct showone *blur;
-    struct showone *group;
-    struct showone *event;
-    struct showone *bg0;
-    struct showone *bg;
-    List *icons;
-    void *userdata;
-};
-
-ButtonIcon *button_get_nth_icon(Button *btn, int idx)
-{
-    return (ButtonIcon *)LIST_DATA(list_get_nth(btn->icons, idx));
-}
-
-static inline Button *button_create(struct showone *parent, const char *id, uint32_t tag)
-{
-    Button *btn = (Button *)calloc(sizeof(Button), 1);
-    btn->blur = BLUR_CREATE("solid", 10);
-    btn->group = GROUP_CREATE(parent);
-    nemoshow_item_scale(btn->group, 0.0, 0.0);
-    nemoshow_item_set_alpha(btn->group, 0.0);
-
-    struct showone *one;
-    one = btn->event = RECT_CREATE(btn->group, 0, 0);
-    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-    nemoshow_one_set_id(one, id);
-    nemoshow_one_set_tag(one, tag);
-    nemoshow_one_set_userdata(one, btn);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_set_alpha(one, 0.0);
-
-    return btn;
-}
-
-static inline void button_hide(Button *btn, uint32_t easetype, int duration, int delay)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(btn->group, easetype, duration, delay,
-                "alpha", 0.0,
-                "sx", 0.0, "sy", 0.0,
-                NULL);
-    } else {
-        nemoshow_item_set_alpha(btn->group, 0.0);
-        nemoshow_item_scale(btn->group, 0.0, 0.0);
-    }
-}
-
-static inline void button_show(Button *btn, uint32_t easetype, int duration, int delay)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(btn->group, easetype, duration, delay,
-                "alpha", 1.0,
-                NULL);
-        _nemoshow_item_motion_bounce(btn->group, easetype, duration, delay,
-                "sx", 1.15, 1.0, "sy", 1.15, 1.0,
-                NULL);
-    } else {
-        nemoshow_item_set_alpha(btn->group, 1.0);
-        nemoshow_item_scale(btn->group, 1.0, 1.0);
-    }
-}
-
-static inline void button_enable_bg(Button *btn, int r, uint32_t color)
-{
-    if (btn->w < r * 2) btn->w = r * 2;
-    if (btn->h < r * 2) btn->h = r * 2;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    struct showone *one;
-    one = CIRCLE_CREATE(btn->group, r);
-    nemoshow_item_set_fill_color(one, RGBA(GRAY));
-    nemoshow_item_set_alpha(one, 0.5);
-    nemoshow_item_set_filter(one, btn->blur);
-    btn->bg0 = one;
-
-    one = CIRCLE_CREATE(btn->group, r);
-    nemoshow_item_set_fill_color(one, RGBA(color));
-    btn->bg = one;
-}
-
-static inline void button_add_path(Button *btn)
-{
-    // FIXME: can not calculate btn->w, btn->h?
-
-    ButtonIcon *icon = (ButtonIcon *)calloc(sizeof(ButtonIcon), 1);
-
-    struct showone *one;
-    icon->one = one = PATH_CREATE(btn->group);
-    btn->icons = list_append(btn->icons, icon);
-}
-
-
-static inline void button_add_circle(Button *btn, int r)
-{
-    if (btn->w < r * 2) btn->w = r * 2;
-    if (btn->h < r * 2) btn->h = r * 2;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    ButtonIcon *icon = (ButtonIcon *)calloc(sizeof(ButtonIcon), 1);
-    icon->w = r * 2;
-    icon->h = r * 2;
-
-    struct showone *one;
-    icon->one = one = CIRCLE_CREATE(btn->group, r);
-    btn->icons = list_append(btn->icons, icon);
-}
-
-static inline void button_add_svg(Button *btn, const char *svgfile, int w, int h)
-{
-    if (btn->w < w) btn->w = w;
-    if (btn->h < h) btn->h = h;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    ButtonIcon *icon = (ButtonIcon *)calloc(sizeof(ButtonIcon), 1);
-    icon->w = w;
-    icon->h = h;
-
-    struct showone *one;
-    icon->one = one = SVG_PATH_GROUP_CREATE(btn->group, w, h, svgfile);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    btn->icons = list_append(btn->icons, icon);
-}
-
-static inline void button_add_svg_path(Button *btn, const char *svgfile, int w, int h)
-{
-    if (btn->w < w) btn->w = w;
-    if (btn->h < h) btn->h = h;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    ButtonIcon *icon = (ButtonIcon *)calloc(sizeof(ButtonIcon), 1);
-    icon->w = w;
-    icon->h = h;
-
-    struct showone *one;
-    icon->one = one = SVG_PATH_CREATE(btn->group, w, h, svgfile);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    btn->icons = list_append(btn->icons, icon);
-}
-
-static inline void button_change_svg(Button *btn, uint32_t easetype, int duration, int delay, int idx, const char *svgfile, int w, int h)
-{
-    if (btn->w < w) btn->w = w;
-    if (btn->h < h) btn->h = h;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    ButtonIcon *icon = (ButtonIcon *)LIST_DATA(list_get_nth(btn->icons, idx));
-    RET_IF(!icon);
-
-    struct showone *one;
-    if (icon->old) nemoshow_one_destroy(icon->old);
-    icon->old = icon->one;
-    if (w >= 0 && h >= 0) {
-        icon->one = one = SVG_PATH_GROUP_CREATE(btn->group, w, h, svgfile);
-        icon->w = w;
-        icon->h = h;
-    } else {
-        icon->one = one = SVG_PATH_GROUP_CREATE(btn->group, icon->w, icon->h, svgfile);
-    }
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_set_alpha(one, 0.0);
-
-    _nemoshow_item_motion(icon->old, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 0.0, NULL);
-    _nemoshow_item_motion(icon->one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0, NULL);
-}
-
-static inline void button_change_svg_path(Button *btn, uint32_t easetype, int duration, int delay, int idx, const char *svgfile, int w, int h)
-{
-    if (btn->w < w) btn->w = w;
-    if (btn->h < h) btn->h = h;
-    nemoshow_item_set_width(btn->event, btn->w);
-    nemoshow_item_set_height(btn->event, btn->h);
-
-    ButtonIcon *icon = (ButtonIcon *)LIST_DATA(list_get_nth(btn->icons, idx));
-    RET_IF(!icon);
-
-    struct showone *one;
-    if (icon->old) nemoshow_one_destroy(icon->old);
-    icon->old = icon->one;
-    if (w >= 0 && h >= 0) {
-        icon->one = one = SVG_PATH_CREATE(btn->group, w, h, svgfile);
-        icon->w = w;
-        icon->h = h;
-    } else {
-        icon->one = one = SVG_PATH_CREATE(btn->group, icon->w, icon->h, svgfile);
-    }
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_set_alpha(one, 0.0);
-
-    _nemoshow_item_motion(icon->old, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 0.0, NULL);
-    _nemoshow_item_motion(icon->one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0, NULL);
-}
-
-static inline void button_bg_set_color(Button *btn, uint32_t easetype, int duration, int delay, uint32_t color)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(btn->bg, easetype, duration, delay,
-                "fill", color, NULL);
-    } else {
-        nemoshow_item_set_fill_color(btn->bg, RGBA(color));
-    }
-}
-
-static inline void button_set_stroke(Button *btn, uint32_t easetype, int duration, int delay, int idx, uint32_t stroke, int stroke_width)
-{
-    ButtonIcon *icon = (ButtonIcon *)LIST_DATA(list_get_nth(btn->icons, idx));
-    RET_IF(!icon);
-
-    if (duration > 0) {
-        _nemoshow_item_motion(icon->one, easetype, duration, delay,
-                "stroke", stroke, "stroke-width", (double)stroke_width,
-                NULL);
-    } else {
-        nemoshow_item_set_stroke_color(icon->one, RGBA(stroke));
-        nemoshow_item_set_stroke_width(icon->one, stroke_width);
-    }
-}
-
-static inline void button_set_fill(Button *btn, uint32_t easetype, int duration, int delay, int idx, uint32_t fill)
-{
-    ButtonIcon *icon = (ButtonIcon *)LIST_DATA(list_get_nth(btn->icons, idx));
-    RET_IF(!icon);
-
-    if (duration > 0) {
-        _nemoshow_item_motion(icon->one, easetype, duration, delay,
-                "fill", fill, NULL);
-    } else {
-        nemoshow_item_set_fill_color(icon->one, RGBA(fill));
-    }
-}
-
-static inline void button_set_userdata(Button *btn, void *userdata)
-{
-    btn->userdata = userdata;
-}
-
-static inline void *button_get_userdata(Button *btn)
-{
-    return btn->userdata;
-}
-
-static inline void button_destroy(Button *btn)
-{
-    nemoshow_one_destroy(btn->blur);
-    ButtonIcon *icon;
-    LIST_FREE(btn->icons, icon) {
-        nemoshow_one_destroy(icon->one);
-        if (icon->old) nemoshow_one_destroy(icon->old);
-        free(icon);
-    }
-    nemoshow_one_destroy(btn->group);
-    free(btn);
-}
-
-static inline void button_translate(Button *btn, uint32_t easetype, int duration, int delay, double tx, double ty)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(btn->group, easetype, duration, delay,
-                "tx", tx, "ty", ty, NULL);
-    } else {
-        nemoshow_item_translate(btn->group, tx, ty);
-    }
-}
-
-static inline void button_down(Button *btn)
-{
-    if (btn->bg0)
-        _nemoshow_item_motion_bounce(btn->bg0,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 50,
-                "sx", 0.7, 0.75, "sy", 0.7, 0.75,
-                NULL);
-    if (btn->bg)
-        _nemoshow_item_motion_bounce(btn->bg,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 50,
-                "sx", 0.7, 0.75, "sy", 0.7, 0.75,
-                NULL);
-    List *l;
-    ButtonIcon *icon;
-    LIST_FOR_EACH(btn->icons, l, icon) {
-        _nemoshow_item_motion_bounce(icon->one,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                "sx", 0.7, 0.75, "sy", 0.7, 0.75,
-                NULL);
-    }
-}
-
-static inline void button_up(Button *btn)
-{
-    if (btn->bg0)
-        _nemoshow_item_motion_bounce(btn->bg0,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 50,
-                "sx", 1.1, 1.00, "sy", 1.1, 1.00,
-                NULL);
-    if (btn->bg)
-        _nemoshow_item_motion_bounce(btn->bg,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 50,
-                "sx", 1.1, 1.00, "sy", 1.1, 1.00,
-                NULL);
-    List *l;
-    ButtonIcon *icon;
-    LIST_FOR_EACH(btn->icons, l, icon) {
-        _nemoshow_item_motion_bounce(icon->one,
-                NEMOEASE_CUBIC_INOUT_TYPE, 150, 0,
-                "sx", 1.1, 1.00, "sy", 1.0, 1.00,
-                NULL);
-    }
-}
-
-#define DBOX_CYAN 0x00D8DEFF
-#define DBOX_WHITE WHITE
-#define DBOX_BLACK 0x5D5D5DFF
-#define DBOX_MAGENTA  MAGENTA
-#define DBOX_YELLOW YELLOW
-
-
-uint32_t DRAWING_BOX_COLOR[] = {
-    DBOX_BLACK, DBOX_CYAN, DBOX_MAGENTA, DBOX_YELLOW, DBOX_WHITE
-};
-
-double DRAWING_BOX_SIZE[] = {
-    1, 2, 3, 5, 8,
-};
-
-typedef struct _DrawingBox DrawingBox;
-struct _DrawingBox {
-    int mode; // 0 (pencil) , 1 (painter)
-    int r;
-    struct showone *group;
-
-    double size;
-    unsigned int size_idx;
-    uint32_t color;
-    unsigned int color_idx;
-
-    Button *pencil_btn;
-
-    Button *quit_btn;
-    Button *share_btn;
-    Button *undo_btn;
-    Button *undo_all_btn;
-
-    Button *stroke_btn;
-    Button *color_btn;
-};
-
-DrawingBox *drawingbox_create(struct showone *parent, int r)
-{
-    DrawingBox *dbox = (DrawingBox *)calloc(sizeof(DrawingBox), 1);
-
-    dbox->r = r;
-    dbox->size = 1;
-    dbox->color = DRAWING_BOX_COLOR[0];
-
-    struct showone *group;
-    group = dbox->group = GROUP_CREATE(parent);
-    nemoshow_item_set_alpha(group, 0.0);
-
-    int wh = r * 2;
-    Button *btn;
-
-    btn = dbox->pencil_btn = button_create(group, "dbox", 10);
-    button_enable_bg(btn, r, DBOX_CYAN);
-    button_add_svg_path(btn, ICON_DIR"/common/pencil.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_WHITE);
-
-    btn = dbox->quit_btn = button_create(group, "dbox", 11);
-    button_enable_bg(btn, r, DBOX_CYAN);
-    button_add_svg_path(btn, ICON_DIR"/common/quit.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_WHITE);
-
-    btn = dbox->share_btn = button_create(group, "dbox", 12);
-    button_enable_bg(btn, r, DBOX_WHITE);
-    button_add_svg_path(btn, ICON_DIR"/common/share.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_BLACK);
-
-    btn = dbox->undo_btn = button_create(group, "dbox", 13);
-    button_enable_bg(btn, r, DBOX_WHITE);
-    button_add_svg_path(btn, ICON_DIR"/common/undo.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_BLACK);
-
-    btn = dbox->undo_all_btn = button_create(group, "dbox", 14);
-    button_enable_bg(btn, r, DBOX_WHITE);
-    button_add_svg_path(btn, ICON_DIR"/common/undo_all.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_BLACK);
-
-    btn = dbox->stroke_btn = button_create(group, "dbox", 15);
-    button_enable_bg(btn, r, DBOX_WHITE);
-    button_add_svg_path(btn, ICON_DIR"/common/stroke_1.svg", wh, wh);
-    button_set_fill(btn, 0, 0, 0, 0, DBOX_BLACK);
-
-    btn = dbox->color_btn = button_create(group, "dbox", 16);
-    button_enable_bg(btn, r, DBOX_WHITE);
-    button_add_svg(btn, ICON_DIR"/common/rainbow.svg", wh, wh);
-    button_add_circle(btn, r * 0.75);
-    button_set_fill(btn, 0, 0, 0, 1, dbox->color);
-
-    ButtonIcon *icon = button_get_nth_icon(btn, 1);
-    nemoshow_item_set_alpha(icon->one, 0.0);
-    nemoshow_item_scale(icon->one, 0.0, 0.0);
-
-    return dbox;
-}
-
-void drawingbox_destroy(DrawingBox *dbox)
-{
-    button_destroy(dbox->pencil_btn);
-    button_destroy(dbox->quit_btn);
-    button_destroy(dbox->share_btn);
-    button_destroy(dbox->undo_btn);
-    button_destroy(dbox->undo_all_btn);
-    button_destroy(dbox->stroke_btn);
-    button_destroy(dbox->color_btn);
-
-    nemoshow_one_destroy(dbox->group);
-    free(dbox);
-}
-
-void drawingbox_change_color(DrawingBox *dbox, uint32_t easetype, int duration, int delay)
-{
-    dbox->color_idx++;
-    if (dbox->color_idx >= (sizeof(DRAWING_BOX_COLOR)/sizeof(DRAWING_BOX_COLOR[0]))) {
-        dbox->color_idx = 0;
-    }
-    dbox->color = DRAWING_BOX_COLOR[dbox->color_idx];
-
-    button_set_fill(dbox->color_btn, easetype, duration, delay,
-            1, dbox->color);
-    button_set_fill(dbox->stroke_btn, easetype, duration, delay,
-            0, dbox->color);
-
-    ButtonIcon *rainbow = button_get_nth_icon(dbox->color_btn, 0);
-    ButtonIcon *color = button_get_nth_icon(dbox->color_btn, 1);
-    _nemoshow_item_motion(rainbow->one, easetype, duration, delay,
-            "sx", 0.0, "sy", 0.0, "alpha", 0.0, NULL);
-    _nemoshow_item_motion(color->one, easetype, duration, delay,
-            "sx", 1.0, "sy", 1.0, "alpha", 1.0, NULL);
-}
-
-void drawingbox_change_stroke(DrawingBox *dbox, uint32_t easetype, int duration, int delay)
-{
-    dbox->size_idx++;
-    if (dbox->size_idx >= (sizeof(DRAWING_BOX_SIZE)/sizeof(DRAWING_BOX_SIZE[0]))) {
-        dbox->size_idx = 0;
-    }
-    dbox->size = DRAWING_BOX_SIZE[dbox->size_idx];
-
-    char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, ICON_DIR"/common/stroke_%d.svg", dbox->size_idx);
-    button_change_svg_path(dbox->stroke_btn, easetype, duration, delay,
-            0, buf, -1, -1);
-    button_set_fill(dbox->stroke_btn, easetype, duration, delay,
-            0, dbox->color);
-}
-
-void drawingbox_show_pencil(DrawingBox *dbox)
-{
-    dbox->mode = 0;
-
-    button_bg_set_color(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
-            DBOX_CYAN);
-    button_set_fill(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
-            0, DBOX_WHITE);
-    button_show(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->quit_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->quit_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->undo_all_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->undo_all_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->stroke_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->stroke_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_hide(dbox->color_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->color_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-}
-
-void drawingbox_show_menu(DrawingBox *dbox)
-{
-    dbox->mode = 1;
-    int r = dbox->r * 2.5;
-
-    int delay = 100;
-
-    button_hide(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    button_translate(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
-
-    button_show(dbox->quit_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-
-    button_show(dbox->stroke_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay);
-    button_translate(dbox->stroke_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay,
-           r * sin(2 * M_PI * 0.4), r *cos(2 * M_PI * 0.4));
-
-    button_show(dbox->color_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 2);
-    button_translate(dbox->color_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 2,
-           r * sin(2 * M_PI * 0.6), r *cos(2 * M_PI * 0.6));
-    ButtonIcon *rainbow = button_get_nth_icon(dbox->color_btn, 0);
-    ButtonIcon *color = button_get_nth_icon(dbox->color_btn, 1);
-    _nemoshow_item_motion(rainbow->one, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 2,
-            "sx", 1.0, "sy", 1.0, "alpha", 1.0, NULL);
-    _nemoshow_item_motion(color->one, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 2,
-            "sx", 0.0, "sy", 0.0, "alpha", 0.0, NULL);
-
-    button_show(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 3);
-    button_translate(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 3,
-           r * sin(2 * M_PI * 0.2), r *cos(2 * M_PI * 0.2));
-
-    button_show(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 4);
-    button_translate(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 4,
-           r * sin(2 * M_PI * 0.8), r *cos(2 * M_PI * 0.8));
-
-    button_show(dbox->undo_all_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 5);
-    button_translate(dbox->undo_all_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 5,
-           r * sin(2 * M_PI * 0.0), r *cos(2 * M_PI * 0.0));
-}
-
-void drawingbox_show(DrawingBox *dbox)
-{
-    _nemoshow_item_motion(dbox->group, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0, NULL);
-
-    button_show(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 350);
-}
-
-void drawingbox_hide(DrawingBox *dbox)
-{
-    _nemoshow_item_motion(dbox->group, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 0.0, NULL);
-
-    button_hide(dbox->pencil_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 150);
-}
-
-void drawingbox_get_translate(DrawingBox *dbox, double *tx, double *ty)
-{
-    if (tx) *tx = nemoshow_item_get_translate_x(dbox->group);
-    if (ty) *ty = nemoshow_item_get_translate_y(dbox->group);
-}
-
-void drawingbox_translate(DrawingBox *dbox, uint32_t easetype, int duration, int delay, double tx, double ty)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(dbox->group, easetype, duration, delay,
-                "tx", tx, "ty", ty, NULL);
-    } else {
-        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "tx");
-        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "ty");
-        nemoshow_item_translate(dbox->group, tx, ty);
-    }
-}
-
-void drawingbox_scale(DrawingBox *dbox, uint32_t easetype, int duration, int delay, double sx, double sy)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(dbox->group, easetype, duration, delay,
-                "sx", sx, "sy", sy, NULL);
-    } else {
-        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "sx");
-        nemoshow_revoke_transition_one(dbox->group->show, dbox->group, "sy");
-        nemoshow_item_scale(dbox->group, sx, sy);
-    }
 }
 
 typedef struct _MapItem MapItem;
