@@ -1,2 +1,3 @@
 opt/pkgs/nemo.explorer/*
 etc/nemoapps/explorer.conf
+usr/bin/nemo-thumb.sh
