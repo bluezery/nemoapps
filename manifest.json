@@ -1,0 +1,12 @@
+{
+ "pkgname": "nemoapps",
+ "name": "nemoapps",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse nemo application framework",
+ "version": "0.1.0",
+ "type": "shell",
+ "icons": {
+ },
+ "config": {
+ }
+}
