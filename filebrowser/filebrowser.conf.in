@@ -1,48 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<@APPNAME@>
-    <size width="1024" height="600"/>
+<config>
+    <size width="745" height="530"/>
+    <exec type="image" path="@NEMOIMAGE@;-f"/>
+    <exec type="video" path="@NEMOPLAYER@;-f"/>
+    <exec type="pdf" path="@NEMOPDF@;-f"/>
+    <exec type="text" path="@NEMOTEXT@;-f"/>
     <!-- Descending order priority -->
     <!-- executable -->
-    <filetype type="exe" icon="@FB_ICON_DIR@/exe.svg" magic="ELF 64-bit LSB executable"/>
+    <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg"/>
+    <filetype type="exe" icon="@APP_RES_DIR@/exe.svg" magic="ELF 64-bit LSB executable"/>
 
     <!-- nemoimage -->
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" ext="png"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" ext="jpg"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" ext="jpeg"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" ext="tif"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" magic="PNG image data"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" magic="JPEG image data"/>
-    <filetype type="image" exec="@BIN_DIR@/nemoimage;-f" magic="TIFF image data"/>
-    <filetype type="svg" exec="@BIN_DIR@/nemoimage;-f" ext="svg"/>
-    <filetype type="svg" exec="@BIN_DIR@/nemoimage;-f" magic="SVG Scalable Vector Graphics image"/>
+    <filetype type="image" ext="png"/>
+    <filetype type="image" ext="jpg"/>
+    <filetype type="image" ext="jpeg"/>
+    <filetype type="image" ext="tif"/>
+    <filetype type="image" magic="PNG image data"/>
+    <filetype type="image" magic="JPEG image data"/>
+    <filetype type="image" magic="TIFF image data"/>
+    <filetype type="svg" ext="svg"/>
+    <filetype type="svg" magic="SVG Scalable Vector Graphics image"/>
     <!-- FIXME: No svg executor yet -->
     <!--<filetype magic="SVG Scalable Vector Graphics image" type="svg"/>-->
     <!--<filetype ext="svg" type="svg"/>-->
 
     <!-- nemovideo -->
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="avi"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="mp4"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="mkv"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="wmv"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="mov"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="mpg"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="flv"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="swf"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="webm"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="ts"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" ext="tp"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="RIFF (little-endian) data, AVI"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="ISO Media, MP4"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Microsoft ASF"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Matroska data"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="ISO Media, Apple QuickTime movie"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="WebM"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="MPEG sequence"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Macromedia Flash Video"/>
-    <filetype type="video" icon="@FB_ICON_DIR@/play.svg" exec="@BIN_DIR@/nemoplayer;-f" magic="Macromedia Flash Data, version 6"/>
+    <filetype type="video" ext="avi"/>
+    <filetype type="video" ext="mp4"/>
+    <filetype type="video" ext="mkv"/>
+    <filetype type="video" ext="wmv"/>
+    <filetype type="video" ext="mov"/>
+    <filetype type="video" ext="mpg"/>
+    <filetype type="video" ext="flv"/>
+    <filetype type="video" ext="swf"/>
+    <filetype type="video" ext="webm"/>
+    <filetype type="video" ext="ts"/>
+    <filetype type="video" ext="tp"/>
+    <filetype type="video" magic="RIFF (little-endian) data, AVI"/>
+    <filetype type="video" magic="ISO Media, MP4"/>
+    <filetype type="video" magic="Microsoft ASF"/>
+    <filetype type="video" magic="Matroska data"/>
+    <filetype type="video" magic="ISO Media, Apple QuickTime movie"/>
+    <filetype type="video" magic="WebM"/>
+    <filetype type="video" magic="MPEG sequence"/>
+    <filetype type="video" magic="Macromedia Flash Video"/>
+    <filetype type="video" magic="Macromedia Flash Data, version 6"/>
 
     <!-- nemopdf -->
-    <filetype type="pdf" icon="@FB_ICON_DIR@/pdf.svg" exec="@BIN_DIR@/nemopdf;-f" ext="pdf"/>
-    <filetype type="pdf" icon="@FB_ICON_DIR@/pdf.svg" exec="@BIN_DIR@/nemopdf;-f" magic="PDF document"/>
-</@APPNAME@>
+    <filetype type="pdf" icon="@APP_ICON_DIR@/pdf.svg" ext="pdf"/>
+    <filetype type="pdf" icon="@APP_ICON_DIR@/pdf.svg" magic="PDF document"/>
+
+    <!-- nemomesh -->
+    <!--<filetype type="3d" icon="@APP_ICON_DIR@/exe.svg" ext="obj"/>-->
+
+    <!-- nemotext -->
+    <filetype type="text" icon="@APP_ICON_DIR@/text.svg" magic="ASCII text"/>
+    <!--<filetype type="text" icon="@APP_ICON_DIR@/text.svg" exec="@BIN_DIR@/nemotext;-f" magic="UTF-8 Unicode text"/>-->
+</config>
 

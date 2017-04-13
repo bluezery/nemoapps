@@ -31,6 +31,15 @@
 #define GRADIENT4 0xFFFFFFFF
 #define GRADIENT5 0x6767677F
 
+typedef struct _ConfigApp ConfigApp;
+struct _ConfigApp {
+    Config *config;
+    char *bgpath_local;
+    char *bgpath;
+    char *rootpath;
+};
+
+
 typedef struct _Pos Pos;
 struct _Pos
 {
@@ -281,10 +290,10 @@ static FileType *filetype_parse_tag(XmlTag *tag, List *execs)
 }
 
 typedef enum {
-    EXPLORER_ICON_TYPE_QUIT = 0,
-    EXPLORER_ICON_TYPE_UP,
-    EXPLORER_ICON_TYPE_PREV,
-    EXPLORER_ICON_TYPE_NEXT,
+    ICON_TYPE_QUIT = 0,
+    ICON_TYPE_UP,
+    ICON_TYPE_PREV,
+    ICON_TYPE_NEXT,
 } ExplorerIconType;
 
 typedef struct _Explorer ExplorerView;
@@ -355,11 +364,11 @@ struct _Explorer {
 };
 
 typedef enum {
-    EXPLORER_ITEM_TYPE_DIR = 0,
-    EXPLORER_ITEM_TYPE_FILE,
-    EXPLORER_ITEM_TYPE_IMG,
-    EXPLORER_ITEM_TYPE_SVG,
-    EXPLORER_ITEM_TYPE_VIDEO,
+    ITEM_TYPE_DIR = 0,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_IMG,
+    ITEM_TYPE_SVG,
+    ITEM_TYPE_VIDEO,
 } ExplorerItemType;
 
 typedef struct _ExplorerItem ExplorerItem;
@@ -670,7 +679,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
     }
 
     ExplorerView *view = it->view;
-    if (it->type == EXPLORER_ITEM_TYPE_IMG) {
+    if (it->type == ITEM_TYPE_IMG) {
         char *path = _explorer_get_thumb_url(it->path, NULL);
         if (!file_is_exist(path) || file_is_null(path)) {
             free(path);
@@ -692,7 +701,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
                     _clip_img_work_done, data);
 
         }
-    } else if (it->type == EXPLORER_ITEM_TYPE_VIDEO) {
+    } else if (it->type == ITEM_TYPE_VIDEO) {
         char *path = _explorer_get_thumb_url(it->path, "001.jpg");
         if (!file_is_exist(path) || file_is_null(path)) {
             ERR("No animation thumbnail: %s", path);
@@ -769,7 +778,7 @@ static void explorer_item_exec(ExplorerItem *it)
     ExplorerView *view = it->view;
     struct nemoshow *show = nemowidget_get_show(view->widget);
 
-    if (it->type == EXPLORER_ITEM_TYPE_DIR) {
+    if (it->type == ITEM_TYPE_DIR) {
         explorer_view_show_dir(view, it->path);
     } else {
         float x, y;
@@ -833,8 +842,8 @@ static void explorer_view_update_clip(ExplorerView *view)
     List *l;
     ExplorerItem *it;
     LIST_FOR_EACH(view->items, l, it) {
-        if (it->type != EXPLORER_ITEM_TYPE_DIR &&
-                it->type != EXPLORER_ITEM_TYPE_FILE)
+        if (it->type != ITEM_TYPE_DIR &&
+                it->type != ITEM_TYPE_FILE)
             continue;
         path = explorer_item_get_path_clip(it);
         if (path) {
@@ -887,17 +896,17 @@ static void _explorer_grab_icon_event(NemoWidgetGrab *grab, NemoWidget *widget, 
     } else if (nemoshow_event_is_up(show, event)) {
         explorer_icon_up(icon);
         if (nemoshow_event_is_single_click(show, event)) {
-            if (icon->type == EXPLORER_ICON_TYPE_QUIT) {
+            if (icon->type == ICON_TYPE_QUIT) {
                 NemoWidget *win = nemowidget_get_top_widget(widget);
                 nemowidget_callback_dispatch(win, "exit", NULL);
-            } else if (icon->type == EXPLORER_ICON_TYPE_UP) {
+            } else if (icon->type == ICON_TYPE_UP) {
                 char *uppath = file_get_updir(view->curpath);
                 ERR("%s %s", view->curpath, uppath);
                 explorer_view_show_dir(view, uppath);
                 free(uppath);
-            } else if (icon->type == EXPLORER_ICON_TYPE_PREV) {
+            } else if (icon->type == ICON_TYPE_PREV) {
                 explorer_view_show_page(view, view->page_idx-1);
-            } else if (icon->type == EXPLORER_ICON_TYPE_NEXT) {
+            } else if (icon->type == ICON_TYPE_NEXT) {
                 explorer_view_show_page(view, view->page_idx+1);
             }
         }
@@ -1047,14 +1056,14 @@ static ExplorerItem *explorer_view_append_item(ExplorerView *view, ExplorerItemT
     nemoshow_item_path_translate(clip, it->gap/2, it->gap/2);
 
     it->clip = clip;
-    if (type == EXPLORER_ITEM_TYPE_IMG) {
+    if (type == ITEM_TYPE_IMG) {
         it->img = image_create(group);
         image_set_anchor(it->img, 0.5, 0.5);
         image_translate(it->img, 0, 0, 0, it->w/2, it->h/2);
         image_set_alpha(it->img, 0, 0, 0, 0.0);
         // XXX: clip should not be controlled by image
         nemoshow_item_set_clip(image_get_one(it->img), clip);
-    } else if (type == EXPLORER_ITEM_TYPE_SVG) {
+    } else if (type == ITEM_TYPE_SVG) {
         // FIXME: Need thread???
         ITEM_CREATE(one, group, NEMOSHOW_PATHGROUP_ITEM);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
@@ -1076,7 +1085,7 @@ static ExplorerItem *explorer_view_append_item(ExplorerView *view, ExplorerItemT
             nemoshow_item_path_translate(clip,
                     -(it->w - w)/2, -(it->h - h)/2);
         }
-    } else if (type == EXPLORER_ITEM_TYPE_VIDEO) {
+    } else if (type == ITEM_TYPE_VIDEO) {
         ITEM_CREATE(one, group, NEMOSHOW_IMAGE_ITEM);
         nemoshow_item_set_alpha(one, 0.0);
         nemoshow_item_set_clip(one, clip);
@@ -1255,7 +1264,7 @@ static void _explorer_view_bg_timer(struct nemotimer *timer, void *userdata)
     worker_start(view->bg_worker);
 }
 
-static ExplorerView *explorer_view_create(NemoWidget *parent, int width, int height, const char *bgpath_local, const char *bgpath, const char *path)
+static ExplorerView *explorer_view_create(NemoWidget *parent, int width, int height, const char *path, ConfigApp *app)
 {
     ExplorerView *view = calloc(sizeof(ExplorerView), 1);
     view->show = nemowidget_get_show(parent);
@@ -1267,8 +1276,8 @@ static ExplorerView *explorer_view_create(NemoWidget *parent, int width, int hei
     view->ith = height/(POS_LAYER_CNT * 2) - 12;
     view->rootpath = strdup(path);
     view->cnt_inpage = sizeof(pos)/sizeof(pos[0]);
-    if (bgpath_local) view->bgpath_local = strdup(bgpath_local);
-    if (bgpath) view->bgpath = strdup(bgpath);
+    if (app->bgpath_local) view->bgpath_local = strdup(app->bgpath_local);
+    if (app->bgpath) view->bgpath = strdup(app->bgpath);
 
     view->bg_worker = worker_create(view->tool);
     view->img_worker = worker_create(view->tool);
@@ -1334,18 +1343,18 @@ static ExplorerView *explorer_view_create(NemoWidget *parent, int width, int hei
     image_set_alpha(img, 0, 0, 0, 0.0);
 
     ExplorerIcon *icon;
-    view->quit = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_QUIT,
+    view->quit = icon = explorer_view_icon_create(view, ICON_TYPE_QUIT,
             APP_ICON_DIR"/quit.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
-    view->up = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_UP,
+    view->up = icon = explorer_view_icon_create(view, ICON_TYPE_UP,
             APP_ICON_DIR"/up.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
 
-    view->prev = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_PREV,
+    view->prev = icon = explorer_view_icon_create(view, ICON_TYPE_PREV,
             APP_ICON_DIR"/prev.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, view->itw/3, height/2);
 
-    view->next = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_NEXT,
+    view->next = icon = explorer_view_icon_create(view, ICON_TYPE_NEXT,
             APP_ICON_DIR"/next.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width - view->itw/3, height/2);
 
@@ -1433,7 +1442,7 @@ static void explorer_view_show_page(ExplorerView *view, int page_idx)
         }
 
         if (fileinfo_is_dir(fileinfo)) {
-            type = EXPLORER_ITEM_TYPE_DIR;
+            type = ITEM_TYPE_DIR;
             icon_uri = APP_ICON_DIR"/dir.svg";
             exec = NULL;
         } else {
@@ -1445,13 +1454,13 @@ static void explorer_view_show_page(ExplorerView *view, int page_idx)
                 continue;
             }
             if (!strcmp(filetype->type, "image")) {
-                type = EXPLORER_ITEM_TYPE_IMG;
+                type = ITEM_TYPE_IMG;
             } else if (!strcmp(filetype->type, "svg")) {
-                type = EXPLORER_ITEM_TYPE_SVG;
+                type = ITEM_TYPE_SVG;
             } else if (!strcmp(filetype->type, "video")) {
-                type = EXPLORER_ITEM_TYPE_VIDEO;
+                type = ITEM_TYPE_VIDEO;
             } else {
-                type = EXPLORER_ITEM_TYPE_FILE;
+                type = ITEM_TYPE_FILE;
             }
             icon_uri = filetype->icon;
             exec = filetype->exec;
@@ -1714,14 +1723,6 @@ static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdat
     nemowidget_win_exit_after(win, 500);
 }
 
-typedef struct _ConfigApp ConfigApp;
-struct _ConfigApp {
-    Config *config;
-    char *bgpath_local;
-    char *bgpath;
-    char *rootpath;
-};
-
 static ConfigApp *_config_load(const char *domain, const char *filename, int argc, char *argv[])
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
@@ -1823,8 +1824,7 @@ int main(int argc, char *argv[])
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
 
     ExplorerView *view;
-    view = explorer_view_create(win, app->config->width, app->config->height,
-            app->bgpath_local, app->bgpath, app->rootpath);
+    view = explorer_view_create(win, app->config->width, app->config->height, app->rootpath, app);
     nemowidget_append_callback(win, "exit", _win_exit, view);
     explorer_view_show_dir(view, app->rootpath);
 
