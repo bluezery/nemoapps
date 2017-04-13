@@ -287,11 +287,11 @@ typedef enum {
     EXPLORER_ICON_TYPE_NEXT,
 } ExplorerIconType;
 
-typedef struct _Explorer Explorer;
+typedef struct _Explorer ExplorerView;
 typedef struct _ExplorerIcon ExplorerIcon;
 
 struct _ExplorerIcon {
-    Explorer *exp;
+    ExplorerView *view;
     ExplorerIconType type;
     int w, h;
 
@@ -364,7 +364,7 @@ typedef enum {
 
 typedef struct _ExplorerItem ExplorerItem;
 struct _ExplorerItem {
-    Explorer *exp;
+    ExplorerView *view;
     ExplorerItemType type;
 
     int gap;
@@ -400,10 +400,10 @@ static void explorer_icon_destroy(ExplorerIcon *icon)
     free(icon);
 }
 
-static ExplorerIcon *explorer_icon_create(Explorer *exp, ExplorerIconType type, const char *uri, int w, int h)
+static ExplorerIcon *explorer_view_icon_create(ExplorerView *view, ExplorerIconType type, const char *uri, int w, int h)
 {
     ExplorerIcon *icon = calloc(sizeof(ExplorerIcon), 1);
-    icon->exp = exp;
+    icon->view = view;
     icon->type = type;
     icon->w = w;
     icon->h = h;
@@ -412,7 +412,7 @@ static ExplorerIcon *explorer_icon_create(Explorer *exp, ExplorerIconType type, 
     icon->blur = blur = BLUR_CREATE("solid", 15);
 
     struct showone *group;
-    icon->group = group = GROUP_CREATE(exp->icon_group);
+    icon->group = group = GROUP_CREATE(view->icon_group);
     nemoshow_item_set_alpha(group, 0.0);
 
     struct showone *one;
@@ -491,7 +491,7 @@ static void explorer_icon_up(ExplorerIcon *icon)
 
 typedef struct _ClipImgWorkData2 ClipImgWorkData2;
 struct _ClipImgWorkData2 {
-    Explorer *exp;
+    ExplorerView *view;
     Image *img;
     char *path;
     struct nemoshow *show;
@@ -514,8 +514,8 @@ static void _clip_img_work_done2(bool cancel, void *userdata)
         } else {
             image_set_bitmap(data->img, data->w, data->h, data->bitmap);
             // XXX: save clip's position as center align
-            data->exp->bg_it_clip_x = (data->w - data->cw)/2;
-            data->exp->bg_it_clip_y = (data->h - data->ch)/2;
+            data->view->bg_it_clip_x = (data->w - data->cw)/2;
+            data->view->bg_it_clip_y = (data->h - data->ch)/2;
             image_set_alpha(data->img,
                     NEMOEASE_CUBIC_INOUT_TYPE, 500, data->delay,
                     data->alpha);
@@ -639,18 +639,18 @@ static void _explorer_item_anim_timer(struct nemotimer *timer, void *userdata)
     nemoshow_item_set_uri(it->anim, path);
     if (path) free(path);
 
-    nemoshow_dispatch_frame(it->exp->show);
+    nemoshow_dispatch_frame(it->view->show);
 
     it->video_idx++;
     if (it->video_idx > 120) it->video_idx = 1;
     nemotimer_set_timeout(timer, VIDEO_INTERVAL);
 }
 
-static void explorer_update_clip(Explorer *exp);
+static void explorer_view_update_clip(ExplorerView *view);
 static void _explorer_item_update(NemoMotion *m, uint32_t time, double t, void *userdata)
 {
     ExplorerItem *it = userdata;
-    explorer_update_clip(it->exp);
+    explorer_view_update_clip(it->view);
 }
 
 static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration, int delay)
@@ -666,10 +666,10 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
     } else {
         nemoshow_item_set_alpha(it->group, 1.0);
         nemoshow_item_scale(it->group, 1.0, 1.0);
-        explorer_update_clip(it->exp);
+        explorer_view_update_clip(it->view);
     }
 
-    Explorer *exp = it->exp;
+    ExplorerView *view = it->view;
     if (it->type == EXPLORER_ITEM_TYPE_IMG) {
         char *path = _explorer_get_thumb_url(it->path, NULL);
         if (!file_is_exist(path) || file_is_null(path)) {
@@ -680,7 +680,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
             ERR("file(%s) does not exist or has zero size", path);
         } else {
             ClipImgWorkData *data = calloc(sizeof(ClipImgWorkData), 1);
-            data->show = it->exp->show;
+            data->show = it->view->show;
             data->img = it->img;
             data->path = strdup(path);
             data->clip = it->clip;
@@ -688,7 +688,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
             data->ch = it->h;
             data->delay = delay;
             data->alpha = 1.0;
-            worker_append_work(exp->img_worker, _clip_img_work,
+            worker_append_work(view->img_worker, _clip_img_work,
                     _clip_img_work_done, data);
 
         }
@@ -702,7 +702,7 @@ static void explorer_item_show(ExplorerItem *it, uint32_t easetype, int duration
             VideoWorkData *data = calloc(sizeof(VideoWorkData), 1);
             data->it = it;
             data->path = path;
-            worker_append_work(exp->img_worker, _explorer_item_video_work,
+            worker_append_work(view->img_worker, _explorer_item_video_work,
                     _explorer_item_video_work_done, data);
 #endif
         } else {
@@ -726,7 +726,7 @@ static void explorer_item_hide(ExplorerItem *it, uint32_t easetype, int duration
     } else {
         nemoshow_item_set_alpha(it->group, 0.0);
         nemoshow_item_scale(it->group, 0.0, 0.0);
-        explorer_update_clip(it->exp);
+        explorer_view_update_clip(it->view);
     }
 }
 
@@ -761,16 +761,16 @@ static void explorer_item_translate(ExplorerItem *it, uint32_t easetype, int dur
     }
 }
 
-static void explorer_show_dir(Explorer *exp, const char *path);
-static void explorer_show_page(Explorer *exp, int page_idx);
+static void explorer_view_show_dir(ExplorerView *view, const char *path);
+static void explorer_view_show_page(ExplorerView *view, int page_idx);
 
 static void explorer_item_exec(ExplorerItem *it)
 {
-    Explorer *exp = it->exp;
-    struct nemoshow *show = nemowidget_get_show(exp->widget);
+    ExplorerView *view = it->view;
+    struct nemoshow *show = nemowidget_get_show(view->widget);
 
     if (it->type == EXPLORER_ITEM_TYPE_DIR) {
-        explorer_show_dir(exp, it->path);
+        explorer_view_show_dir(view, it->path);
     } else {
         float x, y;
         nemoshow_transform_to_viewport(show,
@@ -781,7 +781,7 @@ static void explorer_item_exec(ExplorerItem *it)
         nemoshow_view_set_anchor(show, 0.5, 0.5);
         ERR("%s, %s", it->exec, it->path);
         if (!it->exec) {
-            nemo_execute(exp->uuid, "app", it->path, NULL, NULL, x, y, 0, 1, 1);
+            nemo_execute(view->uuid, "app", it->path, NULL, NULL, x, y, 0, 1, 1);
         } else {
             char path[PATH_MAX];
             char name[PATH_MAX];
@@ -796,7 +796,7 @@ static void explorer_item_exec(ExplorerItem *it)
             tok = strtok(NULL, "");
             snprintf(args, PATH_MAX, "%s;%s", tok, it->path);
             free(buf);
-            nemo_execute(exp->uuid, "app", path, args, NULL, x, y, 0, 1, 1);
+            nemo_execute(view->uuid, "app", path, args, NULL, x, y, 0, 1, 1);
         }
     }
 }
@@ -818,21 +818,21 @@ static struct showone *explorer_item_get_path_clip(ExplorerItem *it)
     return one;
 }
 
-static void explorer_update_clip(Explorer *exp)
+static void explorer_view_update_clip(ExplorerView *view)
 {
-    if (!exp->bg_it0_clip && !exp->bg_it_clip) return;
+    if (!view->bg_it0_clip && !view->bg_it_clip) return;
 
-    if (exp->bg_it0_clip) nemoshow_item_path_clear(exp->bg_it0_clip);
-    if (exp->bg_it_clip) nemoshow_item_path_clear(exp->bg_it_clip);
+    if (view->bg_it0_clip) nemoshow_item_path_clear(view->bg_it0_clip);
+    if (view->bg_it_clip) nemoshow_item_path_clear(view->bg_it_clip);
 
     struct showone *path;
-    LIST_FREE(exp->clip_paths, path) {
+    LIST_FREE(view->clip_paths, path) {
         nemoshow_one_destroy(path);
     }
 
     List *l;
     ExplorerItem *it;
-    LIST_FOR_EACH(exp->items, l, it) {
+    LIST_FOR_EACH(view->items, l, it) {
         if (it->type != EXPLORER_ITEM_TYPE_DIR &&
                 it->type != EXPLORER_ITEM_TYPE_FILE)
             continue;
@@ -840,10 +840,10 @@ static void explorer_update_clip(Explorer *exp)
         if (path) {
             // XXX: cannot translate parent clip, so translsate each one.
             // maybe skia bug...
-            nemoshow_item_path_translate(path, exp->bg_it_clip_x, exp->bg_it_clip_y);
-            if (exp->bg_it0_clip) nemoshow_item_path_append(exp->bg_it0_clip, path);
-            if (exp->bg_it_clip) nemoshow_item_path_append(exp->bg_it_clip, path);
-            exp->clip_paths = list_append(exp->clip_paths, path);
+            nemoshow_item_path_translate(path, view->bg_it_clip_x, view->bg_it_clip_y);
+            if (view->bg_it0_clip) nemoshow_item_path_append(view->bg_it0_clip, path);
+            if (view->bg_it_clip) nemoshow_item_path_append(view->bg_it_clip, path);
+            view->clip_paths = list_append(view->clip_paths, path);
         }
     }
 }
@@ -851,8 +851,8 @@ static void explorer_update_clip(Explorer *exp)
 #if 0
 static void _explorer_update(NemoWidget *widget, const char *id, void *info, void *userdata)
 {
-    Explorer *exp = userdata;
-    explorer_update_clip(exp);
+    ExplorerView *view = userdata;
+    explorer_view_update_clip(view);
 }
 #endif
 
@@ -879,7 +879,7 @@ static void _explorer_grab_icon_event(NemoWidgetGrab *grab, NemoWidget *widget, 
     if (nemoshow_event_is_done(event) != 0) return;
 
     ExplorerIcon *icon = userdata;
-    Explorer *exp = icon->exp;
+    ExplorerView *view = icon->view;
     struct nemoshow *show = nemowidget_get_show(widget);
 
     if (nemoshow_event_is_down(show, event)) {
@@ -891,23 +891,23 @@ static void _explorer_grab_icon_event(NemoWidgetGrab *grab, NemoWidget *widget, 
                 NemoWidget *win = nemowidget_get_top_widget(widget);
                 nemowidget_callback_dispatch(win, "exit", NULL);
             } else if (icon->type == EXPLORER_ICON_TYPE_UP) {
-                char *uppath = file_get_updir(exp->curpath);
-                ERR("%s %s", exp->curpath, uppath);
-                explorer_show_dir(exp, uppath);
+                char *uppath = file_get_updir(view->curpath);
+                ERR("%s %s", view->curpath, uppath);
+                explorer_view_show_dir(view, uppath);
                 free(uppath);
             } else if (icon->type == EXPLORER_ICON_TYPE_PREV) {
-                explorer_show_page(exp, exp->page_idx-1);
+                explorer_view_show_page(view, view->page_idx-1);
             } else if (icon->type == EXPLORER_ICON_TYPE_NEXT) {
-                explorer_show_page(exp, exp->page_idx+1);
+                explorer_view_show_page(view, view->page_idx+1);
             }
         }
     }
-    nemoshow_dispatch_frame(exp->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _explorer_event(NemoWidget *widget, const char *id, void *event, void *userdata)
 {
-    Explorer *exp = userdata;
+    ExplorerView *view = userdata;
     struct nemoshow *show = nemowidget_get_show(widget);
 
     if (nemoshow_event_is_down(show, event)) {
@@ -965,12 +965,12 @@ static void _explorer_event(NemoWidget *widget, const char *id, void *event, voi
                     vx, vy);
         }
     }
-    nemoshow_dispatch_frame(exp->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
-static void explorer_remove_item(Explorer *exp, ExplorerItem *it)
+static void explorer_view_remove_item(ExplorerView *view, ExplorerItem *it)
 {
-    exp->items = list_remove(exp->items, it);
+    view->items = list_remove(view->items, it);
 
     if (it->anim_timer) nemotimer_destroy(it->anim_timer);
 
@@ -986,10 +986,10 @@ static void explorer_remove_item(Explorer *exp, ExplorerItem *it)
     free(it);
 }
 
-static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, const char *icon_uri, const char *txt, const char *exec, const char *path, int x, int y, int w, int h)
+static ExplorerItem *explorer_view_append_item(ExplorerView *view, ExplorerItemType type, const char *icon_uri, const char *txt, const char *exec, const char *path, int x, int y, int w, int h)
 {
     ExplorerItem *it = calloc(sizeof(ExplorerItem), 1);
-    it->exp = exp;
+    it->view = view;
     it->type = type;
     it->gap = 12;
     it->w = w - it->gap;
@@ -1006,7 +1006,7 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     it->font = font;
 
     struct showone *group;
-    group = GROUP_CREATE(exp->it_group);
+    group = GROUP_CREATE(view->it_group);
     nemoshow_item_set_width(group, w);
     nemoshow_item_set_height(group, h);
     nemoshow_item_set_anchor(group, 0.5, 0.5);
@@ -1024,7 +1024,7 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     nemoshow_one_set_tag(one, 0x1);
     nemoshow_one_set_userdata(one, it);
     nemoshow_item_set_fill_color(one, RGBA(LIGHTBLUE));
-    nemoshow_item_set_shader(one, exp->gradient);
+    nemoshow_item_set_shader(one, view->gradient);
     it->bg = one;
 
     if (icon_uri) {
@@ -1081,7 +1081,7 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
         nemoshow_item_set_alpha(one, 0.0);
         nemoshow_item_set_clip(one, clip);
         it->anim = one;
-        it->anim_timer = TOOL_ADD_TIMER(exp->tool, 0,
+        it->anim_timer = TOOL_ADD_TIMER(view->tool, 0,
                 _explorer_item_anim_timer, it);
     }
 
@@ -1105,190 +1105,190 @@ static ExplorerItem *explorer_append_item(Explorer *exp, ExplorerItemType type, 
     nemoshow_item_set_stroke_color(one, RGBA(WHITE));
     nemoshow_item_set_stroke_width(one, 1);
     nemoshow_item_translate(one, (w - it->w)/2, (h - it->h)/2);
-    nemoshow_item_set_shader(one, exp->gradient);
+    nemoshow_item_set_shader(one, view->gradient);
 
-    exp->items = list_append(exp->items, it);
+    view->items = list_append(view->items, it);
     return it;
 }
 
-static void explorer_destroy(Explorer *exp)
+static void explorer_view_destroy(ExplorerView *view)
 {
-    worker_destroy(exp->bg_worker);
-    worker_destroy(exp->img_worker);
-    nemotimer_destroy(exp->bgtimer);
+    worker_destroy(view->bg_worker);
+    worker_destroy(view->img_worker);
+    nemotimer_destroy(view->bgtimer);
 
     FileInfo *file;
-    LIST_FREE(exp->bgfiles, file)
+    LIST_FREE(view->bgfiles, file)
         fileinfo_destroy(file);
 
     struct showone *path;
-    LIST_FREE(exp->clip_paths, path)
+    LIST_FREE(view->clip_paths, path)
         nemoshow_one_destroy(path);
-    if (exp->bg0_clip) nemoshow_one_destroy(exp->bg0_clip);
-    if (exp->bg_clip) nemoshow_one_destroy(exp->bg_clip);
-    if (exp->bg_it0_clip) nemoshow_one_destroy(exp->bg_it0_clip);
-    if (exp->bg_it_clip) nemoshow_one_destroy(exp->bg_it_clip);
+    if (view->bg0_clip) nemoshow_one_destroy(view->bg0_clip);
+    if (view->bg_clip) nemoshow_one_destroy(view->bg_clip);
+    if (view->bg_it0_clip) nemoshow_one_destroy(view->bg_it0_clip);
+    if (view->bg_it_clip) nemoshow_one_destroy(view->bg_it_clip);
 
-    explorer_icon_destroy(exp->quit);
-    explorer_icon_destroy(exp->up);
-    explorer_icon_destroy(exp->prev);
-    explorer_icon_destroy(exp->next);
+    explorer_icon_destroy(view->quit);
+    explorer_icon_destroy(view->up);
+    explorer_icon_destroy(view->prev);
+    explorer_icon_destroy(view->next);
 
     ExplorerItem *it;
-    while((it = LIST_DATA(LIST_FIRST(exp->items)))) {
-        explorer_remove_item(exp, it);
+    while((it = LIST_DATA(LIST_FIRST(view->items)))) {
+        explorer_view_remove_item(view, it);
     }
 
-    if (exp->curpath) free(exp->curpath);
-    if (exp->bgpath) free(exp->bgpath);
-    if (exp->bgpath_local) free(exp->bgpath_local);
-    free(exp->rootpath);
+    if (view->curpath) free(view->curpath);
+    if (view->bgpath) free(view->bgpath);
+    if (view->bgpath_local) free(view->bgpath_local);
+    free(view->rootpath);
 
-    image_destroy(exp->bg0);
-    image_destroy(exp->bg);
-    image_destroy(exp->bg_it0);
-    image_destroy(exp->bg_it);
-    nemoshow_one_destroy(exp->icon_group);
-    nemoshow_one_destroy(exp->it_group);
-    nemoshow_one_destroy(exp->bg_group);
-    nemowidget_destroy(exp->widget);
-    free(exp);
+    image_destroy(view->bg0);
+    image_destroy(view->bg);
+    image_destroy(view->bg_it0);
+    image_destroy(view->bg_it);
+    nemoshow_one_destroy(view->icon_group);
+    nemoshow_one_destroy(view->it_group);
+    nemoshow_one_destroy(view->bg_group);
+    nemowidget_destroy(view->widget);
+    free(view);
 }
 
-static void _explorer_bg_timer(struct nemotimer *timer, void *userdata)
+static void _explorer_view_bg_timer(struct nemotimer *timer, void *userdata)
 {
-    Explorer *exp = userdata;
+    ExplorerView *view = userdata;
 
-    FileInfo *file = LIST_DATA(list_get_nth(exp->bgfiles, exp->bgfiles_idx));
-    worker_stop(exp->bg_worker);
+    FileInfo *file = LIST_DATA(list_get_nth(view->bgfiles, view->bgfiles_idx));
+    worker_stop(view->bg_worker);
 
-    exp->bgidx = !exp->bgidx;
+    view->bgidx = !view->bgidx;
 
     struct showone *clip;
     ClipImgWorkData *data;
     ClipImgWorkData2 *data2;
-    if (exp->bgidx) {
-        if (exp->bg0_clip) nemoshow_one_destroy(exp->bg0_clip);
-        exp->bg0_clip = clip = path_diamond_create(NULL, exp->w - 10, exp->h - 10);
+    if (view->bgidx) {
+        if (view->bg0_clip) nemoshow_one_destroy(view->bg0_clip);
+        view->bg0_clip = clip = path_diamond_create(NULL, view->w - 10, view->h - 10);
         nemoshow_item_path_translate(clip, 5, 5);
         // XXX: clip should not be controlled by image
-        nemoshow_item_set_clip(image_get_one(exp->bg0), clip);
+        nemoshow_item_set_clip(image_get_one(view->bg0), clip);
 
         data = calloc(sizeof(ClipImgWorkData), 1);
-        data->img = exp->bg0;
+        data->img = view->bg0;
         data->clip = clip;
         data->path = strdup(file->path);
-        data->cw = exp->w;
-        data->ch = exp->h;
+        data->cw = view->w;
+        data->ch = view->h;
         data->delay = 0;
         data->alpha = 0.4;
-        data->show = exp->show;
-        worker_append_work(exp->bg_worker, _clip_img_work,
+        data->show = view->show;
+        worker_append_work(view->bg_worker, _clip_img_work,
                 _clip_img_work_done, data);
-        image_set_alpha(exp->bg, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
+        image_set_alpha(view->bg, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
 
-        if (exp->bg_it0_clip) nemoshow_one_destroy(exp->bg_it0_clip);
-        exp->bg_it0_clip = clip = PATH_CREATE(NULL);
+        if (view->bg_it0_clip) nemoshow_one_destroy(view->bg_it0_clip);
+        view->bg_it0_clip = clip = PATH_CREATE(NULL);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(image_get_one(exp->bg_it0), clip);
+        nemoshow_item_set_clip(image_get_one(view->bg_it0), clip);
 
         data2 = calloc(sizeof(ClipImgWorkData2), 1);
-        data2->exp = exp;
-        data2->img = exp->bg_it0;
+        data2->view = view;
+        data2->img = view->bg_it0;
         data2->clip = clip;
         data2->path = strdup(file->path);
-        data2->cw = exp->w;
-        data2->ch = exp->h;
+        data2->cw = view->w;
+        data2->ch = view->h;
         data2->delay = 0;
         data2->alpha = 1.0;
-        data2->show = exp->show;
-        worker_append_work(exp->bg_worker, _clip_img_work2,
+        data2->show = view->show;
+        worker_append_work(view->bg_worker, _clip_img_work2,
                 _clip_img_work_done2, data2);
-        image_set_alpha(exp->bg_it, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
+        image_set_alpha(view->bg_it, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
     } else {
-        if (exp->bg_clip) nemoshow_one_destroy(exp->bg_clip);
-        exp->bg_clip = clip = path_diamond_create(NULL, exp->w - 10, exp->h - 10);
+        if (view->bg_clip) nemoshow_one_destroy(view->bg_clip);
+        view->bg_clip = clip = path_diamond_create(NULL, view->w - 10, view->h - 10);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(image_get_one(exp->bg), clip);
+        nemoshow_item_set_clip(image_get_one(view->bg), clip);
 
         data = calloc(sizeof(ClipImgWorkData), 1);
-        data->img = exp->bg;
+        data->img = view->bg;
         data->clip = clip;
         data->path = strdup(file->path);
-        data->cw = exp->w;
-        data->ch = exp->h;
+        data->cw = view->w;
+        data->ch = view->h;
         data->delay = 0;
         data->alpha = 0.4;
-        data->show = exp->show;
-        worker_append_work(exp->bg_worker, _clip_img_work,
+        data->show = view->show;
+        worker_append_work(view->bg_worker, _clip_img_work,
                 _clip_img_work_done, data);
-        image_set_alpha(exp->bg0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
+        image_set_alpha(view->bg0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
 
-        if (exp->bg_it_clip) nemoshow_one_destroy(exp->bg_it_clip);
-        exp->bg_it_clip = clip = PATH_CREATE(NULL);
+        if (view->bg_it_clip) nemoshow_one_destroy(view->bg_it_clip);
+        view->bg_it_clip = clip = PATH_CREATE(NULL);
         nemoshow_item_path_translate(clip, 5, 5);
-        nemoshow_item_set_clip(image_get_one(exp->bg_it), clip);
+        nemoshow_item_set_clip(image_get_one(view->bg_it), clip);
 
         data2 = calloc(sizeof(ClipImgWorkData2), 1);
-        data2->exp = exp;
-        data2->img = exp->bg_it;
+        data2->view = view;
+        data2->img = view->bg_it;
         data2->clip = clip;
         data2->path = strdup(file->path);
-        data2->cw = exp->w;
-        data2->ch = exp->h;
+        data2->cw = view->w;
+        data2->ch = view->h;
         data2->delay = 0;
         data2->alpha = 1.0;
-        data2->show = exp->show;
-        worker_append_work(exp->bg_worker, _clip_img_work2,
+        data2->show = view->show;
+        worker_append_work(view->bg_worker, _clip_img_work2,
                 _clip_img_work_done2, data2);
-        image_set_alpha(exp->bg_it0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
+        image_set_alpha(view->bg_it0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 0.0);
     }
 
-    exp->bgfiles_idx++;
-    if (exp->bgfiles_idx >= list_count(exp->bgfiles))
-        exp->bgfiles_idx = 0;
+    view->bgfiles_idx++;
+    if (view->bgfiles_idx >= list_count(view->bgfiles))
+        view->bgfiles_idx = 0;
 
-    if (list_count(exp->bgfiles) > 1)
+    if (list_count(view->bgfiles) > 1)
         nemotimer_set_timeout(timer, BACK_INTERVAL);
 
-    nemoshow_dispatch_frame(exp->show);
-    worker_start(exp->bg_worker);
+    nemoshow_dispatch_frame(view->show);
+    worker_start(view->bg_worker);
 }
 
-static Explorer *explorer_create(NemoWidget *parent, int width, int height, const char *bgpath_local, const char *bgpath, const char *path)
+static ExplorerView *explorer_view_create(NemoWidget *parent, int width, int height, const char *bgpath_local, const char *bgpath, const char *path)
 {
-    Explorer *exp = calloc(sizeof(Explorer), 1);
-    exp->show = nemowidget_get_show(parent);
-    exp->tool = nemowidget_get_tool(parent);
-    exp->uuid = nemowidget_get_uuid(parent);
-    exp->w = width;
-    exp->h = height;
-    exp->itw = width/(POS_LAYER_CNT * 2) - 12;
-    exp->ith = height/(POS_LAYER_CNT * 2) - 12;
-    exp->rootpath = strdup(path);
-    exp->cnt_inpage = sizeof(pos)/sizeof(pos[0]);
-    if (bgpath_local) exp->bgpath_local = strdup(bgpath_local);
-    if (bgpath) exp->bgpath = strdup(bgpath);
+    ExplorerView *view = calloc(sizeof(ExplorerView), 1);
+    view->show = nemowidget_get_show(parent);
+    view->tool = nemowidget_get_tool(parent);
+    view->uuid = nemowidget_get_uuid(parent);
+    view->w = width;
+    view->h = height;
+    view->itw = width/(POS_LAYER_CNT * 2) - 12;
+    view->ith = height/(POS_LAYER_CNT * 2) - 12;
+    view->rootpath = strdup(path);
+    view->cnt_inpage = sizeof(pos)/sizeof(pos[0]);
+    if (bgpath_local) view->bgpath_local = strdup(bgpath_local);
+    if (bgpath) view->bgpath = strdup(bgpath);
 
-    exp->bg_worker = worker_create(exp->tool);
-    exp->img_worker = worker_create(exp->tool);
+    view->bg_worker = worker_create(view->tool);
+    view->img_worker = worker_create(view->tool);
 
     NemoWidget *widget;
     widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_append_callback(widget, "event", _explorer_event, exp);
-    //nemowidget_append_callback(widget, "frame", _explorer_update, exp);
-    exp->widget = widget;
+    nemowidget_append_callback(widget, "event", _explorer_event, view);
+    //nemowidget_append_callback(widget, "frame", _explorer_update, view);
+    view->widget = widget;
 
     struct showone *canvas;
     canvas = nemowidget_get_canvas(widget);
 
     struct showone *group;
-    exp->bg_group = group = GROUP_CREATE(canvas);
-    exp->it_group = GROUP_CREATE(canvas);
-    exp->icon_group = GROUP_CREATE(canvas);
+    view->bg_group = group = GROUP_CREATE(canvas);
+    view->it_group = GROUP_CREATE(canvas);
+    view->icon_group = GROUP_CREATE(canvas);
 
     struct showone *gradient;
-    exp->gradient = gradient = LINEAR_GRADIENT_CREATE(0, 0, exp->w, exp->h);
+    view->gradient = gradient = LINEAR_GRADIENT_CREATE(0, 0, view->w, view->h);
     STOP_CREATE(gradient, GRADIENT0, 0.0);
     STOP_CREATE(gradient, GRADIENT1, 0.1);
     STOP_CREATE(gradient, GRADIENT2, 0.2);
@@ -1297,89 +1297,89 @@ static Explorer *explorer_create(NemoWidget *parent, int width, int height, cons
     STOP_CREATE(gradient, GRADIENT5, 1.0);
 
     struct showone *one;
-    exp->border = one = path_diamond_create(group, exp->w, exp->h);
+    view->border = one = path_diamond_create(group, view->w, view->h);
     nemoshow_item_set_stroke_color(one, RGBA(LIGHTBLUE));
     nemoshow_item_set_stroke_width(one, 1);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, exp->w/2, exp->h/2);
+    nemoshow_item_translate(one, view->w/2, view->h/2);
     nemoshow_item_set_alpha(one, 0.0);
     nemoshow_item_scale(one, 0.0, 0.0);
     nemoshow_item_set_shader(one, gradient);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
 
-    exp->bgtimer = TOOL_ADD_TIMER(exp->tool, 0, _explorer_bg_timer, exp);
+    view->bgtimer = TOOL_ADD_TIMER(view->tool, 0, _explorer_view_bg_timer, view);
 
     Image *img;
-    exp->bg0 = img = image_create(group);
+    view->bg0 = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_translate(img, 0, 0, 0, exp->w/2, exp->h/2);
+    image_translate(img, 0, 0, 0, view->w/2, view->h/2);
     image_scale(img, 0, 0, 0, 0.0, 0.0);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
-    exp->bg = img = image_create(group);
+    view->bg = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_translate(img, 0, 0, 0, exp->w/2, exp->h/2);
+    image_translate(img, 0, 0, 0, view->w/2, view->h/2);
     image_scale(img, 0, 0, 0, 0.0, 0.0);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
-    exp->bg_it0 = img = image_create(group);
+    view->bg_it0 = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_translate(img, 0, 0, 0, exp->w/2, exp->h/2);
+    image_translate(img, 0, 0, 0, view->w/2, view->h/2);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
-    exp->bg_it = img = image_create(group);
+    view->bg_it = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_translate(img, 0, 0, 0, exp->w/2, exp->h/2);
+    image_translate(img, 0, 0, 0, view->w/2, view->h/2);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
     ExplorerIcon *icon;
-    exp->quit = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_QUIT,
-            APP_ICON_DIR"/quit.svg", exp->itw/2, exp->ith/2);
+    view->quit = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_QUIT,
+            APP_ICON_DIR"/quit.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
-    exp->up = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_UP,
-            APP_ICON_DIR"/up.svg", exp->itw/2, exp->ith/2);
+    view->up = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_UP,
+            APP_ICON_DIR"/up.svg", view->itw/2, view->ith/2);
     explorer_icon_translate(icon, 0, 0, 0, width/2, height/2);
 
-    exp->prev = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_PREV,
-            APP_ICON_DIR"/prev.svg", exp->itw/2, exp->ith/2);
-    explorer_icon_translate(icon, 0, 0, 0, exp->itw/3, height/2);
+    view->prev = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_PREV,
+            APP_ICON_DIR"/prev.svg", view->itw/2, view->ith/2);
+    explorer_icon_translate(icon, 0, 0, 0, view->itw/3, height/2);
 
-    exp->next = icon = explorer_icon_create(exp, EXPLORER_ICON_TYPE_NEXT,
-            APP_ICON_DIR"/next.svg", exp->itw/2, exp->ith/2);
-    explorer_icon_translate(icon, 0, 0, 0, width - exp->itw/3, height/2);
+    view->next = icon = explorer_view_icon_create(view, EXPLORER_ICON_TYPE_NEXT,
+            APP_ICON_DIR"/next.svg", view->itw/2, view->ith/2);
+    explorer_icon_translate(icon, 0, 0, 0, width - view->itw/3, height/2);
 
     nemowidget_show(widget, 0, 0, 0);
 
-    return exp;
+    return view;
 }
 
-static void explorer_show_items(Explorer *exp, uint32_t easetype, int duration, int delay)
+static void explorer_view_show_items(ExplorerView *view, uint32_t easetype, int duration, int delay)
 {
-    worker_stop(exp->img_worker);
+    worker_stop(view->img_worker);
 
     List *l;
     ExplorerItem *it;
-    LIST_FOR_EACH(exp->items, l, it) {
+    LIST_FOR_EACH(view->items, l, it) {
         explorer_item_show(it, easetype, duration, delay);
         delay += 50;
     }
 
-    worker_start(exp->img_worker);
+    worker_start(view->img_worker);
 }
 
-static void explorer_arrange(Explorer *exp, uint32_t easetype, int duration, int delay)
+static void explorer_view_arrange(ExplorerView *view, uint32_t easetype, int duration, int delay)
 {
     int x, y, w, h;
-    x = exp->w/2.0;
-    y = exp->h/2.0;
-    w = exp->itw;
-    h = exp->ith;
+    x = view->w/2.0;
+    y = view->h/2.0;
+    w = view->itw;
+    h = view->ith;
 
     int idx = 0;
     List *l;
     ExplorerItem *it;
-    LIST_FOR_EACH(exp->items, l, it) {
+    LIST_FOR_EACH(view->items, l, it) {
         explorer_item_translate(it, 0, 0, 0,
                 x + w * pos[idx].x,
                 y + h * pos[idx].y);
@@ -1387,37 +1387,37 @@ static void explorer_arrange(Explorer *exp, uint32_t easetype, int duration, int
     }
 }
 
-static void explorer_show_page(Explorer *exp, int page_idx)
+static void explorer_view_show_page(ExplorerView *view, int page_idx)
 {
-    if (page_idx >= exp->page_cnt) return;
+    if (page_idx >= view->page_cnt) return;
     if (page_idx < 0) return;
 
     ERR("%d", page_idx);
 
-    exp->page_idx = page_idx;
+    view->page_idx = page_idx;
 
-    int filecnt = list_count(exp->fileinfos);
-    int fileinfoidx = page_idx * exp->cnt_inpage;
+    int filecnt = list_count(view->fileinfos);
+    int fileinfoidx = page_idx * view->cnt_inpage;
 
     if (page_idx > 0) {
-        explorer_icon_show(exp->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 250);
+        explorer_icon_show(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 250);
     } else {
-        explorer_icon_hide(exp->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+        explorer_icon_hide(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     }
 
-    if (fileinfoidx + exp->cnt_inpage < filecnt) {
-        explorer_icon_show(exp->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 400);
+    if (fileinfoidx + view->cnt_inpage < filecnt) {
+        explorer_icon_show(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 400);
     } else {
-        explorer_icon_hide(exp->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+        explorer_icon_hide(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     }
 
     ExplorerItem *it;
-    while((it = LIST_DATA(LIST_FIRST(exp->items)))) {
-        explorer_remove_item(exp, it);
+    while((it = LIST_DATA(LIST_FIRST(view->items)))) {
+        explorer_view_remove_item(view, it);
     }
 
     int idx = 0;
-    while (idx < exp->cnt_inpage && fileinfoidx < filecnt) {
+    while (idx < view->cnt_inpage && fileinfoidx < filecnt) {
         ExplorerItemType type;
         const char *icon_uri = NULL;
         const char *name = NULL;
@@ -1425,7 +1425,7 @@ static void explorer_show_page(Explorer *exp, int page_idx)
         const char *path = NULL;
 
         FileInfo *fileinfo =
-            LIST_DATA(list_get_nth(exp->fileinfos, fileinfoidx));
+            LIST_DATA(list_get_nth(view->fileinfos, fileinfoidx));
         if (!fileinfo) {
             ERR("WTF: fileinfo is NULL");
             fileinfoidx++;
@@ -1459,99 +1459,99 @@ static void explorer_show_page(Explorer *exp, int page_idx)
         name = fileinfo->name;
         path = fileinfo->path;
 
-        it = explorer_append_item(exp, type, icon_uri, name, exec, path,
-                0, 0, exp->itw, exp->ith);
+        it = explorer_view_append_item(view, type, icon_uri, name, exec, path,
+                0, 0, view->itw, view->ith);
         idx++;
         fileinfoidx++;
     }
-    if (list_count(exp->items) < 5) {
+    if (list_count(view->items) < 5) {
         int vals[10];
-        vals[0] = exp->w/2;
-        vals[1] = exp->h * 0.25;
-        vals[2] = exp->w * 0.75;
-        vals[3] = exp->h/2;
-        vals[4] = exp->w/2;
-        vals[5] = exp->h * 0.75;
-        vals[6] = exp->w * 0.25;
-        vals[7] = exp->h/2;
-        vals[8] = exp->w/2;
-        vals[9] = exp->h * 0.25;
-        nemowidget_detach_scope(exp->widget);
-        nemowidget_attach_scope_polygon(exp->widget, 10, vals);
+        vals[0] = view->w/2;
+        vals[1] = view->h * 0.25;
+        vals[2] = view->w * 0.75;
+        vals[3] = view->h/2;
+        vals[4] = view->w/2;
+        vals[5] = view->h * 0.75;
+        vals[6] = view->w * 0.25;
+        vals[7] = view->h/2;
+        vals[8] = view->w/2;
+        vals[9] = view->h * 0.25;
+        nemowidget_detach_scope(view->widget);
+        nemowidget_attach_scope_polygon(view->widget, 10, vals);
 
-        explorer_icon_translate(exp->prev,
+        explorer_icon_translate(view->prev,
                 NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                (exp->itw/3) + (exp->w/2) * 0.5, exp->h/2);
-        explorer_icon_translate(exp->next,
+                (view->itw/3) + (view->w/2) * 0.5, view->h/2);
+        explorer_icon_translate(view->next,
                 NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                exp->w - exp->itw/3 - (exp->w/2) * 0.5, exp->h/2);
-        _nemoshow_item_motion(exp->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                view->w - view->itw/3 - (view->w/2) * 0.5, view->h/2);
+        _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
                 "sx", 0.5, "sy", 0.5, NULL);
-        image_scale(exp->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
+        image_scale(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
         /*
-        image_translate(exp->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
-                exp->w/4.0, exp->h/4.0);
+        image_translate(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
+                view->w/4.0, view->h/4.0);
                 */
-        image_scale(exp->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
+        image_scale(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
         /*
-        image_translate(exp->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
-                exp->w/4.0, exp->h/4.0);
+        image_translate(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
+                view->w/4.0, view->h/4.0);
                 */
     } else {
         int vals[10];
-        vals[0] = exp->w/2;
+        vals[0] = view->w/2;
         vals[1] = 0;
-        vals[2] = exp->w;
-        vals[3] = exp->h/2;
-        vals[4] = exp->w/2;
-        vals[5] = exp->h;
+        vals[2] = view->w;
+        vals[3] = view->h/2;
+        vals[4] = view->w/2;
+        vals[5] = view->h;
         vals[6] = 0;
-        vals[7] = exp->h/2;
-        vals[8] = exp->w/2;
+        vals[7] = view->h/2;
+        vals[8] = view->w/2;
         vals[9] = 0;
-        nemowidget_detach_scope(exp->widget);
-        nemowidget_attach_scope_polygon(exp->widget, 8, vals);
+        nemowidget_detach_scope(view->widget);
+        nemowidget_attach_scope_polygon(view->widget, 8, vals);
 
-        explorer_icon_translate(exp->prev,
+        explorer_icon_translate(view->prev,
                 NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                exp->itw/3, exp->h/2);
-        explorer_icon_translate(exp->next,
+                view->itw/3, view->h/2);
+        explorer_icon_translate(view->next,
                 NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                exp->w - exp->itw/3, exp->h/2);
-        _nemoshow_item_motion(exp->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                view->w - view->itw/3, view->h/2);
+        _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
                 "sx", 1.0, "sy", 1.0, NULL);
-        image_scale(exp->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
-        //image_translate(exp->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
-        image_scale(exp->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
-        //image_translate(exp->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
+        image_scale(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
+        //image_translate(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
+        image_scale(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
+        //image_translate(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
     }
 
-    explorer_arrange(exp, 0, 0, 0);
-    explorer_show_items(exp, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
-    nemoshow_dispatch_frame(exp->show);
+    explorer_view_arrange(view, 0, 0, 0);
+    explorer_view_show_items(view, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    nemoshow_dispatch_frame(view->show);
 }
 
 typedef struct _BackThreadData BackThreadData;
 struct _BackThreadData {
-    Explorer *exp;
+    ExplorerView *view;
     int w, h;
     List *bgfiles;
 };
 
-static void _explorer_load_bg_dir_done(bool cancel, void *userdata)
+static void _explorer_view_load_bg_dir_done(bool cancel, void *userdata)
 {
     BackThreadData *data = userdata;
-    Explorer *exp = data->exp;
-    exp->bgdir_thread = NULL;
+    ExplorerView *view = data->view;
+    view->bgdir_thread = NULL;
 
     if (!cancel) {
         if (data->bgfiles) {
             FileInfo *file;
-            LIST_FREE(exp->bgfiles, file)
+            LIST_FREE(view->bgfiles, file)
                 fileinfo_destroy(file);
-            exp->bgfiles = data->bgfiles;
-            exp->bgfiles_idx = 0;
-            nemotimer_set_timeout(exp->bgtimer, 10);
+            view->bgfiles = data->bgfiles;
+            view->bgfiles_idx = 0;
+            nemotimer_set_timeout(view->bgtimer, 10);
         }
     } else {
         FileInfo *file;
@@ -1562,24 +1562,24 @@ static void _explorer_load_bg_dir_done(bool cancel, void *userdata)
     free(data);
 }
 
-static void *_explorer_load_bg_dir(void *userdata)
+static void *_explorer_view_load_bg_dir(void *userdata)
 {
     BackThreadData *data = userdata;
-    Explorer *exp = data->exp;
+    ExplorerView *view = data->view;
 
     char localpath[PATH_MAX];
     List *bgfiles = NULL;
-    if (exp->bgpath_local) {
+    if (view->bgpath_local) {
         snprintf(localpath, PATH_MAX, "%s/%s",
-                exp->curpath, exp->bgpath_local);
+                view->curpath, view->bgpath_local);
         if (file_is_exist(localpath)) {
             bgfiles = fileinfo_readdir(localpath);
         }
     }
 
     if (!bgfiles) {
-        if (exp->bgpath) {
-            bgfiles = fileinfo_readdir(exp->bgpath);
+        if (view->bgpath) {
+            bgfiles = fileinfo_readdir(view->bgpath);
         }
     }
 
@@ -1595,7 +1595,7 @@ static void *_explorer_load_bg_dir(void *userdata)
         }
     } else {
         ERR("There is no background image directory in the both (%s, %s)",
-                localpath, exp->bgpath);
+                localpath, view->bgpath);
     }
 
     return NULL;
@@ -1603,113 +1603,113 @@ static void *_explorer_load_bg_dir(void *userdata)
 
 typedef struct _FileThreadData FileThreadData;
 struct _FileThreadData {
-    Explorer *exp;
+    ExplorerView *view;
     List *fileinfos;
 };
 
-static void *_explorer_load_file(void *userdata)
+static void *_load_file(void *userdata)
 {
     FileThreadData *data = userdata;
-    Explorer *exp = data->exp;
+    ExplorerView *view = data->view;
 
-    data->fileinfos = fileinfo_readdir(exp->curpath);
+    data->fileinfos = fileinfo_readdir(view->curpath);
 
     return NULL;
 }
 
-static void _explorer_load_file_done(bool cancel, void *userdata)
+static void _load_file_done(bool cancel, void *userdata)
 {
     FileThreadData *data = userdata;
-    Explorer *exp = data->exp;
+    ExplorerView *view = data->view;
 
-    exp->filethread = NULL;
+    view->filethread = NULL;
     if (cancel) {
         FileInfo *fileinfo;
         LIST_FREE(data->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
     } else {
         FileInfo *fileinfo;
-        LIST_FREE(exp->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
-        exp->fileinfos = data->fileinfos;
-        exp->page_cnt = list_count(exp->fileinfos)/exp->cnt_inpage + 1;
-        explorer_show_page(exp, 0);
+        LIST_FREE(view->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
+        view->fileinfos = data->fileinfos;
+        view->page_cnt = list_count(view->fileinfos)/view->cnt_inpage + 1;
+        explorer_view_show_page(view, 0);
     }
     free(data);
 }
 
-static void explorer_show_dir(Explorer *exp, const char *path)
+static void explorer_view_show_dir(ExplorerView *view, const char *path)
 {
     RET_IF(!path);
     ERR("%s", path);
 
-    _nemoshow_item_motion(exp->border, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+    _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
             "alpha", 1.0, NULL);
 
-    if (exp->curpath) free(exp->curpath);
-    exp->curpath = strdup(path);
+    if (view->curpath) free(view->curpath);
+    view->curpath = strdup(path);
 
-    if (exp->bgdir_thread) thread_destroy(exp->bgdir_thread);
+    if (view->bgdir_thread) thread_destroy(view->bgdir_thread);
     BackThreadData *bgdata = calloc(sizeof(BackThreadData), 1);
-    bgdata->exp = exp;
-    exp->bgdir_thread = thread_create(exp->tool,
-            _explorer_load_bg_dir, _explorer_load_bg_dir_done, bgdata);
+    bgdata->view = view;
+    view->bgdir_thread = thread_create(view->tool,
+            _explorer_view_load_bg_dir, _explorer_view_load_bg_dir_done, bgdata);
 
 
-    char *uppath = file_get_updir(exp->curpath);
-    char *uproot = file_get_updir(exp->rootpath);
+    char *uppath = file_get_updir(view->curpath);
+    char *uproot = file_get_updir(view->rootpath);
 
     if (!strcmp(uppath, uproot)) {
-        explorer_icon_show(exp->quit, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-        explorer_icon_hide(exp->up, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
+        explorer_icon_show(view->quit, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+        explorer_icon_hide(view->up, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
     } else {
-        explorer_icon_show(exp->up, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-        explorer_icon_hide(exp->quit, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
+        explorer_icon_show(view->up, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
+        explorer_icon_hide(view->quit, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
     }
     free(uppath);
     free(uproot);
 
-    if (exp->filethread) thread_destroy(exp->filethread);
+    if (view->filethread) thread_destroy(view->filethread);
     FileThreadData *filedata = calloc(sizeof(FileThreadData), 1);
-    filedata->exp = exp;
-    exp->filethread = thread_create(exp->tool,
-            _explorer_load_file, _explorer_load_file_done, filedata);
-    nemoshow_dispatch_frame(exp->show);
+    filedata->view = view;
+    view->filethread = thread_create(view->tool,
+            _load_file, _load_file_done, filedata);
+    nemoshow_dispatch_frame(view->show);
 }
 
-static void explorer_hide(Explorer *exp)
+static void explorer_view_hide(ExplorerView *view)
 {
-    worker_stop(exp->bg_worker);
-    worker_stop(exp->img_worker);
+    worker_stop(view->bg_worker);
+    worker_stop(view->img_worker);
 
-    if (exp->bgdir_thread) thread_destroy(exp->bgdir_thread);
-    nemotimer_set_timeout(exp->bgtimer, 0);
+    if (view->bgdir_thread) thread_destroy(view->bgdir_thread);
+    nemotimer_set_timeout(view->bgtimer, 0);
 
-    _nemoshow_item_motion(exp->border, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
+    _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
             "alpha", 0.0, NULL);
-    image_set_alpha(exp->bg0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
-    image_set_alpha(exp->bg, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
-    image_set_alpha(exp->bg_it0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
-    image_set_alpha(exp->bg_it, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
+    image_set_alpha(view->bg0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
+    image_set_alpha(view->bg, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
+    image_set_alpha(view->bg_it0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
+    image_set_alpha(view->bg_it, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
 
-    explorer_icon_hide(exp->prev, NEMOEASE_CUBIC_OUT_TYPE, 250, 0);
-    explorer_icon_hide(exp->quit, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
-    explorer_icon_hide(exp->up, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
-    explorer_icon_hide(exp->next, NEMOEASE_CUBIC_OUT_TYPE, 250, 200);
+    explorer_icon_hide(view->prev, NEMOEASE_CUBIC_OUT_TYPE, 250, 0);
+    explorer_icon_hide(view->quit, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
+    explorer_icon_hide(view->up, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
+    explorer_icon_hide(view->next, NEMOEASE_CUBIC_OUT_TYPE, 250, 200);
 
     int delay = 0;
     List *l;
     ExplorerItem *it;
-    LIST_FOR_EACH(exp->items, l, it) {
+    LIST_FOR_EACH(view->items, l, it) {
         explorer_item_hide(it, NEMOEASE_CUBIC_OUT_TYPE, 150, delay);
         delay += 30;
     }
-    nemoshow_dispatch_frame(exp->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {
-    Explorer *exp = userdata;
+    ExplorerView *view = userdata;
 
-    explorer_hide(exp);
+    explorer_view_hide(view);
 
     nemowidget_win_exit_after(win, 500);
 }
@@ -1822,16 +1822,16 @@ int main(int argc, char *argv[])
 
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
 
-    Explorer *exp;
-    exp = explorer_create(win, app->config->width, app->config->height,
+    ExplorerView *view;
+    view = explorer_view_create(win, app->config->width, app->config->height,
             app->bgpath_local, app->bgpath, app->rootpath);
-    nemowidget_append_callback(win, "exit", _win_exit, exp);
-    explorer_show_dir(exp, app->rootpath);
+    nemowidget_append_callback(win, "exit", _win_exit, view);
+    explorer_view_show_dir(view, app->rootpath);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
 
-    explorer_destroy(exp);
+    explorer_view_destroy(view);
     nemowidget_destroy(win);
     TOOL_DESTROY(tool);
 
