@@ -483,6 +483,7 @@ void fileinfo_destroy(FileInfo *fileinfo)
 
 FileInfo *fileinfo_create(bool is_dir, const char *path, const char *name)
 {
+    RET_IF(!path | !name, NULL);
     FileInfo *fileinfo = calloc(sizeof(FileInfo), 1);
     fileinfo->is_dir = is_dir;
     fileinfo->path = strdup(path);
@@ -512,14 +513,14 @@ List *fileinfo_readdir(const char *path)
         if (!dr->d_name) continue;
         if ((dr->d_name)[0] == '.') continue;
 
-        char child_path[PATH_MAX];
-        snprintf(child_path, PATH_MAX, "%s/%s", rpath, dr->d_name);
+        char _path[PATH_MAX];
+        snprintf(_path, PATH_MAX, "%s/%s", rpath, dr->d_name);
 
         bool is_dir = false;
         if (dr->d_type == DT_DIR) {
             is_dir = true;
         }
-        fileinfo = fileinfo_create(is_dir, child_path, dr->d_name);
+        fileinfo = fileinfo_create(is_dir, _path, dr->d_name);
         files = list_append(files, fileinfo);
     }
     free(rpath);
