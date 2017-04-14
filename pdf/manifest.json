@@ -4,7 +4,9 @@
  "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
  "description": "inhouse pdf application",
  "version": "0.1.0",
- "type": "shell",
+ "type": "application",
+ "icon": {
+ },
  "config": {
  }
 }

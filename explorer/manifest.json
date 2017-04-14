@@ -4,8 +4,8 @@
  "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
  "description": "inhouse explorer application",
  "version": "0.1.0",
- "type": "shell",
- "icons": {
+ "type": "application",
+ "icon": {
      "svg": {
          "path": "@package/icons/icon.svg"
      }

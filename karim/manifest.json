@@ -5,6 +5,8 @@
  "description": "karim Rashid's launcher",
  "version": "0.1.0",
  "type": "theme",
+ "icon": {
+ },
  "config": {
  }
 }

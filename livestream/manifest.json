@@ -5,7 +5,7 @@
  "description": "inhouse livestream application",
  "version": "0.1.0",
  "type": "theme",
- "icons": {
+ "icon": {
      "svg": {
          "path": "@package/icons/icon.svg"
      }
