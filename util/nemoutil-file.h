@@ -49,6 +49,7 @@ bool fileinfo_is_text(FileInfo *fileinfo);
 bool fileinfo_is_pdf(FileInfo *fileinfo);
 bool fileinfo_is_dir(FileInfo *fileinfo);
 bool fileinfo_is_exec(FileInfo *fileinfo);
+bool fileinfo_is_url(FileInfo *fileinfo);
 
 #ifdef __cplusplus
 }

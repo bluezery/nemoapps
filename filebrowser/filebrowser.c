@@ -31,131 +31,304 @@
 #define GRADIENT4 0xFFFFFFFF
 #define GRADIENT5 0x6767677F
 
-typedef struct _ConfigApp ConfigApp;
-struct _ConfigApp {
-    Config *config;
-    char *bgpath_local;
-    char *bgpath;
-    char *rootpath;
-};
+#define MAX_FILE_CNT 20
+
+static char *_parse_url(const char *str)
+{
+    RET_IF(!str, NULL);
+
+    char *begin = strstr(str, "(URL=<");
+    RET_IF(!begin, NULL);
+    begin+=5;
+
+    char *end = strstr(str, ">)");
+    RET_IF(!end, NULL);
+    end-=1;
+
+    RET_IF(begin == end, NULL);
+    int cnt = end - begin + 1;
+
+    return strndup(begin, cnt);
+}
 
 typedef struct _Pos Pos;
 struct _Pos
 {
-    double x, y;
+    int x, y, wh;
 };
 
-#if 0
-// 1, 8, 16, ...
-const Pos pos[] = {
-    // 0
-    {0, 0},
-    // 1
-    {0.5, 0.5}, {0.0, 1.0}, {-0.5, 0.5}, {-1.0, 0.0},
-    {-0.5, -0.5}, {0.0, -1.0}, {0.5, -0.5}, {1.0, 0.0},
-    // 2
-    {1.5, 0.5}, {1.0, 1.0}, {0.5, 1.5}, {0.0, 2.0},
-    {-0.5, 1.5}, {-1.0, 1.0}, {-1.5, 0.5}, {-2.0, 0.0},
-    {-1.5, -0.5}, {-1.0, -1.0}, {-0.5, -1.5}, {0.0, -2.0},
-    {0.5, -1.5}, {1.0, -1.0}, {1.5, -0.5}, {2.0, 0.0}
-};
-#endif
-
-// 4, 12, 20, ...  (0 * 4 + 4, 2*4 + 4, 4 * 4 + 4, ...)
-#define POS_LAYER_CNT 2
-const Pos pos[] = {
-    // 0
-    { 0.5, 0.0},{ 0.0, 0.5},{-0.5, 0.0},{ 0.0,-0.5},
-    // 1
-    { 1.5, 0.0},{ 1.0, 0.5},{ 0.5, 1.0},
-    { 0.0, 1.5},{-0.5, 1.0},{-1.0, 0.5},
-    {-1.5, 0.0},{-1.0,-0.5},{-0.5,-1.0},
-    { 0.0,-1.5},{ 0.5,-1.0},{ 1.0,-0.5},
-    // 2
-};
-
-static void path_update_diamond(struct showone *one, int w, int h)
+static Pos pos_new(int x, int y, int wh)
 {
-    double r = 16;
-    nemoshow_item_path_moveto(one, w/2 + r, r);
-    nemoshow_item_path_cubicto(one, w/2, 0, w/2, 0, w/2 - r, r);
-    nemoshow_item_path_lineto(one, r, h/2 - r);
-    nemoshow_item_path_cubicto(one, 0, h/2, 0, h/2, r, h/2 + r);
-    nemoshow_item_path_lineto(one, w/2 - r, h - r);
-    nemoshow_item_path_cubicto(one, w/2, h, w/2, h, w/2 + r, h - r);
-    nemoshow_item_path_lineto(one, w - r, h/2 + r);
-    nemoshow_item_path_cubicto(one, w, h/2, w, h/2, w - r, h/2 - r);
-    nemoshow_item_path_close(one);
+    // x, y, wh is index
+    Pos pos;
+    pos.x = x;
+    pos.y = y;
+    pos.wh = wh;
+    return pos;
 }
 
-// anchor: 1.0, 1.0
-struct showone *path_diamond_create(struct showone *parent, int w, int h)
+static void pos_init(Pos *pos[])
 {
-    struct showone *one;
-    one = PATH_CREATE(parent);
-
-    path_update_diamond(one, w, h);
-
-    return one;
-}
-
-
-// anchor 0.5, 0.5
-struct showone *path_diamond_create2(struct showone *parent, int w, int h)
-{
-    double r = 16;
-    struct showone *one;
-    one = PATH_CREATE(parent);
-
-    nemoshow_item_path_moveto(one, r, r - h/2);
-    nemoshow_item_path_cubicto(one, 0, -h/2, 0, -h/2, -r, r - h/2);
-    nemoshow_item_path_lineto(one, r - w/2, -r);
-    nemoshow_item_path_cubicto(one, -w/2, 0, -w/2, 0, r - w/2, r);
-    nemoshow_item_path_lineto(one, -r, h/2 - r);
-    nemoshow_item_path_cubicto(one, 0, h/2, 0, h/2, r, h/2 - r);
-    nemoshow_item_path_lineto(one, w/2 - r, r);
-    nemoshow_item_path_cubicto(one, w/2, 0, w/2, 0, w/2 - r, -r);
-    nemoshow_item_path_close(one);
-
-    return one;
-}
-
-struct showone *path_diamond_create3(struct showone *parent, int w, int h, int r)
-{
-    struct showone *one;
-    one = PATH_CREATE(parent);
-
-    nemoshow_item_path_moveto(one, w/2.0, 0.0);
-    nemoshow_item_path_lineto(one, 0.0, h/2.0);
-    nemoshow_item_path_lineto(one, w/2.0, h);
-    nemoshow_item_path_lineto(one, w, h/2.0);
-    nemoshow_item_path_close(one);
-
-    return one;
-}
-
-static char *_fb_get_thumb_url(const char *path, const char *ext)
-{
-    if (!path) return NULL;
-    char *base = file_get_basename(path);
-    char *dir = file_get_dirname(path);
-    char *ret;
-    if (ext)  {
-        ret = strdup_printf("%s/%s/%s.%s", dir, THUMB_DIR, base, ext);
-    } else {
-        ret = strdup_printf("%s/%s/%s", dir, THUMB_DIR, base);
+    int i;
+    for (i = 0 ; i < MAX_FILE_CNT ; i++) {
+        pos[i] = calloc(sizeof(Pos), i+1);
     }
-    free(base);
-    free(dir);
-    return ret;
+
+    // 1
+    pos[0][0] = pos_new(0, 0, 3);
+
+    pos[1][0] = pos_new(0, 0, 3);
+    pos[1][1] = pos_new(2, 0, 3);
+
+    pos[2][0] = pos_new(0, 0, 3);
+    pos[2][1] = pos_new(2, 0, 3);
+    pos[2][2] = pos_new(4, 0, 3);
+
+    pos[3][0] = pos_new(0, 0, 3);
+    pos[3][1] = pos_new(2, 0, 2);
+    pos[3][2] = pos_new(3, 0, 3);
+    pos[3][3] = pos_new(5, 0, 3);
+
+    pos[4][0] = pos_new(0, 0, 3);
+    pos[4][1] = pos_new(2, 0, 2);
+    pos[4][2] = pos_new(3, 0, 3);
+    pos[4][3] = pos_new(5, 0, 1);
+    pos[4][4] = pos_new(5, 1, 1);
+
+    pos[5][0] = pos_new(0, 0, 3);
+    pos[5][1] = pos_new(2, 0, 2);
+    pos[5][2] = pos_new(3, 0, 3);
+    pos[5][3] = pos_new(5, 0, 1);
+    pos[5][4] = pos_new(5, 1, 0);
+    pos[5][5] = pos_new(6, 1, 0);
+
+    pos[6][0] = pos_new(0, 0, 3);
+    pos[6][1] = pos_new(2, 0, 0);
+    pos[6][2] = pos_new(2, 1, 0);
+    pos[6][3] = pos_new(3, 0, 3);
+    pos[6][4] = pos_new(5, 0, 1);
+    pos[6][5] = pos_new(5, 1, 0);
+    pos[6][6] = pos_new(6, 1, 0);
+
+    pos[7][0] = pos_new(0, 0, 3);
+    pos[7][1] = pos_new(2, 0, 0);
+    pos[7][2] = pos_new(2, 1, 0);
+    pos[7][3] = pos_new(3, 0, 3);
+    pos[7][4] = pos_new(5, 0, 0);
+    pos[7][5] = pos_new(6, 0, 0);
+    pos[7][6] = pos_new(5, 1, 0);
+    pos[7][7] = pos_new(6, 1, 0);
+
+    // 9
+    pos[8][0] = pos_new(0, 0, 3);
+    pos[8][1] = pos_new(0, 2, 0);
+    pos[8][2] = pos_new(1, 2, 0);
+    pos[8][3] = pos_new(2, 0, 0);
+    pos[8][4] = pos_new(2, 1, 2);
+    pos[8][5] = pos_new(3, 0, 3);
+    pos[8][6] = pos_new(3, 2, 1);
+    pos[8][7] = pos_new(5, 0, 1);
+    pos[8][8] = pos_new(5, 1, 3);
+
+    pos[9][0] = pos_new(0, 0, 3);
+    pos[9][1] = pos_new(0, 2, 0);
+    pos[9][2] = pos_new(1, 2, 0);
+    pos[9][3] = pos_new(2, 0, 0);
+    pos[9][4] = pos_new(2, 1, 2);
+    pos[9][5] = pos_new(3, 0, 3);
+    pos[9][6] = pos_new(3, 2, 1);
+    pos[9][7] = pos_new(5, 0, 0);
+    pos[9][8] = pos_new(6, 0, 0);
+    pos[9][9] = pos_new(5, 1, 3);
+
+    pos[10][0]  = pos_new(0, 0, 3);
+    pos[10][1]  = pos_new(0, 2, 0);
+    pos[10][2]  = pos_new(1, 2, 0);
+    pos[10][3]  = pos_new(2, 0, 0);
+    pos[10][4]  = pos_new(2, 1, 0);
+    pos[10][5]  = pos_new(2, 2, 0);
+    pos[10][6]  = pos_new(3, 0, 3);
+    pos[10][7]  = pos_new(3, 2, 1);
+    pos[10][8]  = pos_new(5, 0, 0);
+    pos[10][9]  = pos_new(6, 0, 0);
+    pos[10][10] = pos_new(5, 1, 3);
+
+    pos[11][0]  = pos_new(0, 0, 3);
+    pos[11][1]  = pos_new(0, 2, 0);
+    pos[11][2]  = pos_new(1, 2, 0);
+    pos[11][3]  = pos_new(2, 0, 0);
+    pos[11][4]  = pos_new(2, 1, 0);
+    pos[11][5]  = pos_new(2, 2, 0);
+    pos[11][6]  = pos_new(3, 0, 2);
+    pos[11][7]  = pos_new(3, 2, 1);
+    pos[11][8]  = pos_new(4, 0, 2);
+    pos[11][9]  = pos_new(5, 0, 0);
+    pos[11][10] = pos_new(6, 0, 0);
+    pos[11][11] = pos_new(5, 1, 3);
+
+    pos[12][0]  = pos_new(0, 0, 3);
+    pos[12][1]  = pos_new(0, 2, 0);
+    pos[12][2]  = pos_new(1, 2, 0);
+    pos[12][3]  = pos_new(2, 0, 0);
+    pos[12][4]  = pos_new(2, 1, 0);
+    pos[12][5]  = pos_new(2, 2, 0);
+    pos[12][6]  = pos_new(3, 0, 0);
+    pos[12][7]  = pos_new(3, 1, 0);
+    pos[12][8]  = pos_new(3, 2, 1);
+    pos[12][9]  = pos_new(4, 0, 2);
+    pos[12][10] = pos_new(5, 0, 0);
+    pos[12][11] = pos_new(6, 0, 0);
+    pos[12][12] = pos_new(5, 1, 3);
+
+    pos[13][0]  = pos_new(0, 0, 3);
+    pos[13][1]  = pos_new(0, 2, 0);
+    pos[13][2]  = pos_new(1, 2, 0);
+    pos[13][3]  = pos_new(2, 0, 0);
+    pos[13][4]  = pos_new(2, 1, 0);
+    pos[13][5]  = pos_new(2, 2, 0);
+    pos[13][6]  = pos_new(3, 0, 0);
+    pos[13][7]  = pos_new(3, 1, 0);
+    pos[13][8]  = pos_new(3, 2, 1);
+    pos[13][9]  = pos_new(4, 0, 0);
+    pos[13][10] = pos_new(4, 1, 0);
+    pos[13][11] = pos_new(5, 0, 0);
+    pos[13][12] = pos_new(6, 0, 0);
+    pos[13][13] = pos_new(5, 1, 3);
+
+    pos[14][0]  = pos_new(0, 0, 3);
+    pos[14][1]  = pos_new(0, 2, 0);
+    pos[14][2]  = pos_new(1, 2, 0);
+    pos[14][3]  = pos_new(2, 0, 0);
+    pos[14][4]  = pos_new(2, 1, 0);
+    pos[14][5]  = pos_new(2, 2, 0);
+    pos[14][6]  = pos_new(3, 0, 0);
+    pos[14][7]  = pos_new(3, 1, 0);
+    pos[14][8]  = pos_new(3, 2, 0);
+    pos[14][9]  = pos_new(4, 0, 0);
+    pos[14][10] = pos_new(4, 1, 0);
+    pos[14][11] = pos_new(4, 2, 0);
+    pos[14][12] = pos_new(5, 0, 0);
+    pos[14][13] = pos_new(6, 0, 0);
+    pos[14][14] = pos_new(5, 1, 3);
+
+    // 16
+    pos[15][0]  = pos_new(0, 0, 3);
+    pos[15][1]  = pos_new(0, 2, 0);
+    pos[15][2]  = pos_new(1, 2, 0);
+    pos[15][3]  = pos_new(0, 3, 1);
+    pos[15][4]  = pos_new(2, 0, 0);
+    pos[15][5]  = pos_new(2, 1, 0);
+    pos[15][6]  = pos_new(2, 2, 0);
+    pos[15][7]  = pos_new(2, 3, 0);
+    pos[15][8]  = pos_new(3, 0, 2);
+    pos[15][9]  = pos_new(3, 2, 3);
+    pos[15][10] = pos_new(4, 0, 0);
+    pos[15][11] = pos_new(4, 1, 0);
+    pos[15][12] = pos_new(5, 0, 1);
+    pos[15][13] = pos_new(5, 1, 3);
+    pos[15][14] = pos_new(5, 3, 0);
+    pos[15][15] = pos_new(6, 3, 0);
+
+    pos[16][0]  = pos_new(0, 0, 3);
+    pos[16][1]  = pos_new(0, 2, 0);
+    pos[16][2]  = pos_new(1, 2, 0);
+    pos[16][3]  = pos_new(0, 3, 1);
+    pos[16][4]  = pos_new(2, 0, 0);
+    pos[16][5]  = pos_new(2, 1, 0);
+    pos[16][6]  = pos_new(2, 2, 0);
+    pos[16][7]  = pos_new(2, 3, 0);
+    pos[16][8]  = pos_new(3, 0, 2);
+    pos[16][9]  = pos_new(3, 2, 3);
+    pos[16][10] = pos_new(4, 0, 0);
+    pos[16][11] = pos_new(4, 1, 0);
+    pos[16][12] = pos_new(5, 0, 0);
+    pos[16][13] = pos_new(6, 0, 0);
+    pos[16][14] = pos_new(5, 1, 3);
+    pos[16][15] = pos_new(5, 3, 0);
+    pos[16][16] = pos_new(6, 3, 0);
+
+    pos[17][0]  = pos_new(0, 0, 3);
+    pos[17][1]  = pos_new(0, 2, 0);
+    pos[17][2]  = pos_new(1, 2, 0);
+    pos[17][3]  = pos_new(0, 3, 1);
+    pos[17][4]  = pos_new(2, 0, 0);
+    pos[17][5]  = pos_new(2, 1, 0);
+    pos[17][6]  = pos_new(2, 2, 0);
+    pos[17][7]  = pos_new(2, 3, 0);
+    pos[17][8]  = pos_new(3, 0, 2);
+    pos[17][9]  = pos_new(3, 2, 1);
+    pos[17][10] = pos_new(3, 3, 1);
+    pos[17][11] = pos_new(4, 0, 0);
+    pos[17][12] = pos_new(4, 1, 0);
+    pos[17][13] = pos_new(5, 0, 0);
+    pos[17][14] = pos_new(6, 0, 0);
+    pos[17][15] = pos_new(5, 1, 3);
+    pos[17][16] = pos_new(5, 3, 0);
+    pos[17][17] = pos_new(6, 3, 0);
+
+    pos[18][0]  = pos_new(0, 0, 3);
+    pos[18][1]  = pos_new(0, 2, 0);
+    pos[18][2]  = pos_new(1, 2, 0);
+    pos[18][3]  = pos_new(0, 3, 1);
+    pos[18][4]  = pos_new(2, 0, 0);
+    pos[18][5]  = pos_new(2, 1, 0);
+    pos[18][6]  = pos_new(2, 2, 0);
+    pos[18][7]  = pos_new(2, 3, 0);
+    pos[18][8]  = pos_new(3, 0, 2);
+    pos[18][9]  = pos_new(3, 2, 1);
+    pos[18][10] = pos_new(3, 3, 0);
+    pos[18][11] = pos_new(4, 3, 0);
+    pos[18][12] = pos_new(4, 0, 0);
+    pos[18][13] = pos_new(4, 1, 0);
+    pos[18][14] = pos_new(5, 0, 0);
+    pos[18][15] = pos_new(6, 0, 0);
+    pos[18][16] = pos_new(5, 1, 3);
+    pos[18][17] = pos_new(5, 3, 0);
+    pos[18][18] = pos_new(6, 3, 0);
+
+    pos[19][0]  = pos_new(0, 0, 3);
+    pos[19][1]  = pos_new(0, 2, 0);
+    pos[19][2]  = pos_new(1, 2, 0);
+    pos[19][3]  = pos_new(0, 3, 1);
+    pos[19][4]  = pos_new(2, 0, 0);
+    pos[19][5]  = pos_new(2, 1, 0);
+    pos[19][6]  = pos_new(2, 2, 0);
+    pos[19][7]  = pos_new(2, 3, 0);
+    pos[19][8]  = pos_new(3, 0, 2);
+    pos[19][9]  = pos_new(3, 2, 0);
+    pos[19][10] = pos_new(3, 3, 0);
+    pos[19][11] = pos_new(4, 0, 0);
+    pos[19][12] = pos_new(4, 1, 0);
+    pos[19][13] = pos_new(4, 2, 0);
+    pos[19][14] = pos_new(4, 3, 0);
+    pos[19][15] = pos_new(5, 0, 0);
+    pos[19][16] = pos_new(6, 0, 0);
+    pos[19][17] = pos_new(5, 1, 3);
+    pos[19][18] = pos_new(5, 3, 0);
+    pos[19][19] = pos_new(6, 3, 0);
 }
+
 
 typedef struct _Exec Exec;
 struct _Exec {
     char *type;
+    char *icon;
+    char *bg;
+    char *xtype;
     char *path;
 };
-static Exec *exec_parse_tag(XmlTag *tag)
+
+void exec_destroy(Exec *exec)
+{
+    RET_IF(!exec);
+    free(exec->type);
+    if (exec->icon) free(exec->icon);
+    if (exec->bg) free(exec->bg);
+    if (exec->xtype) free(exec->xtype);
+    free(exec->path);
+}
+
+static Exec *tag_parse_exec(XmlTag *tag)
 {
     List *ll;
     XmlAttr *attr;
@@ -168,8 +341,22 @@ static Exec *exec_parse_tag(XmlTag *tag)
                 if (exec->type) free(exec->type);
                 exec->type = strdup(attr->val);
             }
-        }
-        if (!strcmp(attr->key, "path")) {
+        } else if (!strcmp(attr->key, "icon")) {
+            if (attr->val) {
+                if (exec->icon) free(exec->icon);
+                exec->icon = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "bg")) {
+            if (attr->val) {
+                if (exec->bg) free(exec->bg);
+                exec->bg = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "xtype")) {
+            if (attr->val) {
+                if (exec->xtype) free(exec->xtype);
+                exec->xtype = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "path")) {
             if (attr->val) {
                 if (exec->path) free(exec->path);
                 exec->path = strdup(attr->val);
@@ -191,31 +378,36 @@ static Exec *exec_parse_tag(XmlTag *tag)
     return exec;
 }
 
-List *__filetypes = NULL;
 typedef struct _FileType FileType;
 struct _FileType {
     char *type;
-    char *icon;
-    char *exec;
     char *ext;
+    char *icon;
+    char *bg;
     char *magic;
+
+    char *xtype;
+    char *exec;
 };
 
 static void filetype_destroy(FileType *filetype)
 {
     if (filetype->type) free(filetype->type);
-    if (filetype->icon) free(filetype->icon);
-    if (filetype->exec) free(filetype->exec);
     if (filetype->ext) free(filetype->ext);
+    if (filetype->icon) free(filetype->icon);
+    if (filetype->bg) free(filetype->bg);
     if (filetype->magic) free(filetype->magic);
+
+    if (filetype->xtype) free(filetype->xtype);
+    if (filetype->exec) free(filetype->exec);
     free(filetype);
 }
 
-static const FileType *_fileinfo_match_filetype(FileInfo *fileinfo)
+static FileType *_fileinfo_match_type(List *filetypes, FileInfo *fileinfo)
 {
     List *l;
     FileType *ft;
-    LIST_FOR_EACH(__filetypes, l, ft) {
+    LIST_FOR_EACH(filetypes, l, ft) {
         if (ft->ext && fileinfo->ext &&
                 !strcasecmp(ft->ext, fileinfo->ext)) {
             return ft;
@@ -227,65 +419,114 @@ static const FileType *_fileinfo_match_filetype(FileInfo *fileinfo)
     return NULL;
 }
 
-static FileType *filetype_parse_tag(XmlTag *tag, List *execs)
+static FileType *tag_parse_filetype(XmlTag *tag, List *execs)
 {
     List *ll;
     XmlAttr *attr;
-    FileType *filetype = NULL;
-    filetype = calloc(sizeof(FileType), 1);
+    FileType *ft = NULL;
+    ft = calloc(sizeof(FileType), 1);
     LIST_FOR_EACH(tag->attrs, ll, attr) {
         if (!strcmp(attr->key, "type")) {
             if (attr->val) {
-                if (filetype->type) free(filetype->type);
-                filetype->type = strdup(attr->val);
+                if (ft->type) free(ft->type);
+                ft->type = strdup(attr->val);
             }
-        }
-        if (!strcmp(attr->key, "icon")) {
+        } else if (!strcmp(attr->key, "icon")) {
             if (attr->val) {
-                if (filetype->icon) free(filetype->icon);
-                filetype->icon = strdup(attr->val);
+                if (ft->icon) free(ft->icon);
+                ft->icon = strdup(attr->val);
             }
-        }
-        if (!strcmp(attr->key, "exec")) {
+        } else if (!strcmp(attr->key, "bg")) {
             if (attr->val) {
-                if (filetype->exec) free(filetype->exec);
-                filetype->exec = strdup(attr->val);
+                if (ft->bg) free(ft->bg);
+                ft->bg = strdup(attr->val);
             }
-        }
-        if (!strcmp(attr->key, "ext")) {
+        } else if (!strcmp(attr->key, "exec")) {
             if (attr->val) {
-                if (filetype->ext) free(filetype->ext);
-                filetype->ext = strdup(attr->val);
+                if (ft->exec) free(ft->exec);
+                ft->exec = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "ext")) {
+            if (attr->val) {
+                if (ft->ext) free(ft->ext);
+                ft->ext = strdup(attr->val);
             }
         } else if (!strcmp(attr->key, "magic")) {
             if (attr->val) {
-                if (filetype->magic) free(filetype->magic);
-                filetype->magic = strdup(attr->val);
+                if (ft->magic) free(ft->magic);
+                ft->magic = strdup(attr->val);
             }
         }
     }
-    if (!filetype->type) {
-        filetype_destroy(filetype);
-        ERR("No file type specfied: magic(%s),ext(%s)", filetype->magic, filetype->ext);
+    if (!ft->type) {
+        filetype_destroy(ft);
+        ERR("No ft type specfied: magic(%s),ext(%s)", ft->magic, ft->ext);
         return NULL;
     }
-    if (!filetype->ext && !filetype->magic) {
-        filetype_destroy(filetype);
-        ERR("No file ext or magic specfied: type(%s)", filetype->type);
+    if (!ft->ext && !ft->magic) {
+        filetype_destroy(ft);
+        ERR("No ft ext or magic specfied: type(%s)", ft->type);
         return NULL;
     }
-    if (!filetype->exec) {
+
+    if (!ft->exec) {
         List *l;
         Exec *exec;
         LIST_FOR_EACH(execs, l, exec) {
-            if (!strcmp(filetype->type, exec->type)) {
-                filetype->exec = strdup(exec->path);
+            if (!strcmp(ft->type, exec->type)) {
+                if (exec->icon && !ft->icon) {
+                    ft->icon = strdup(exec->icon);
+                }
+                if (exec->bg && !ft->bg) {
+                    ft->bg = strdup(exec->bg);
+                }
+                if (exec->xtype) ft->xtype = strdup(exec->xtype);
+                ft->exec = strdup(exec->path);
                 break;
             }
         }
     }
 
-    return filetype;
+    return ft;
+}
+
+typedef struct _ConfigApp ConfigApp;
+struct _ConfigApp {
+    Config *config;
+    char *bgpath_local;
+    char *bgpath;
+    int item_ltx, item_lty;
+    int item_gap;
+    int item_w, item_h;
+    int item_txt_h;
+    char *rootpath;
+    Pos *pos[MAX_FILE_CNT];
+    List *filetypes;
+};
+
+
+
+
+
+
+
+
+
+
+static char *_get_thumb_url(const char *path, const char *ext)
+{
+    if (!path) return NULL;
+    char *base = file_get_basename(path);
+    char *dir = file_get_dirname(path);
+    char *ret;
+    if (ext)  {
+        ret = strdup_printf("%s/%s/%s.%s", dir, THUMB_DIR, base, ext);
+    } else {
+        ret = strdup_printf("%s/%s/%s", dir, THUMB_DIR, base);
+    }
+    free(base);
+    free(dir);
+    return ret;
 }
 
 typedef enum {
@@ -294,6 +535,29 @@ typedef enum {
     ICON_TYPE_PREV,
     ICON_TYPE_NEXT,
 } FBIconType;
+
+typedef struct _FBFile FBFile;
+struct _FBFile {
+    const FileType *ft;
+    char *name;
+    char *path;
+};
+
+static FBFile *fb_file_create(FileType *ft, FileInfo *fileinfo)
+{
+    FBFile *file = calloc(sizeof(FBFile), 1);
+    file->ft = ft;
+    file->path = strdup(fileinfo->path);
+    file->name = strdup(fileinfo->name);
+    return file;
+}
+
+static void fb_file_destroy(FBFile *file)
+{
+    free(file->path);
+    free(file->name);
+    free(file);
+}
 
 typedef struct _FBView FBView;
 typedef struct _FBIcon FBIcon;
@@ -311,97 +575,42 @@ struct _FBIcon {
     struct showone *icon;
 };
 
-struct _FBView {
-    NemoWidget *win;
-    const char *uuid;
-    int w, h;
-    int itw, ith;
-    struct nemoshow *show;
-    struct nemotool *tool;
-    NemoWidget *widget;
-
-    struct showone *gradient;
-
-    struct nemotimer *bg_timer;
-    int bgfiles_idx;
-    List *bgfiles;
-    Thread *bgdir_thread;
-    struct showone *bg_group;
-    struct showone *bg_it_clip, *bg_it0_clip;
-    double bg_it_clip_x, bg_it_clip_y;
-
-    List *clip_paths;
-    bool bgidx;
-    Image *bg0, *bg;
-    Image *bg_it0, *bg_it;
-
-    struct showone *border;
-
-    struct showone *it_group;
-    List *items;
-
-    struct showone *icon_group;
-    FBIcon *quit, *up;
-    FBIcon *prev, *next;
-
-    char *bgpath_local;
-    char *bgpath;
-
-    char *rootpath;
-    char *curpath;
-
-    int cnt_inpage;
-
-    int page_idx;
-    int page_cnt;
-
-    Thread *filethread;
-    List *fileinfos;
-
-    Worker *bg_worker;
-    Worker *img_worker;
-};
-
 typedef enum {
     ITEM_TYPE_DIR = 0,
     ITEM_TYPE_FILE,
+    ITEM_TYPE_URL,
     ITEM_TYPE_IMG,
     ITEM_TYPE_SVG,
     ITEM_TYPE_VIDEO,
+    ITEM_TYPE_PDF
 } FBItemType;
 
 typedef struct _FBItem FBItem;
 struct _FBItem {
     FBView *view;
-    FBItemType type;
+    FBFile *file;
 
-    int gap;
-    int w, h;
-    char *exec;
-    char *path;
-
-    int video_idx;
-    struct nemotimer *anim_timer;
-
-    struct showone *blur;
-    struct showone *font;
+    int x, y, w, h;
+    int txt_h;
 
     struct showone *group;
 
-    struct showone *bg;
+    struct showone *event;
 
-    struct showone *icon_bg;
+    struct showone *bg_clip;
+    Image *bg;
+    // Video
+    int video_idx;
+    struct nemotimer *video_timer;
+
+    struct showone *icon_shadow;
     struct showone *icon;
 
-    struct showone *txt_bg;
-    struct showone *txt;
-
-    struct showone *clip;
-    Image *img;
-    struct showone *svg;
-    struct showone *anim;
+    Text *txt_shadow, *txt;
+    Text *txt_shadow2, *txt2;
 };
 
+/*
 static void fb_icon_destroy(FBIcon *icon)
 {
     nemoshow_one_destroy(icon->group);
@@ -559,7 +768,7 @@ static void _fb_item_anim_timer(struct nemotimer *timer, void *userdata)
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, "%03d.jpg", it->video_idx);
 
-    char *path = _fb_get_thumb_url(it->path, buf);
+    char *path = _get_thumb_url(it->path, buf);
 
     if (!file_is_exist(path) || file_is_null(path)) {
         ERR("No animation thumbnail: %s", path);
@@ -623,7 +832,7 @@ static void fb_item_show(FBItem *it, uint32_t easetype, int duration, int delay)
 
     FBView *view = it->view;
     if (it->type == ITEM_TYPE_IMG) {
-        char *path = _fb_get_thumb_url(it->path, NULL);
+        char *path = _get_thumb_url(it->path, NULL);
         if (!file_is_exist(path) || file_is_null(path)) {
             free(path);
             path = strdup(it->path);
@@ -645,7 +854,7 @@ static void fb_item_show(FBItem *it, uint32_t easetype, int duration, int delay)
 
         }
     } else if (it->type == ITEM_TYPE_VIDEO) {
-        char *path = _fb_get_thumb_url(it->path, "001.jpg");
+        char *path = _get_thumb_url(it->path, "001.jpg");
         if (!file_is_exist(path) || file_is_null(path)) {
             ERR("No animation thumbnail: %s", path);
 #if 0
@@ -713,16 +922,15 @@ static void fb_item_translate(FBItem *it, uint32_t easetype, int duration, int d
     }
 }
 
-static void fb_show_dir(FBView *view, const char *path);
-static void fb_show_page(FBView *view, int page_idx);
+static void view_show_dir(FBView *view, const char *path);
+static void view_show_page(FBView *view, int page_idx);
 
 static void fb_item_exec(FBItem *it)
 {
     FBView *view = it->view;
     struct nemoshow *show = nemowidget_get_show(view->widget);
-
-    if (it->type == ITEM_TYPE_DIR) {
-        fb_show_dir(view, it->path);
+    i (it->type == ITEM_TYPE_DIR) {
+        view_show_dir(view, it->path);
     } else {
         float x, y;
         nemoshow_transform_to_viewport(show,
@@ -837,12 +1045,12 @@ static void _fb_grab_icon_event(NemoWidgetGrab *grab, NemoWidget *widget, struct
             } else if (icon->type == ICON_TYPE_UP) {
                 char *uppath = file_get_updir(view->curpath);
                 ERR("%s %s", view->curpath, uppath);
-                fb_show_dir(view, uppath);
+                view_show_dir(view, uppath);
                 free(uppath);
             } else if (icon->type == ICON_TYPE_PREV) {
-                fb_show_page(view, view->page_idx-1);
+                view_show_page(view, view->page_idx-1);
             } else if (icon->type == ICON_TYPE_NEXT) {
-                fb_show_page(view, view->page_idx+1);
+                view_show_page(view, view->page_idx+1);
             }
         }
     }
@@ -930,47 +1138,200 @@ static void fb_remove_item(FBView *view, FBItem *it)
     free(it);
 }
 
-static FBItem *fb_append_item(FBView *view, FBItemType type, const char *icon_uri, const char *txt, const char *exec, const char *path, int x, int y, int w, int h)
+*/
+struct _FBView {
+    ConfigApp *app;
+    NemoWidget *win;
+    const char *uuid;
+    int w, h;
+    int itw, ith;
+    struct nemoshow *show;
+    struct nemotool *tool;
+    NemoWidget *widget;
+
+    struct showone *gradient;
+
+    struct nemotimer *bg_timer;
+    int bgfiles_idx;
+    List *bgfiles;
+    Thread *bgdir_thread;
+    struct showone *bg_group;
+    struct showone *bg_it_clip, *bg_it0_clip;
+    double bg_it_clip_x, bg_it_clip_y;
+
+    List *clip_paths;
+    bool bgidx;
+    Image *bg0, *bg;
+    Image *bg_it0, *bg_it;
+
+    struct showone *border;
+
+    struct showone *it_group;
+    List *items;
+
+    struct showone *icon_group;
+
+    char *bgpath_local;
+    char *bgpath;
+
+    char *rootpath;
+    char *curpath;
+
+    int cnt_inpage;
+
+    int page_idx;
+    int page_cnt;
+
+    Thread *filethread;
+    List *fileinfos;
+
+    Worker *bg_worker;
+    Worker *img_worker;
+};
+
+static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w, int h)
 {
     FBItem *it = calloc(sizeof(FBItem), 1);
     it->view = view;
-    it->type = type;
-    it->gap = 12;
-    it->w = w - it->gap;
-    it->h = h - it->gap;
+    it->file = file;
+    it->x = x;
+    it->y = y;
+    it->w = w;
+    it->h = h;
+    it->txt_h = view->app->item_txt_h;
 
-    if (exec) it->exec = strdup(exec);
-    if (path) it->path = strdup(path);
-
-    struct showone *blur;
-    it->blur = blur = BLUR_CREATE("solid", 5);
-
-    struct showone *font;
-    font = FONT_CREATE("NanumGothic", "Regular");
-    it->font = font;
+    const char *font_family = view->app->config->font_family;
+    const char *font_style = view->app->config->font_style;
+    int font_size = view->app->config->font_size;
 
     struct showone *group;
-    group = GROUP_CREATE(view->it_group);
-    nemoshow_item_set_width(group, w);
-    nemoshow_item_set_height(group, h);
-    nemoshow_item_set_anchor(group, 0.5, 0.5);
-    nemoshow_item_translate(group, x, y);
+    it->group = group = GROUP_CREATE(view->it_group);
+    nemoshow_item_set_width(group, it->w);
+    nemoshow_item_set_height(group, it->h);
+    /*
     nemoshow_item_set_alpha(group, 0.0);
     nemoshow_item_scale(group, 0.0, 0.0);
-    it->group = group;
+    */
+    nemoshow_item_translate(group, it->x + it->w/2, it->y + it->h/2);
 
     struct showone *one;
-    one = path_diamond_create(group, it->w, it->h);
+    it->event = one = RECT_CREATE(group, it->w, it->h);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, w/2, h/2);
     nemoshow_one_set_tag(one, 0x1);
     nemoshow_one_set_userdata(one, it);
-    nemoshow_item_set_fill_color(one, RGBA(LIGHTBLUE));
-    nemoshow_item_set_shader(one, view->gradient);
-    it->bg = one;
+    nemoshow_item_set_alpha(one, 0.0);
+    //nemoshow_item_set_fill_color(one, RGBA(RED));
 
+    it->bg = image_create(group);
+    image_set_anchor(it->bg, 0.5, 0.5);
+
+    // FIXME: multibyte & length calculation for fixed size
+    char buf[PATH_MAX];
+    Text *txt;
+
+    snprintf(buf, it->w/7, "%s", file->name);
+    it->txt_shadow = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    text_set_fill_color(txt, 0, 0, 0, BLACK);
+    text_set_anchor(txt, 0.0, 0.0);
+    text_update(txt, 0, 0, 0, buf);
+    text_show(txt, 0, 0, 0);
+
+    it->txt = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    text_set_fill_color(txt, 0, 0, 0, WHITE);
+    text_set_anchor(txt, 0.0, 0.0);
+    text_update(txt, 0, 0, 0, buf);
+    text_show(txt, 0, 0, 0);
+
+    if (!strcmp(file->ft->type, "image") || strcmp(file->ft->type, "svg")) {
+        snprintf(buf, it->w/7, "%s", "Image");
+    } else if (!strcmp(file->ft->type, "video")) {
+        snprintf(buf, it->w/7, "%s", "Video");
+    } else if (!strcmp(file->ft->type, "pdf")) {
+        snprintf(buf, it->w/7, "%s", "PDF");
+    } else if (!strcmp(file->ft->type, "url")) {
+        snprintf(buf, it->w/7, "%s", "URL");
+    }
+    it->txt_shadow2 = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    text_set_fill_color(txt, 0, 0, 0, BLACK);
+    text_set_anchor(txt, 0.0, 0.0);
+    text_update(txt, 0, 0, 0, buf);
+    text_show(txt, 0, 0, 0);
+
+    it->txt2 = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    text_set_fill_color(txt, 0, 0, 0, WHITE);
+    text_set_anchor(txt, 0.0, 0.0);
+    text_update(txt, 0, 0, 0, buf);
+    text_show(txt, 0, 0, 0);
+
+    struct showone *clip;
+    clip = PATH_CREATE(group);
+    nemoshow_item_path_moveto(one, 0, 0);
+    nemoshow_item_path_lineto(one, it->w, 0);
+    nemoshow_item_path_lineto(one, it->w, it->h);
+    nemoshow_item_path_lineto(one, 0, 0);
+    nemoshow_item_path_close(one);
+
+    double iw, ih;
+    if (file->ft->icon) {
+        svg_get_wh(file->ft->icon, &iw, &ih);
+        ERR("[%s] [%s] %lf, %lf", file->path, file->ft->icon, iw, ih);
+        it->icon_shadow = one = SVG_PATH_CREATE(group, iw, ih, file->ft->icon);
+        nemoshow_item_set_anchor(one, 0.5, 0.5);
+
+        it->icon = one = SVG_PATH_CREATE(group, iw, ih, file->ft->icon);
+        nemoshow_item_set_anchor(one, 0.5, 0.5);
+    }
+
+    if (file->ft->bg) {
+        List *fileinfos = fileinfo_readdir(file->ft->bg);
+        if (fileinfos) {
+            int r = rand() % list_count(fileinfos);
+            FileInfo *fileinfo = LIST_DATA(list_get_nth(fileinfos, r));
+
+            image_load_full(it->bg, view->tool,
+                    fileinfo->path, it->w, it->h, NULL, NULL);
+            text_translate(it->txt_shadow, 0, 0, 0,
+                    -it->w/2 + view->app->item_gap + 1,
+                    -it->h/2 + view->app->item_gap + 1);
+            text_translate(it->txt, 0, 0, 0,
+                    -it->w/2 + view->app->item_gap,
+                    -it->h/2 + view->app->item_gap);
+            text_translate(it->txt_shadow2, 0, 0, 0,
+                    -it->w/2 + view->app->item_gap + 1,
+                    -it->h/2 + view->app->item_gap + 1 + font_size);
+            text_translate(it->txt2, 0, 0, 0,
+                    -it->w/2 + view->app->item_gap,
+                    -it->h/2 + view->app->item_gap + font_size);
+
+            if (it->icon_shadow) {
+                nemoshow_item_translate(it->icon_shadow,
+                        -it->w/2 + it->w - iw - view->app->item_gap + 1,
+                        -it->h/2 + it->h - ih - view->app->item_gap + 1);
+            }
+            if (it->icon) {
+                nemoshow_item_translate(it->icon,
+                        -it->w/2 + it->w - iw - view->app->item_gap,
+                        -it->h/2 + it->h - ih - view->app->item_gap);
+            }
+        } else {
+            ERR("No background files in the directory, %s", file->ft->bg);
+        }
+    } else {
+        if (!strcmp(file->ft->type, "image")) {
+            image_load_full(it->bg, view->tool, file->path,
+                    it->w, it->h - it->txt_h, NULL, NULL);
+            image_set_clip(it->bg, clip);
+        } else if (!strcmp(file->ft->type, "svg")) {
+        } else if (!strcmp(file->ft->type, "video")) {
+        } else if (!strcmp(file->ft->type, "url")) {
+        }
+        //it->bg = one = IMAGE_CREATE(group, it->w, it->h - it->txt_h);
+    }
+
+
+    /*
     if (icon_uri) {
         one = SVG_PATH_CREATE(group, it->w, it->h, icon_uri);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
@@ -1050,12 +1411,13 @@ static FBItem *fb_append_item(FBView *view, FBItemType type, const char *icon_ur
     nemoshow_item_set_stroke_width(one, 1);
     nemoshow_item_translate(one, (w - it->w)/2, (h - it->h)/2);
     nemoshow_item_set_shader(one, view->gradient);
+    */
 
     view->items = list_append(view->items, it);
     return it;
 }
 
-static void fb_view_destroy(FBView *view)
+static void view_destroy(FBView *view)
 {
     worker_destroy(view->bg_worker);
     worker_destroy(view->img_worker);
@@ -1071,15 +1433,13 @@ static void fb_view_destroy(FBView *view)
     if (view->bg_it0_clip) nemoshow_one_destroy(view->bg_it0_clip);
     if (view->bg_it_clip) nemoshow_one_destroy(view->bg_it_clip);
 
-    fb_icon_destroy(view->quit);
-    fb_icon_destroy(view->up);
-    fb_icon_destroy(view->prev);
-    fb_icon_destroy(view->next);
 
+    /*
     FBItem *it;
     while((it = LIST_DATA(LIST_FIRST(view->items)))) {
         fb_remove_item(view, it);
     }
+    */
 
     if (view->curpath) free(view->curpath);
     if (view->bgpath) free(view->bgpath);
@@ -1130,7 +1490,7 @@ static void _fb_bg_timer(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(view->show);
 }
 
-static FBView *fb_view_create(NemoWidget *parent, int width, int height, const char *path, ConfigApp *app)
+static FBView *view_create(NemoWidget *parent, int width, int height, const char *path, ConfigApp *app)
 {
     FBView *view = calloc(sizeof(FBView), 1);
     view->win = parent;
@@ -1139,13 +1499,16 @@ static FBView *fb_view_create(NemoWidget *parent, int width, int height, const c
     view->uuid = nemowidget_get_uuid(parent);
     view->w = width;
     view->h = height;
-    view->itw = width/(POS_LAYER_CNT * 2) - 12;
-    view->ith = height/(POS_LAYER_CNT * 2) - 12;
     view->rootpath = strdup(path);
-    view->cnt_inpage = sizeof(pos)/sizeof(pos[0]);
+    view->app = app;
+    view->cnt_inpage = 20;
     if (app->bgpath_local) view->bgpath_local = strdup(app->bgpath_local);
     if (app->bgpath) view->bgpath = strdup(app->bgpath);
 
+    /*
+    view->itw = width/(POS_LAYER_CNT * 2) - 12;
+    view->ith = height/(POS_LAYER_CNT * 2) - 12;
+    */
     /*
     view->bg_worker = worker_create(view->tool);
     view->img_worker = worker_create(view->tool);
@@ -1153,7 +1516,7 @@ static FBView *fb_view_create(NemoWidget *parent, int width, int height, const c
 
     NemoWidget *widget;
     widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_append_callback(widget, "event", _fb_event, view);
+    //nemowidget_append_callback(widget, "event", _fb_event, view);
     view->widget = widget;
 
     struct showone *one;
@@ -1182,6 +1545,7 @@ static FBView *fb_view_create(NemoWidget *parent, int width, int height, const c
     return view;
 }
 
+/*
 static void fb_show_items(FBView *view, uint32_t easetype, int duration, int delay)
 {
     worker_stop(view->img_worker);
@@ -1195,6 +1559,7 @@ static void fb_show_items(FBView *view, uint32_t easetype, int duration, int del
 
     worker_start(view->img_worker);
 }
+*/
 
 static void fb_arrange(FBView *view, uint32_t easetype, int duration, int delay)
 {
@@ -1204,6 +1569,7 @@ static void fb_arrange(FBView *view, uint32_t easetype, int duration, int delay)
     w = view->itw;
     h = view->ith;
 
+    /*
     int idx = 0;
     List *l;
     FBItem *it;
@@ -1213,149 +1579,96 @@ static void fb_arrange(FBView *view, uint32_t easetype, int duration, int delay)
                 y + h * pos[idx].y);
         idx++;
     }
+    */
 }
 
-static void fb_show_page(FBView *view, int page_idx)
+static void view_show_page(FBView *view, int page_idx)
 {
-    if (page_idx >= view->page_cnt) return;
-    if (page_idx < 0) return;
+    RET_IF(page_idx >= view->page_cnt);
+    RET_IF(page_idx < 0);
 
     ERR("%d", page_idx);
 
     view->page_idx = page_idx;
 
-    int filecnt = list_count(view->fileinfos);
-    int fileinfoidx = page_idx * view->cnt_inpage;
+    int idx = page_idx * view->cnt_inpage;
 
+    /*
+     * Only show page 1
     if (page_idx > 0) {
         fb_icon_show(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 250);
     } else {
         fb_icon_hide(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     }
 
-    if (fileinfoidx + view->cnt_inpage < filecnt) {
+    if (idx + view->cnt_inpage < cnt) {
         fb_icon_show(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 400);
     } else {
         fb_icon_hide(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
     }
+    */
 
+    /*
     FBItem *it;
     while((it = LIST_DATA(LIST_FIRST(view->items)))) {
         fb_remove_item(view, it);
     }
+    */
 
-    int idx = 0;
-    while (idx < view->cnt_inpage && fileinfoidx < filecnt) {
-        FBItemType type;
-        const char *icon_uri = NULL;
-        const char *name = NULL;
-        const char *exec = NULL;
-        const char *path = NULL;
-
-        FileInfo *fileinfo =
-            LIST_DATA(list_get_nth(view->fileinfos, fileinfoidx));
-        if (!fileinfo) {
-            ERR("WTF: fileinfo is NULL");
-            fileinfoidx++;
-            continue;
-        }
-
+    List *l;
+    List *files = NULL;
+    FBFile *file;
+    FileInfo *fileinfo;
+    LIST_FOR_EACH(view->fileinfos, l, fileinfo) {
         if (fileinfo_is_dir(fileinfo)) {
-            type = ITEM_TYPE_DIR;
-            icon_uri = APP_RES_DIR"/dir.svg";
-            exec = NULL;
+            // XXXX
         } else {
-            const FileType *filetype =
-                _fileinfo_match_filetype(fileinfo);
-            if (!filetype) {
-                ERR("Not supported file: %s", fileinfo->path);
-                fileinfoidx++;
+            FileType *ft;
+            ft = _fileinfo_match_type(view->app->filetypes, fileinfo);
+            if (!ft) {
+                ERR("Not supported ft: %s", fileinfo->path);
                 continue;
             }
-            if (!strcmp(filetype->type, "image")) {
-                type = ITEM_TYPE_IMG;
-            } else if (!strcmp(filetype->type, "svg")) {
-                type = ITEM_TYPE_SVG;
-            } else if (!strcmp(filetype->type, "video")) {
-                type = ITEM_TYPE_VIDEO;
-            } else {
-                type = ITEM_TYPE_FILE;
-            }
-            icon_uri = filetype->icon;
-            exec = filetype->exec;
+            file = fb_file_create(ft, fileinfo);
+            files = list_append(files, file);
         }
-        name = fileinfo->name;
-        path = fileinfo->path;
-
-        it = fb_append_item(view, type, icon_uri, name, exec, path,
-                0, 0, view->itw, view->ith);
         idx++;
-        fileinfoidx++;
-    }
-    if (list_count(view->items) < 5) {
-        int vals[10];
-        vals[0] = view->w/2;
-        vals[1] = view->h * 0.25;
-        vals[2] = view->w * 0.75;
-        vals[3] = view->h/2;
-        vals[4] = view->w/2;
-        vals[5] = view->h * 0.75;
-        vals[6] = view->w * 0.25;
-        vals[7] = view->h/2;
-        vals[8] = view->w/2;
-        vals[9] = view->h * 0.25;
-        nemowidget_detach_scope(view->widget);
-        nemowidget_attach_scope_polygon(view->widget, 10, vals);
-
-        fb_icon_translate(view->prev,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                (view->itw/3) + (view->w/2) * 0.5, view->h/2);
-        fb_icon_translate(view->next,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                view->w - view->itw/3 - (view->w/2) * 0.5, view->h/2);
-        _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                "sx", 0.5, "sy", 0.5, NULL);
-        image_scale(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
-        /*
-        image_translate(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
-                view->w/4.0, view->h/4.0);
-                */
-        image_scale(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.5, 0.5);
-        /*
-        image_translate(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150,
-                view->w/4.0, view->h/4.0);
-                */
-    } else {
-        int vals[10];
-        vals[0] = view->w/2;
-        vals[1] = 0;
-        vals[2] = view->w;
-        vals[3] = view->h/2;
-        vals[4] = view->w/2;
-        vals[5] = view->h;
-        vals[6] = 0;
-        vals[7] = view->h/2;
-        vals[8] = view->w/2;
-        vals[9] = 0;
-        nemowidget_detach_scope(view->widget);
-        nemowidget_attach_scope_polygon(view->widget, 8, vals);
-
-        fb_icon_translate(view->prev,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                view->itw/3, view->h/2);
-        fb_icon_translate(view->next,
-                NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                view->w - view->itw/3, view->h/2);
-        _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                "sx", 1.0, "sy", 1.0, NULL);
-        image_scale(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
-        //image_translate(view->bg0, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
-        image_scale(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 1.0, 1.0);
-        //image_translate(view->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 150, 0.0, 0.0);
+        if (idx >= MAX_FILE_CNT) break;
     }
 
+    ConfigApp *app = view->app;
+    Pos **pos = view->app->pos;
+    idx = 0;
+    int cnt = list_count(files) - 1;
+    LIST_FOR_EACH(files, l, file) {
+        int x, y, w, h;
+        x = pos[cnt][idx].x * (app->item_w + app->item_gap) + app->item_ltx;
+        y = pos[cnt][idx].y * (app->item_h + app->item_gap) + app->item_lty;
+        if (pos[cnt][idx].wh == 0) {
+            w = app->item_w;
+            h = app->item_h;
+        } else if (pos[cnt][idx].wh == 1) {
+            w = app->item_w * 2 + app->item_gap;
+            h = app->item_h;
+        } else if (pos[cnt][idx].wh == 2) {
+            w = app->item_w;
+            h = app->item_h * 2 + app->item_gap;
+        } else if (pos[cnt][idx].wh == 3) {
+            w = app->item_w * 2 + app->item_gap;
+            h = app->item_h * 2 + app->item_gap;
+        } else {
+            ERR("Not supported position wh type: %d", pos[cnt][idx].wh);
+            abort();
+        }
+        FBItem *it;
+        it = view_append_item(view, file, x, y, w, h);
+        idx++;
+    }
+
+    /*
     fb_arrange(view, 0, 0, 0);
     fb_show_items(view, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+    */
     nemoshow_dispatch_frame(view->show);
 }
 
@@ -1455,6 +1768,8 @@ static void *_fb_load_file(void *userdata)
     FBView *view = data->view;
 
     data->fileinfos = fileinfo_readdir(view->curpath);
+    // Only show 1 page
+    view->page_cnt = 1;
 
     return NULL;
 }
@@ -1483,7 +1798,6 @@ static void _fb_load_file_done(bool cancel, void *userdata)
 
         double w, h;
         nemowidget_get_geometry(view->win, NULL, NULL, &w, &h);
-        ERR("%d(%lf, %lf)", cnt, w, h);
         _nemoshow_item_motion(view->bg_group, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
                 "alpha", 1.0, NULL);
 
@@ -1492,12 +1806,12 @@ static void _fb_load_file_done(bool cancel, void *userdata)
         bgdata->view = view;
         view->bgdir_thread = thread_create(view->tool,
                 _load_bg_dir, _load_bg_dir_done, bgdata);
-        //fb_show_page(view, 0);
+        view_show_page(view, 0);
     }
     free(data);
 }
 
-static void fb_show_dir(FBView *view, const char *path)
+static void view_show_dir(FBView *view, const char *path)
 {
     RET_IF(!path);
     ERR("%s", path);
@@ -1531,11 +1845,7 @@ static void fb_hide(FBView *view)
     image_set_alpha(view->bg_it0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
     image_set_alpha(view->bg_it, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
 
-    fb_icon_hide(view->prev, NEMOEASE_CUBIC_OUT_TYPE, 250, 0);
-    fb_icon_hide(view->quit, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
-    fb_icon_hide(view->up, NEMOEASE_CUBIC_OUT_TYPE, 250, 100);
-    fb_icon_hide(view->next, NEMOEASE_CUBIC_OUT_TYPE, 250, 200);
-
+    /*
     int delay = 0;
     List *l;
     FBItem *it;
@@ -1543,6 +1853,7 @@ static void fb_hide(FBView *view)
         fb_item_hide(it, NEMOEASE_CUBIC_OUT_TYPE, 150, delay);
         delay += 30;
     }
+    */
     nemoshow_dispatch_frame(view->show);
 }
 
@@ -1559,6 +1870,12 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->config = config_load(domain, filename, argc, argv);
+    app->item_ltx = 45;
+    app->item_lty = 115;
+    app->item_gap = 10;
+    app->item_w = 85;
+    app->item_h = 85;
+    app->item_txt_h = 40;
 
     Xml *xml;
     if (app->config->path) {
@@ -1569,11 +1886,11 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
     if (xml) {
-        const char *root= "config";
+        const char *prefix= "config";
         char buf[PATH_MAX];
         const char *temp;
 
-        snprintf(buf, PATH_MAX, "%s/background", root);
+        snprintf(buf, PATH_MAX, "%s/background", prefix);
         temp = xml_get_value(xml, buf, "localpath");
         if (temp && strlen(temp) > 0) {
             app->bgpath_local = strdup(temp);
@@ -1585,31 +1902,54 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
             ERR("No background path in configuration file");
         }
 
-        List *execs = NULL;
-        snprintf(buf, PATH_MAX, "%s/exec", root);
-        List *_execs = xml_search_tags(xml, buf);
+        snprintf(buf, PATH_MAX, "%s/item", prefix);
+        temp = xml_get_value(xml, buf, "ltx");
+        if (temp && strlen(temp) > 0) {
+            app->item_ltx = atoi(temp);
+        }
+        temp = xml_get_value(xml, buf, "lty");
+        if (temp && strlen(temp) > 0) {
+            app->item_lty = atoi(temp);
+        }
+        temp = xml_get_value(xml, buf, "gap");
+        if (temp && strlen(temp) > 0) {
+            app->item_gap = atoi(temp);
+        }
+        temp = xml_get_value(xml, buf, "width");
+        if (temp && strlen(temp) > 0) {
+            app->item_w = atoi(temp);
+        }
+        temp = xml_get_value(xml, buf, "height");
+        if (temp && strlen(temp) > 0) {
+            app->item_h = atoi(temp);
+        }
+        temp = xml_get_value(xml, buf, "txt_height");
+        if (temp && strlen(temp) > 0) {
+            app->item_txt_h = atoi(temp);
+        }
+
         List *l;
         XmlTag *tag;
+
+        List *execs = NULL;
+        snprintf(buf, PATH_MAX, "%s/exec", prefix);
+        List *_execs = xml_search_tags(xml, buf);
         LIST_FOR_EACH(_execs, l, tag) {
-            Exec *exec = exec_parse_tag(tag);
+            Exec *exec = tag_parse_exec(tag);
             if (!exec) continue;
             execs = list_append(execs, exec);
         }
 
-        snprintf(buf, PATH_MAX, "%s/filetype", root);
+        snprintf(buf, PATH_MAX, "%s/filetype", prefix);
         List *types = xml_search_tags(xml, buf);
         LIST_FOR_EACH(types, l, tag) {
-            FileType *filetype = filetype_parse_tag(tag, execs);
-            if (!filetype) continue;
-            __filetypes = list_append(__filetypes, filetype);
+            FileType *ft = tag_parse_filetype(tag, execs);
+            if (!ft) continue;
+            app->filetypes = list_append(app->filetypes, ft);
         }
 
         Exec *exec;
-        LIST_FREE(execs, exec) {
-            free(exec->type);
-            free(exec->path);
-            free(exec);
-        }
+        LIST_FREE(execs, exec) exec_destroy(exec);
 
         xml_unload(xml);
     }
@@ -1644,6 +1984,9 @@ static void _config_unload(ConfigApp *app)
     if (app->bgpath) free(app->bgpath);
     free(app->rootpath);
     free(app);
+
+    FileType *ft;
+    LIST_FREE(app->filetypes, ft) filetype_destroy(ft);
 }
 
 int main(int argc, char *argv[])
@@ -1653,25 +1996,24 @@ int main(int argc, char *argv[])
     if (!app->rootpath) {
         app->rootpath = strdup(file_get_homedir());
     }
+    pos_init(app->pos);
 
     struct nemotool *tool = TOOL_CREATE();
 
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
 
     FBView *view;
-    view = fb_view_create(win, app->config->width, app->config->height, app->rootpath, app);
+    view = view_create(win, app->config->width, app->config->height, app->rootpath, app);
     nemowidget_append_callback(win, "exit", _win_exit, view);
-    fb_show_dir(view, app->rootpath);
+    view_show_dir(view, app->rootpath);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);
 
-    fb_view_destroy(view);
+    view_destroy(view);
     nemowidget_destroy(win);
     TOOL_DESTROY(tool);
 
-    FileType *filetype;
-    LIST_FREE(__filetypes, filetype) filetype_destroy(filetype);
     _config_unload(app);
 
     return 0;

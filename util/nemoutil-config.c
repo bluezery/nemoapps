@@ -23,6 +23,8 @@ void config_unload(Config *config)
     if (config->id) free(config->id);
     if (config->path) free(config->path);
     if (config->layer) free(config->layer);
+    if (config->font_family) free(config->font_family);
+    if (config->font_style) free(config->font_style);
     free(config);
 }
 
@@ -85,6 +87,14 @@ static void _config_override(Config *config, Xml *xml)
     snprintf(buf, PATH_MAX, "%s/frame", prefix);
     temp = xml_get_value(xml, buf, "rate");
     if (temp && (strlen(temp) > 0)) config->framerate = atoi(temp);
+
+    snprintf(buf, PATH_MAX, "%s/font", prefix);
+    temp = xml_get_value(xml, buf, "family");
+    if (temp && (strlen(temp) > 0)) config->font_family = strdup(temp);
+    temp = xml_get_value(xml, buf, "style");
+    if (temp && (strlen(temp) > 0)) config->font_style = strdup(temp);
+    temp = xml_get_value(xml, buf, "size");
+    if (temp && (strlen(temp) > 0)) config->font_size = atoi(temp);
 
     config->width = (double)config->width * sx;
     config->height = (double)config->height * sy;

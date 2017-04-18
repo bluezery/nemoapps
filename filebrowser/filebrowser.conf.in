@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <font family="Lato" size="10"/>
     <size width="745" height="530"/>
-    <exec type="image" path="@NEMOIMAGE@;-f"/>
-    <exec type="video" path="@NEMOPLAYER@;-f"/>
-    <exec type="pdf" path="@NEMOPDF@;-f"/>
-    <exec type="text" path="@NEMOTEXT@;-f"/>
-    <!-- Descending order priority -->
-    <!-- executable -->
     <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg"/>
-    <filetype type="exe" icon="@APP_RES_DIR@/exe.svg" magic="ELF 64-bit LSB executable"/>
 
-    <!-- nemoimage -->
+    <!--left top x, y and minimum width/height/text height unit for item-->
+    <item ltx="45" lty="115" gap="10" width="85" height="85" txt_height="40"/>
+
+    <exec type="image" path="@NEMOIMAGE@;-f"/>
+    <exec type="video" icon="@APP_RES_DIR@/icon/video.svg" path="@NEMOPLAYER@;-f"/>
+    <exec type="pdf"   icon="@APP_RES_DIR@/icon/pdf.svg" bg="@APP_RES_DIR@/bg/pdf/" path="@NEMOPDF@;-f"/>
+    <!--exec type="text" path="@NEMOTEXT@;-f"/>-->
+    <exec type="url"   icon="@APP_RES_DIR@/icon/url.svg" xtype="xapp" path="/usr/bin/electron"/>
+
+    <!-- Descending order priority -->
+
+    <filetype type="exe" magic="ELF 64-bit LSB executable"/>
+
     <filetype type="image" ext="png"/>
     <filetype type="image" ext="jpg"/>
     <filetype type="image" ext="jpeg"/>
@@ -20,11 +26,7 @@
     <filetype type="image" magic="TIFF image data"/>
     <filetype type="svg" ext="svg"/>
     <filetype type="svg" magic="SVG Scalable Vector Graphics image"/>
-    <!-- FIXME: No svg executor yet -->
-    <!--<filetype magic="SVG Scalable Vector Graphics image" type="svg"/>-->
-    <!--<filetype ext="svg" type="svg"/>-->
 
-    <!-- nemovideo -->
     <filetype type="video" ext="avi"/>
     <filetype type="video" ext="mp4"/>
     <filetype type="video" ext="mkv"/>
@@ -46,15 +48,15 @@
     <filetype type="video" magic="Macromedia Flash Video"/>
     <filetype type="video" magic="Macromedia Flash Data, version 6"/>
 
-    <!-- nemopdf -->
-    <filetype type="pdf" icon="@APP_ICON_DIR@/pdf.svg" ext="pdf"/>
-    <filetype type="pdf" icon="@APP_ICON_DIR@/pdf.svg" magic="PDF document"/>
+    <filetype type="pdf" ext="pdf"/>
+    <filetype type="pdf" magic="PDF document"/>
+
+    <!--<filetype type="text"  magic="ASCII text"/>-->
+    <!--<filetype type="text" magic="UTF-8 Unicode text"/>-->
+
+    <filetype type="url"  magic="Internet shortcut text"/>
 
     <!-- nemomesh -->
-    <!--<filetype type="3d" icon="@APP_ICON_DIR@/exe.svg" ext="obj"/>-->
-
-    <!-- nemotext -->
-    <filetype type="text" icon="@APP_ICON_DIR@/text.svg" magic="ASCII text"/>
-    <!--<filetype type="text" icon="@APP_ICON_DIR@/text.svg" exec="@BIN_DIR@/nemotext;-f" magic="UTF-8 Unicode text"/>-->
+    <!--<filetype type="3d" ext="obj"/>-->
 </config>
 

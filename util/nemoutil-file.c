@@ -46,6 +46,11 @@ const char *MAGIC_EXECS[] =
     "ELF 64-bit LSB executable",
 };
 
+const char *MAGIC_URLS[] =
+{
+    "Internet shortcut text",
+};
+
 char *file_get_magic(const char *path, int flags)
 {
     magic_t _magic = magic_open(MAGIC_SYMLINK | flags);
@@ -617,5 +622,11 @@ bool fileinfo_is_exec(FileInfo *fileinfo)
 {
     return _path_check_magic(fileinfo->magic_str, MAGIC_EXECS,
             sizeof(MAGIC_EXECS)/sizeof(MAGIC_EXECS[0]));
+}
+
+bool fileinfo_is_url(FileInfo *fileinfo)
+{
+    return _path_check_magic(fileinfo->magic_str, MAGIC_URLS,
+            sizeof(MAGIC_URLS)/sizeof(MAGIC_URLS[0]));
 }
 

@@ -13,6 +13,8 @@ struct _Config {
     int exit_width, exit_height;
     int scene_width, scene_height;
     int framerate;
+    char *font_family, *font_style;
+    int font_size;
     char *layer;
 };
 
