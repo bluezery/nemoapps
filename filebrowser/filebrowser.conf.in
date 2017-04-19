@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <font family="Lato" size="10"/>
+    <!--<font family="Lato" size="10"/>-->
     <size width="745" height="530"/>
-    <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg"/>
+    <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg" titlepath=".@APPNAME@/title"/>
 
+    <title ltx="45" lty="35"/>
     <!--left top x, y and minimum width/height/text height unit for item-->
-    <item ltx="45" lty="115" gap="10" width="85" height="85" txt_height="40"/>
+    <item ltx="45" lty="115" gap="10" width="85" height="85" txt_height="35"/>
 
     <exec type="image" path="@NEMOIMAGE@;-f"/>
     <exec type="video" icon="@APP_RES_DIR@/icon/video.svg" path="@NEMOPLAYER@;-f"/>

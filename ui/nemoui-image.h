@@ -40,6 +40,8 @@ void image_set_anchor(Image *img, double ax, double ay);
 void image_set_clip(Image *img, struct showone *clip);
 struct showone *image_get_one(Image *img);
 struct showone *image_get_group(Image *img);
+void image_below(Image *img, struct showone *one);
+void image_above(Image *img, struct showone *one);
 
 #ifdef __cplusplus
 }

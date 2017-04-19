@@ -383,3 +383,13 @@ struct showone *image_get_group(Image *img)
 {
     return img->group;
 }
+
+void image_below(Image *img, struct showone *one)
+{
+    nemoshow_item_below_one(img->group, one);
+}
+
+void image_above(Image *img, struct showone *one)
+{
+    nemoshow_item_above_one(img->group, one);
+}

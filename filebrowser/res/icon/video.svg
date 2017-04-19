@@ -3,35 +3,10 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
 	 y="0px" width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">
-<polygon fill="none" stroke="#000000" stroke-miterlimit="10" points="27.934,20 13.933,29 13.933,11 "/>
 <g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
+	<path fill="#FFFFFF" d="M13.383,10.084l15.501,9.874l-15.501,10.05V10.084z M14.483,28.084l12.499-8.126l-12.499-7.951V28.084z"/>
+	<path fill="#666666" d="M13.433,10.084L28.857,20l-15.424,9.916V10.084 M14.433,28.084L27.009,20l-12.576-8.084V28.084
+		 M13.333,9.901v0.183v19.832V30.1l0.154-0.1l15.424-9.916L29.042,20l-0.131-0.084L13.487,10L13.333,9.901L13.333,9.901z
+		 M14.533,27.9V12.099L26.824,20L14.533,27.9L14.533,27.9z"/>
 </g>
 </svg>

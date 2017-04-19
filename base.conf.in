@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <font family="NanumGothic" size="10"/>
     <window layer=""/>
     <size width="512" height="512"/>
     <scale x="1.0" y="1.0"/>
