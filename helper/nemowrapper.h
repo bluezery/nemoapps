@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <uuid/uuid.h>
 
+#include <nemoitem.h>
 #include <nemobus.h>
 #include <nemotool.h>
 #include <nemoshow.h>
@@ -1591,24 +1592,28 @@ static inline char *nemo_execute(const char *owner, const char *type, const char
     RET_IF(!path, NULL);
 
     struct nemobus *bus;
+
     struct busmsg *msg;
-    char *uuid;
+    struct itemone *one;
+    char states[512];
+
+    one = nemoitem_one_create();
+    nemoitem_one_set_attr_format(one, "x", "%f", x);
+    nemoitem_one_set_attr_format(one, "y", "%f", y);
+    nemoitem_one_set_attr_format(one, "r", "%f", r);
+    nemoitem_one_set_attr_format(one, "sx", "%f", sx);
+    nemoitem_one_set_attr_format(one, "sy", "%f", sy);
+    if (owner) nemoitem_one_set_attr(one, "owner", owner);
+    if (resize) nemoitem_one_set_attr(one, "resize", resize);
+    nemoitem_one_save_attrs(one, states, ';');
+    nemoitem_one_destroy(one);
+
+    msg = NEMOMSG_CREATE_CMD(type, path);
+    if (args) nemobus_msg_set_attr(msg, "args", args);
+    nemobus_msg_set_attr(msg, "states", states);
 
     bus = NEMOBUS_CREATE();
-    msg = NEMOMSG_CREATE_CMD(type, path);
-
-    if (owner) nemobus_msg_set_attr(msg, "owner", owner);
-    if (args) nemobus_msg_set_attr(msg, "args", args);
-    if (resize) nemobus_msg_set_attr(msg, "resize", resize);
-    nemobus_msg_set_attr_format(msg, "x", "%f", x);
-    nemobus_msg_set_attr_format(msg, "y", "%f", y);
-    nemobus_msg_set_attr_format(msg, "r", "%f", r);
-    nemobus_msg_set_attr_format(msg, "sx", "%f", sx);
-    nemobus_msg_set_attr_format(msg, "sy", "%f", sy);
-
-    uuid = NEMOMSG_SEND(bus, msg);
-
-    return uuid;
+    return NEMOMSG_SEND(bus, msg);
 }
 
 static inline void nemo_close(const char *uuid)
