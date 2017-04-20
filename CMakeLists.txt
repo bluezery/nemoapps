@@ -54,7 +54,7 @@ ADD_DEFINITIONS(-DLOG_DIR="${LOG_DIR}")
 
 FIND_PACKAGE(PkgConfig REQUIRED)
 
-PKG_CHECK_MODULES(NEMO REQUIRED nemoapps nemobus nemohelper nemoplay uuid)
+PKG_CHECK_MODULES(NEMO REQUIRED nemoapps nemokits nemobus nemohelper nemoplay uuid)
 INCLUDE_DIRECTORIES(${NEMO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${NEMO_LIBRARY_DIRS})
 

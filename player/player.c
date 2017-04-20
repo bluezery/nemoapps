@@ -613,14 +613,14 @@ static void _bus_callback(void *data, const char *events)
 	if (length <= 0) return;
 
     struct nemojson *json;
-	json = nemojson_create(buffer, length);
+	json = nemojson_create_string(buffer, length);
 	nemojson_update(json);
 
     int i;
-	for (i = 0; i < nemojson_get_object_count(json); i++) {
+	for (i = 0; i < nemojson_get_count(json); i++) {
         struct nemoitem *msg;
 		msg = nemoitem_create();
-		nemoitem_load_json(msg, "/nemoshell", nemojson_get_object(json, i));
+		nemojson_object_load_item(nemojson_get_object(json, i), msg, "/nemoshell");
 
         struct itemone *one;
         nemoitem_for_each(one, msg) {
