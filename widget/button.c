@@ -6,7 +6,6 @@
 #include "widgets.h"
 #include "nemoui.h"
 
-
 // ************************************//
 // Widget Interface
 // ************************************//
@@ -96,7 +95,7 @@ static void _nemowidget_button_show(NemoWidget *button, uint32_t easetype, int d
         if (ctx->bg) nemoshow_item_set_alpha(ctx->bg, 1.0f);
         if (ctx->svg) nemoshow_item_set_alpha(ctx->svg, 1.0f);
     }
-    if (ctx->text) text_show(ctx->text, easetype, duration, delay);
+    if (ctx->text) text_set_alpha(ctx->text, easetype, duration, delay, 1.0);
 }
 
 static void _nemowidget_button_hide(NemoWidget *button, uint32_t easetype, int duration, int delay)
@@ -121,7 +120,7 @@ static void _nemowidget_button_hide(NemoWidget *button, uint32_t easetype, int d
         if (ctx->bg) nemoshow_item_set_alpha(ctx->bg, 0.0f);
         if (ctx->svg) nemoshow_item_set_alpha(ctx->svg, 0.0f);
     }
-    if (ctx->text) text_show(ctx->text, easetype, duration, delay);
+    if (ctx->text) text_set_alpha(ctx->text, easetype, duration, delay, 0.0);
 }
 
 static void _nemowidget_button_event(NemoWidget *button, struct showevent *event)
@@ -271,7 +270,6 @@ void nemowidget_button_set_text(NemoWidget *button, const char *family, const ch
 
     ctx->text = text_create(tool, ctx->group, family, style, fontsize);
     text_update(ctx->text, 0, 0, 0, str);
-    text_hide(ctx->text, 0, 0, 0);
     text_translate(ctx->text, 0, 0, 0, ctx->w/2, ctx->h/2);
 
     nemowidget_dirty(button);

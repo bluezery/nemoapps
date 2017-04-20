@@ -16,7 +16,6 @@
 
 #include "nemoutil.h"
 #include "widgets.h"
-#include "nemoui.h"
 
 #define MAX_NUM_CPU 32
 #define UPDATE_TIMEOUT 2000

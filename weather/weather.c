@@ -16,7 +16,6 @@
 
 #include "nemoutil.h"
 #include "widgets.h"
-#include "nemoui.h"
 
 #define UPDATE_WINDOW 1
 

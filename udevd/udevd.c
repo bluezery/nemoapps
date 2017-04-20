@@ -20,7 +20,6 @@
 
 #include "nemoutil.h"
 #include "widgets.h"
-#include "nemoui.h"
 
 #define TIMEOUT 1000
 #define LIBMOUNT

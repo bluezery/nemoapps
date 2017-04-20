@@ -6,10 +6,10 @@ INCLUDE_DIRECTORIES(${NEMOPLAY_INCLUDE_DIRS})
 LINK_DIRECTORIES(${NEMOPLAY_LIBRARY_DIRS})
 
 ADD_LIBRARY(${LIBNAME} SHARED
-    nemoui-player.c
-    nemoui-player.h
     nemoui-misc.h
     nemoui-graph.h
+    nemoui-player.c
+    nemoui-player.h
     nemoui-image.cpp
     nemoui-image.h
     nemoui-thread.c
@@ -22,6 +22,8 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-drawer.h
     nemoui-button.c
     nemoui-button.h
+    nemoui-text.c
+    nemoui-text.h
     nemoui.h
     )
 
@@ -35,13 +37,16 @@ INSTALL(TARGETS ${LIBNAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 INSTALL(FILES
-    nemoui-player.h
     nemoui-misc.h
     nemoui-graph.h
+    nemoui-player.h
     nemoui-image.h
     nemoui-thread.h
     nemoui-path.h
     nemoui-gesture.h
+    nemoui-drawer.h
+    nemoui-button.h
+    nemoui-text.h
     nemoui.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )

@@ -262,11 +262,11 @@ static void clock_show(ClockView *clock, uint32_t easetype, int duration, int de
 
     number_text_show(clock->year.text, easetype, duration, delay);
 
-    text_show(clock->month.text, easetype, duration, delay);
+    text_set_alpha(clock->month.text, easetype, duration, delay, 1.0);
 
     number_text_show(clock->day.text, easetype, duration, delay);
 
-    text_show(clock->week.text, easetype, duration, delay);
+    text_set_alpha(clock->week.text, easetype, duration, delay, 1.0);
 
     if (clock->timer) nemotimer_destroy(clock->timer);
     struct nemotimer *timer = nemotimer_create(clock->tool);
@@ -291,11 +291,11 @@ static void clock_hide(ClockView *clock, uint32_t easetype, int duration, int de
 
     number_text_hide(clock->year.text, easetype, duration, delay);
 
-    text_hide(clock->month.text, easetype, duration, delay);
+    text_set_alpha(clock->month.text, easetype, duration, delay, 0.0);
 
     number_text_hide(clock->day.text, easetype, duration, delay);
 
-    text_hide(clock->week.text, easetype, duration, delay);
+    text_set_alpha(clock->week.text, easetype, duration, delay, 0.0);
 
     if (clock->timer) {
         nemotimer_destroy(clock->timer);

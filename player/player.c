@@ -814,13 +814,13 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_set_filter(text, blur);
     text_translate(text, 0, 0, 0, width/2 + 1, fontsize + video_gap + 1);
     text_update(text, 0, 0, 0, view->filename);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
 
     view->name = text = text_create(tool, top, "NanumGothic", "Regular", fontsize);
     text_set_fill_color(text, 0, 0, 0, WHITE);
     text_translate(text, 0, 0, 0, width/2, fontsize + video_gap);
     text_update(text, 0, 0, 0, view->filename);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
 
 
     struct showone *bottom;
@@ -926,7 +926,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_set_anchor(text, 0.0, 0.0);
     text_update(text, 0, 0, 0, "00:00:00");
     text_translate(text, 0, 0, 0, rx + r + 1, ry - ih - 5 + 1);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
     view->cur_time_back = text;
 
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
@@ -934,7 +934,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_update(text, 0, 0, 0, "00:00:00");
     text_set_anchor(text, 0.0, 0.0);
     text_translate(text, 0, 0, 0, rx + r, ry - ih - 5);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
     view->cur_time = text;
 
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
@@ -943,7 +943,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_update(text, 0, 0, 0, "00:00:00");
     text_set_anchor(text, 1.0, 0.0);
     text_translate(text, 0, 0, 0, bar_x + bar_w + 1, ry - ih - 5 + 1);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
     view->total_time_back = text;
 
     text = text_create(tool, bottom, "NanumGothic", "Regular", 10);
@@ -951,7 +951,7 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     text_update(text, 0, 0, 0, "00:00:00");
     text_set_anchor(text, 1.0, 0.0);
     text_translate(text, 0, 0, 0, bar_x + bar_w, ry - ih - 5);
-    text_show(text, 0, 0, 0);
+    text_set_alpha(text, 0, 0, 0, 1.0);
     view->total_time = text;
 
     int ww, hh;

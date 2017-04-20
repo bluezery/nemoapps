@@ -597,7 +597,7 @@ struct _FBItem {
     FBFile *file;
 
     int x, y, w, h;
-    int txt_h;
+    int name_h;
 
     struct showone *group;
 
@@ -620,7 +620,7 @@ struct _FBItem {
     struct showone *icon_shadow;
     struct showone *icon;
 
-    Text *txt, *txt2;
+    Text *name, *name1;
 };
 
 /*
@@ -719,61 +719,6 @@ static void fb_icon_up(FBIcon *icon)
             NULL);
 }
 
-typedef struct _ClipImgWorkData ClipImgWorkData;
-struct _ClipImgWorkData {
-    Image *img;
-    char *path;
-    struct nemoshow *show;
-    struct showone *clip;
-    int cw, ch;
-    int delay;
-    double alpha;
-
-    int w, h;
-    ImageBitmap *bitmap;
-};
-
-static void _clip_img_work_done(bool cancel, void *userdata)
-{
-    ClipImgWorkData *data = userdata;
-
-    if (!cancel) {
-        if (!data->bitmap) {
-            ERR("bitmap is not loaded correctly");
-        } else {
-            image_set_bitmap(data->img, data->w, data->h, data->bitmap);
-            // XXX: move clip as center align
-            nemoshow_item_path_translate(data->clip,
-                    (data->w - data->cw)/2, (data->h - data->ch)/2);
-            image_set_alpha(data->img,
-                    NEMOEASE_CUBIC_INOUT_TYPE, 500, data->delay,
-                    data->alpha);
-            nemoshow_dispatch_frame(data->show);
-        }
-    } else {
-        if (data->bitmap) image_bitmap_destroy(data->bitmap);
-    }
-
-    free(data->path);
-    free(data);
-}
-
-static void _clip_img_work(void *userdata)
-{
-    ClipImgWorkData *data = userdata;
-
-    int w, h;
-    if (image_get_wh(data->path, &w, &h)) {
-        _rect_ratio_full(w, h, data->cw, data->ch, &(data->w), &(data->h));
-        data->bitmap = image_bitmap_create(data->path);
-    } else {
-        data->w = data->cw;
-        data->h = data->ch;
-        data->bitmap = NULL;
-        ERR("image get width/height failed: %s", data->path);
-    }
-}
-
 static void _fb_item_anim_timer(struct nemotimer *timer, void *userdata)
 {
     FBItem *it = userdata;
@@ -849,20 +794,6 @@ static void fb_item_show(FBItem *it, uint32_t easetype, int duration, int delay)
         if (!file_is_exist(path) || file_is_null(path)) {
             free(path);
             path = strdup(it->path);
-        }
-        if (!file_is_exist(path) || file_is_null(path)) {
-            ERR("file(%s) does not exist or has zero size", path);
-        } else {
-            ClipImgWorkData *data = calloc(sizeof(ClipImgWorkData), 1);
-            data->show = it->view->show;
-            data->img = it->img;
-            data->path = strdup(path);
-            data->clip = it->clip;
-            data->cw = it->w;
-            data->ch = it->h;
-            data->delay = delay;
-            data->alpha = 1.0;
-
         }
     } else if (it->type == ITEM_TYPE_VIDEO) {
         char *path = _get_thumb_url(it->path, "001.jpg");
@@ -1136,7 +1067,6 @@ static void fb_remove_item(FBView *view, FBItem *it)
 */
 struct _FBView {
     ConfigApp *app;
-    NemoWidget *win;
     struct nemoshow *show;
     struct nemotool *tool;
     const char *uuid;
@@ -1144,38 +1074,28 @@ struct _FBView {
 
     NemoWidget *widget;
 
-    struct nemotimer *bg_change_timer;
-
+    struct showone *bg_group;
+    char *bgpath_local;
+    char *bgpath;
+    Image *bg;
     List *bgfiles;
     int bgfiles_idx;
+    struct nemotimer *bg_change_timer;
     Thread *bgdir_thread;
-
-    struct showone *bg_group;
-
     Text *title, *title1;
-
-    Image *bg;
-
-    struct showone *border;
 
     struct showone *it_group;
     List *items;
 
-    struct showone *icon_group;
-
-    char *bgpath_local;
-    char *bgpath;
+    Thread *filethread;
+    List *fileinfos;
 
     char *rootpath;
     char *curpath;
 
     int cnt_inpage;
-
     int page_idx;
     int page_cnt;
-
-    Thread *filethread;
-    List *fileinfos;
 };
 
 static void _video_timer(struct nemotimer *timer, void *userdata)
@@ -1236,7 +1156,7 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
     it->y = y;
     it->w = w;
     it->h = h;
-    it->txt_h = view->app->item_txt_h;
+    it->name_h = view->app->item_txt_h;
 
     const char *font_family = view->app->config->font_family;
     const char *font_style = view->app->config->font_style;
@@ -1289,7 +1209,7 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
             ERR("No background files in the directory, %s", file->ft->bg);
         }
     } else {
-        clip = _clip_create(group, it->w, it->h - it->txt_h);
+        clip = _clip_create(group, it->w, it->h - it->name_h);
 
         if (!strcmp(file->ft->type, "image")) {
             Image *img;
@@ -1299,10 +1219,10 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
             char *path = _get_thumb_url(file->path, NULL);
             if (!file_is_exist(path) || file_is_null(path)) {
                 image_load_full(img, view->tool, file->path,
-                        it->w, it->h - it->txt_h, NULL, NULL);
+                        it->w, it->h - it->name_h, NULL, NULL);
             } else {
                 image_load_full(img, view->tool, path,
-                        it->w, it->h - it->txt_h, NULL, NULL);
+                        it->w, it->h - it->name_h, NULL, NULL);
             }
             free(path);
         } else if (!strcmp(file->ft->type, "svg")) {
@@ -1325,7 +1245,7 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
             char *path = _get_thumb_url(file->path, "png");
             if (file_is_exist(path) && !file_is_null(path)) {
                 image_load_full(img, view->tool, path,
-                        it->w, it->h - it->txt_h, NULL, NULL);
+                        it->w, it->h - it->name_h, NULL, NULL);
             } else {
                 ERR("No thumbnail: %s", path);
             }
@@ -1347,10 +1267,10 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
     Text *txt;
 
     snprintf(buf, it->w/7, "%s", file->name);
-    it->txt = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    it->name = txt = text_create(view->tool, group, font_family, font_style, font_size);
     text_set_anchor(txt, 0.0, 0.0);
     text_update(txt, 0, 0, 0, buf);
-    text_show(txt, 0, 0, 0);
+    text_set_alpha(txt, 0, 0, 0, 1.0);
 
     if (!strcmp(file->ft->type, "image") || strcmp(file->ft->type, "svg")) {
         snprintf(buf, it->w/7, "%s", "Image");
@@ -1361,18 +1281,18 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
     } else if (!strcmp(file->ft->type, "url")) {
         snprintf(buf, it->w/7, "%s", "URL");
     }
-    it->txt2 = txt = text_create(view->tool, group, font_family, font_style, font_size);
+    it->name1 = txt = text_create(view->tool, group, font_family, font_style, font_size/2);
     text_set_anchor(txt, 0.0, 0.0);
     text_update(txt, 0, 0, 0, buf);
-    text_show(txt, 0, 0, 0);
+    text_set_alpha(txt, 0, 0, 0, 1.0);
 
 
     if (file->ft->bg) {
         int gap = view->app->item_gap;
-        text_set_fill_color(it->txt, 0, 0, 0, WHITE);
-        text_set_fill_color(it->txt2, 0, 0, 0, WHITE);
-        text_translate(it->txt, 0, 0, 0, gap, gap);
-        text_translate(it->txt2, 0, 0, 0, gap, gap + font_size);
+        text_set_fill_color(it->name, 0, 0, 0, WHITE);
+        text_set_fill_color(it->name1, 0, 0, 0, WHITE);
+        text_translate(it->name, 0, 0, 0, gap, gap);
+        text_translate(it->name1, 0, 0, 0, gap, gap + font_size);
 
         if (it->icon_shadow) {
             nemoshow_item_translate(it->icon_shadow,
@@ -1385,18 +1305,18 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
     } else {
         int gap_w = view->app->item_gap;
         int gap_h = view->app->item_gap/2;
-        text_set_fill_color(it->txt, 0, 0, 0, BLACK);
-        text_set_fill_color(it->txt2, 0, 0, 0, BLACK);
-        text_translate(it->txt, 0, 0, 0, gap_w, it->h - it->txt_h + gap_h);
-        text_translate(it->txt2, 0, 0, 0, gap_w, it->h - it->txt_h + gap_h + font_size);
+        text_set_fill_color(it->name, 0, 0, 0, BLACK);
+        text_set_fill_color(it->name1, 0, 0, 0, BLACK);
+        text_translate(it->name, 0, 0, 0, gap_w, it->h - it->name_h + gap_h);
+        text_translate(it->name1, 0, 0, 0, gap_w, it->h - it->name_h + gap_h + font_size);
 
         if (it->icon_shadow) {
             nemoshow_item_translate(it->icon_shadow,
-                    it->w/2 - iw/2 + 1, (it->h - it->txt_h)/2 - ih/2 + 1);
+                    it->w/2 - iw/2 + 1, (it->h - it->name_h)/2 - ih/2 + 1);
         }
         if (it->icon) {
             nemoshow_item_translate(it->icon,
-                    it->w/2 - iw/2, (it->h - it->txt_h)/2 - ih/2);
+                    it->w/2 - iw/2, (it->h - it->name_h)/2 - ih/2);
         }
     }
 
@@ -1468,13 +1388,13 @@ static FBItem *view_append_item(FBView *view, FBFile *file, int x, int y, int w,
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, w/2 + 1, h/2 + h/8 + 1);
     nemoshow_item_set_filter(one, blur);
-    it->txt_bg = one;
+    it->name_bg = one;
 
     one = TEXT_CREATE(group, font, it->w/11, buf);
     nemoshow_item_set_fill_color(one, RGBA(COLOR_TXT));
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, w/2, h/2 + h/8);
-    it->txt = one;
+    it->name = one;
 
     one = path_diamond_create(group, it->w, it->h);
     nemoshow_item_set_stroke_color(one, RGBA(WHITE));
@@ -1508,7 +1428,6 @@ static void view_destroy(FBView *view)
     free(view->rootpath);
 
     image_destroy(view->bg);
-    nemoshow_one_destroy(view->icon_group);
     nemoshow_one_destroy(view->it_group);
     nemoshow_one_destroy(view->bg_group);
     nemowidget_destroy(view->widget);
@@ -1541,7 +1460,6 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
 {
     FBView *view = calloc(sizeof(FBView), 1);
     view->app = app;
-    view->win = parent;
     view->show = nemowidget_get_show(parent);
     view->tool = nemowidget_get_tool(parent);
     view->uuid = nemowidget_get_uuid(parent);
@@ -1555,6 +1473,7 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
     NemoWidget *widget;
     widget = nemowidget_create_vector(parent, width, height);
     //nemowidget_append_callback(widget, "event", _fb_event, view);
+    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     view->widget = widget;
 
     struct showone *one;
@@ -1563,7 +1482,6 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
 
     struct showone *group;
     view->bg_group = group = GROUP_CREATE(canvas);
-    nemoshow_item_set_alpha(group, 0.0);
 
     one = RECT_CREATE(group, view->w, view->h);
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
@@ -1579,14 +1497,12 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
 
     Text *txt;
     view->title = txt = text_create(view->tool, group, font_family, font_style, 40);
-    text_translate(txt, 0, 0, 0, view->app->title_ltx, view->app->title_lty);
     text_set_anchor(txt, 0.0, 0.0);
-    text_show(txt, 0, 0, 0);
+    text_set_alpha(txt, 0, 0, 0, 1.0);
 
     view->title1 = txt = text_create(view->tool, group, font_family, font_style, 8);
-    text_translate(txt, 0, 0, 0, view->app->title_ltx, view->app->title_lty + 40);
     text_set_anchor(txt, 0.0, 0.0);
-    text_show(txt, 0, 0, 0);
+    text_set_alpha(txt, 0, 0, 0, 1.0);
 
     view->it_group = GROUP_CREATE(canvas);
 
@@ -1804,7 +1720,7 @@ struct _FileThreadData {
     List *fileinfos;
 };
 
-static void *_fb_load_file(void *userdata)
+static void *_fb_file_thread(void *userdata)
 {
     FileThreadData *data = userdata;
     FBView *view = data->view;
@@ -1816,7 +1732,7 @@ static void *_fb_load_file(void *userdata)
     return NULL;
 }
 
-static void _fb_load_file_done(bool cancel, void *userdata)
+static void _fb_file_thread_done(bool cancel, void *userdata)
 {
     FileThreadData *data = userdata;
     FBView *view = data->view;
@@ -1843,7 +1759,7 @@ static void _fb_load_file_done(bool cancel, void *userdata)
         }
 
         // FIXME: it's scaling it's content
-        //nemowidget_resize(view->win, w, h);
+        //nemowidget_resize(nemowidget_get_top_widget(view->widget), w, h);
         nemowidget_resize(view->widget, w, h);
 
         _nemoshow_item_motion(view->bg_group, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
@@ -1864,16 +1780,17 @@ static void view_show_dir(FBView *view, const char *path)
     RET_IF(!path);
     ERR("%s", path);
 
-    nemowidget_show(view->widget, 0, 0, 0);
-
     if (view->curpath) free(view->curpath);
     view->curpath = strdup(path);
 
+    nemowidget_set_alpha(view->widget, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 1.0);
+    nemowidget_show(view->widget, 0, 0, 0);
+
     if (view->filethread) thread_destroy(view->filethread);
-    FileThreadData *filedata = calloc(sizeof(FileThreadData), 1);
-    filedata->view = view;
+    FileThreadData *data = calloc(sizeof(FileThreadData), 1);
+    data->view = view;
     view->filethread = thread_create(view->tool,
-            _fb_load_file, _fb_load_file_done, filedata);
+            _fb_file_thread, _fb_file_thread_done, data);
 
     if (view->app->titlepath) {
         char buf[PATH_MAX];
@@ -1881,16 +1798,26 @@ static void view_show_dir(FBView *view, const char *path)
         int line_len;
         char **line_txt = file_read_line(buf, &line_len);
         if (!line_txt || !line_txt[0] || line_len <= 0) {
-            text_update(view->title, 0, 0, 0, basename(view->rootpath));
+            text_update(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, basename(view->rootpath));
         } else {
-            text_update(view->title, 0, 0, 0, line_txt[0]);
+            text_update(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, line_txt[0]);
             if (line_txt[1]) {
-                text_update(view->title1, 0, 0, 0, line_txt[1]);
+                text_update(view->title1, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, line_txt[1]);
             }
         }
     } else {
-        text_update(view->title, 0, 0, 0, basename(view->rootpath));
+        text_update(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, basename(view->rootpath));
     }
+    text_translate(view->title, 0, 0, 0, view->app->title_ltx, view->app->title_lty);
+    double tw, th;
+    text_get_size(view->title, &tw, &th);
+    text_translate(view->title1, 0, 0, 0, view->app->title_ltx, view->app->title_lty + th);
+
+    struct showone *one;
+    one = RECT_CREATE(view->bg_group, tw, th);
+    nemoshow_item_translate(one, view->app->title_ltx, view->app->title_lty);
+    nemoshow_item_set_fill_color(one, RGBA(RED));
+    nemoshow_item_set_alpha(one, 0.5);
 
     nemoshow_dispatch_frame(view->show);
 }
@@ -1900,8 +1827,6 @@ static void fb_hide(FBView *view)
     if (view->bgdir_thread) thread_destroy(view->bgdir_thread);
     nemotimer_set_timeout(view->bg_change_timer, 0);
 
-    _nemoshow_item_motion(view->border, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
-            "alpha", 0.0, NULL);
     image_set_alpha(view->bg, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
 
     /*
