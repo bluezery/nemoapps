@@ -1597,6 +1597,7 @@ static inline char *nemo_execute(const char *owner, const char *type, const char
     struct itemone *one;
     char states[512];
 
+    ERR("%lf %lf %s %s %s", x, y, type, path, args);
     one = nemoitem_one_create();
     nemoitem_one_set_attr_format(one, "x", "%f", x);
     nemoitem_one_set_attr_format(one, "y", "%f", y);

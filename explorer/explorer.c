@@ -787,7 +787,6 @@ static void explorer_item_exec(ExplorerItem *it)
                 NEMOSHOW_ITEM_AT(it->group, ty),
                 &x, &y);
 
-        nemoshow_view_set_anchor(show, 0.5, 0.5);
         ERR("%s, %s", it->exec, it->path);
         if (!it->exec) {
             nemo_execute(view->uuid, "app", it->path, NULL, NULL, x, y, 0, 1, 1);
