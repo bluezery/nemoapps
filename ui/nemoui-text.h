@@ -52,6 +52,7 @@ void text_set_stroke_color(Text *text, uint32_t easetype, int duration, int dela
 void text_translate(Text *text, uint32_t easetype, int duration, int delay, int x, int y);
 void text_update(Text *text, uint32_t easetype, int duration, int delay, const char *str);
 void text_set_alpha(Text *txt, uint32_t easetype, int duration, int delay, double alpha);
+void text_set_scale(Text *txt, uint32_t easetype, int duration, int delay, double sx, double sy);
 
 #ifdef __cplusplus
 }

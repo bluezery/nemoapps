@@ -72,6 +72,9 @@ void text_set_anchor(Text *txt, double ax, double ay)
 
 void text_get_size(Text *txt, double *tw, double *th)
 {
+    if (!txt->str || (strlen(txt->str) == 0)) {
+        ERR("No strings, it's size will be ZERO!");
+    }
     nemoshow_one_update(txt->one[txt->idx]);
 #if TEXT_PATH_VERSION
     if (tw) *tw = nemoshow_item_get_width(txt->one[txt->idx]);
@@ -218,6 +221,16 @@ void text_translate(Text *txt, uint32_t easetype, int duration, int delay, int x
                 NULL);
     } else {
         nemoshow_item_translate(txt->group, x, y);
+    }
+}
+
+void text_set_scale(Text *txt, uint32_t easetype, int duration, int delay, double sx, double sy)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(txt->group, easetype, duration, delay,
+                "sx", sx, "sy", sy, NULL);
+    } else {
+        nemoshow_item_scale(txt->group, sx, sy);
     }
 }
 
