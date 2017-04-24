@@ -5,8 +5,6 @@
  "description": "inhouse nemo application framework",
  "version": "0.1.0",
  "type": "shell",
- "icon": {
- },
  "config": {
  }
 }

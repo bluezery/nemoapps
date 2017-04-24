@@ -7,7 +7,7 @@
  "type": "application",
  "icon": {
      "svg": {
-         "path": "@package/icons/icon.svg"
+         "path": "icons/icon.svg"
      }
  },
  "config": {
