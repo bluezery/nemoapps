@@ -1592,7 +1592,6 @@ static inline char *nemo_execute(const char *owner, const char *type, const char
     RET_IF(!path, NULL);
 
     struct nemobus *bus;
-
     struct busmsg *msg;
     struct itemone *one;
     char states[512];

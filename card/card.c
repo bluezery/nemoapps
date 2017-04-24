@@ -817,7 +817,6 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
             double ro = 0.0;
 
-            ERR("%s", card->launch_type);
             if (card->launch_type) {
                 if (!strcmp(card->launch_type, "table")) {
                     int rw, rh;
@@ -856,16 +855,29 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             snprintf(args, PATH_MAX, "%s", tok);
             free(buf);
 
-            struct nemobus *bus = NEMOBUS_CREATE();
-            struct busmsg *msg = NEMOMSG_CREATE_CMD(itt->type, path);
-            nemobus_msg_set_attr(msg, "owner", card->uuid);
+            struct nemobus *bus;
+            struct busmsg *msg;
+            struct itemone *one;
+            char states[512];
+
+            bus = NEMOBUS_CREATE();
+            msg = NEMOMSG_CREATE_CMD(itt->type, path);
+
+            ERR("[%s] %lf %lf %s %s %s", card->launch_type, x, y, itt->type, path, args);
+            one = nemoitem_one_create();
+            nemoitem_one_set_attr_format(one, "x", "%f", x);
+            nemoitem_one_set_attr_format(one, "y", "%f", y);
+            nemoitem_one_set_attr_format(one, "r", "%f", ro);
+            nemoitem_one_set_attr_format(one, "sx", "%f", itt->sxy);
+            nemoitem_one_set_attr_format(one, "sy", "%f", itt->sxy);
+            nemoitem_one_set_attr(one, "owner", card->uuid);
+            nemoitem_one_set_attr(one, "resize", itt->resize? "on" : "off");
+            nemoitem_one_save_attrs(one, states, ';');
+            nemoitem_one_destroy(one);
+
             nemobus_msg_set_attr(msg, "args", args);
-            nemobus_msg_set_attr(msg, "resize", itt->resize? "on" : "off");
-            nemobus_msg_set_attr_format(msg, "x", "%f", x);
-            nemobus_msg_set_attr_format(msg, "y", "%f", y);
-            nemobus_msg_set_attr_format(msg, "r", "%f", ro);
-            nemobus_msg_set_attr_format(msg, "sx", "%f", itt->sxy);
-            nemobus_msg_set_attr_format(msg, "sy", "%f", itt->sxy);
+            nemobus_msg_set_attr(msg, "states", states);
+
             if (itt->mirror) {
                 if (strstr(itt->mirror, "/nemoshell/fullscreen"))
                     nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
