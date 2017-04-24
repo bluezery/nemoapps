@@ -186,3 +186,12 @@ Depends: nemoapps (= ${binary:Version}),
     ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's inhouse applications
  <insert long description, indented with spaces>
+
+Package: nemo.filebrowser
+Priority: optional
+Section: graphics
+Architecture: any
+Depends: nemoapps (= ${binary:Version}),
+    ${shlibs:Depends}, ${misc:Depends}
+Description: NEMOUX's inhouse applications
+ <insert long description, indented with spaces>
