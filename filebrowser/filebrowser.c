@@ -1548,10 +1548,12 @@ static void view_show_dir(FBView *view, const char *path)
             view->app->title_ltx, view->app->title_lty + th + 5);
     text_set_alpha(view->title1, 0, 0, 0, 1.0);
 
+#if 0
     struct showone *one = RECT_CREATE(view->bg_group, tw + 1, th + 1);
     nemoshow_item_set_fill_color(one, RGBA(RED));
     nemoshow_item_set_alpha(one, 0.5);
     nemoshow_item_translate(one, view->app->title_ltx, view->app->title_lty);
+#endif
 
     nemoshow_dispatch_frame(view->show);
 }
