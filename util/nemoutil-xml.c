@@ -373,6 +373,8 @@ Xml *xml_load(const char *data, size_t size)
         LOG("%s at line %lu\n",
                 XML_ErrorString(XML_GetErrorCode(parser)),
                 XML_GetCurrentLineNumber(parser));
+        free(xml);
+        return NULL;
     }
     XML_ParserFree(parser);
 
