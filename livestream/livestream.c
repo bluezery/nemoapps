@@ -56,30 +56,9 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         return NULL;
     }
 
+    const char *prefix= "config";
     char buf[PATH_MAX];
     const char *temp;
-
-    const char *prefix = "config";
-    double sx = 1.0;
-    double sy = 1.0;
-    int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
-    temp = xml_get_value(xml, buf, "width");
-    if (!temp) {
-        ERR("No size width in %s", prefix);
-    } else {
-        width = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "height");
-    if (!temp) {
-        ERR("No size height in %s", prefix);
-    } else {
-        height = atoi(temp);
-    }
-    if (width > 0) sx = (double)app->config->width/width;
-    if (height > 0) sy = (double)app->config->height/height;
-    if (sx > sy) app->sxy = sy;
-    else app->sxy = sx;
 
     temp = xml_get_value(xml, buf, "col");
     if (!temp) {

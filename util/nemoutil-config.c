@@ -138,6 +138,7 @@ Config *config_load_from_domain(const char *domain, const char *filename)
     config->width = 512;
     config->height = 512;
     config->framerate = 60;
+    config->sxy = 1.0;
 
     Xml *xml;
     xml = xml_load_from_domain(domain, "base.conf");
@@ -217,6 +218,8 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
         _argv[i] = strdup(argv[i]);
     }
 
+    int width = 0;
+    int height = 0;
     optind = 1;
     opterr = 0;
     int opt;
@@ -227,10 +230,10 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
                 config->id = strdup(optarg);
                 break;
             case 'w':
-                config->width = atoi(optarg);
+                width = atoi(optarg);
                 break;
             case 'h':
-                config->height = atoi(optarg);
+                height = atoi(optarg);
                 break;
             case 'r':
                 config->framerate = atoi(optarg);
@@ -244,6 +247,19 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
         }
     }
     optind = 1;
+
+    double sx = 1.0;
+    double sy = 1.0;
+    if (width > 0) {
+        sx = (double)width/config->width;
+        config->width = width;
+    }
+    if (height > 0) {
+        sy = (double)height/config->height;
+        config->height = height;
+    }
+    if (sx > sy) config->sxy = sy;
+    else config->sxy = sx;
 }
 
 Config *config_load(const char *domain, const char *filename, int argc, char *argv[])

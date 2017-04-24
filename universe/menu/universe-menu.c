@@ -432,8 +432,8 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
     char uri[PATH_MAX];
     snprintf(uri, PATH_MAX, APPDATA_ROOT"/main/%s.png", grp->name);
     file_get_image_wh(uri, &it->w, &it->h);
-    it->w *= view->app->sxy;
-    it->h *= view->app->sxy;
+    it->w *= view->app->config->sxy;
+    it->h *= view->app->config->sxy;
 
     struct showone *group;
     it->group = group = GROUP_CREATE(view->group);
@@ -462,8 +462,8 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
 
     double ww, hh;
     svg_get_wh(uri, &ww, &hh);
-    ww *= view->app->sxy;
-    hh *= view->app->sxy;
+    ww *= view->app->config->sxy;
+    hh *= view->app->config->sxy;
     it->event = one = SVG_PATH_CREATE(group, ww, hh, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, ww/2, hh/2);
@@ -477,7 +477,7 @@ MainItem *menu_create_item(MenuView *view, ConfigGroup *grp)
     ConfigItem *cit;
     LIST_FOR_EACH(grp->items, l, cit) {
         SubItem *sub_it;
-        sub_it = sub_item_create(it, cit, view->app->sxy);
+        sub_it = sub_item_create(it, cit, view->app->config->sxy);
         it->items = list_append(it->items, sub_it);
     }
 
@@ -646,8 +646,8 @@ MenuView *menu_view_create(NemoWidget *parent, int width, int height, ConfigApp 
     struct showone *one;
     int w, h;
     file_get_image_wh(app->planet_uri, &w, &h);
-    w *= app->sxy;
-    h *= app->sxy;
+    w *= app->config->sxy;
+    h *= app->config->sxy;
     view->planet = one = IMAGE_CREATE(group, w, h, app->planet_uri);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
@@ -691,29 +691,6 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 
     const char *prefix = "config";
     char buf[PATH_MAX];
-    const char *temp;
-
-    int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
-    temp = xml_get_value(xml, buf, "width");
-    if (!temp) {
-        ERR("No size width in %s", prefix);
-    } else {
-        width = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "height");
-    if (!temp) {
-        ERR("No size height in %s", prefix);
-    } else {
-        height = atoi(temp);
-    }
-
-    double sx = 1.0;
-    double sy = 1.0;
-    if (width > 0) sx = (double)app->config->width/width;
-    if (height > 0) sy = (double)app->config->height/height;
-    if (sx > sy) app->sxy = sy;
-    else app->sxy = sx;
 
     snprintf(buf, PATH_MAX, "%s/items", prefix);
     List *tags  = xml_search_tags(xml, buf);
@@ -784,7 +761,7 @@ int main(int argc, char *argv[])
     ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
 
-    ERR("%d %d %lf", app->config->width, app->config->height, app->sxy);
+    ERR("%d %d %lf", app->config->width, app->config->height, app->config->sxy);
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
     nemowidget_win_enable_scale(win, -1);

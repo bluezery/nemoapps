@@ -16,6 +16,7 @@ struct _Config {
     char *font_family, *font_style;
     int font_size;
     char *layer;
+    double sxy;
 };
 
 #ifdef __cplusplus

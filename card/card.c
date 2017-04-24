@@ -29,7 +29,6 @@ struct _ConfigApp {
     Config *config;
     List *menu_items;
     List *mirrors;
-    double sxy;
     int item_cnt;
     int item_area_width, item_area_height;
     int item_duration;
@@ -1150,27 +1149,6 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     char buf[PATH_MAX];
     const char *temp;
 
-    double sx = 1.0;
-    double sy = 1.0;
-    int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
-    temp = xml_get_value(xml, buf, "width");
-    if (!temp) {
-        ERR("No size width in %s", prefix);
-    } else {
-        width = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "height");
-    if (!temp) {
-        ERR("No size height in %s", prefix);
-    } else {
-        height = atoi(temp);
-    }
-    if (width > 0) sx = (double)app->config->width/width;
-    if (height > 0) sy = (double)app->config->height/height;
-    if (sx > sy) app->sxy = sy;
-    else app->sxy = sx;
-
     snprintf(buf, PATH_MAX, "%s/items", prefix);
     List *tags  = xml_search_tags(xml, buf);
     List *l;
@@ -1202,14 +1180,14 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     } else {
         app->item_area_width = atoi(temp);
     }
-    app->item_area_width *= app->sxy;
+    app->item_area_width *= app->config->sxy;
     temp = xml_get_value(xml, buf, "area_height");
     if (!temp) {
         ERR("No item area height in %s", prefix);
     } else {
         app->item_area_height = atoi(temp);
     }
-    app->item_area_height *= app->sxy;
+    app->item_area_height *= app->config->sxy;
     temp = xml_get_value(xml, buf, "duration");
     if (!temp) {
         ERR("No item duration in %s", prefix);
@@ -1235,14 +1213,14 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     } else {
         app->item_width = atoi(temp);
     }
-    app->item_width *= app->sxy;
+    app->item_width *= app->config->sxy;
     temp = xml_get_value(xml, buf, "height");
     if (!temp) {
         ERR("No item height in %s", prefix);
     } else {
         app->item_height = atoi(temp);
     }
-    app->item_height *= app->sxy;
+    app->item_height *= app->config->sxy;
 
     // Position
     temp = xml_get_value(xml, buf, "icon_px");
@@ -1371,7 +1349,7 @@ int main(int argc, char *argv[])
     List *l;
     MenuItem *it;
     LIST_FOR_EACH(app->menu_items, l, it) {
-        card_append_item(card, app->sxy,
+        card_append_item(card, app->config->sxy,
                 it->type, it->bg, it->icon, it->icon_anim, it->txt, it->exec,
                 it->resize, it->sxy, it->mirror, app);
     }

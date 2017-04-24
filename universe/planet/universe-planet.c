@@ -26,7 +26,6 @@
 typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
     Config *config;
-    double sxy;
     char *backline_path;
 };
 
@@ -113,8 +112,8 @@ Planet *planet_dup(Planet *planet)
 
     int iw, ih;
     file_get_image_wh(uri, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     dup->one = one = IMAGE_CREATE(group, iw, ih, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
 
@@ -132,14 +131,14 @@ Planet *planet_dup(Planet *planet)
     }
 
     file_get_image_wh(uri0, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     dup->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     int iww, ihh;
     file_get_image_wh(uri1, &iww, &ihh);
-    iww *= app->sxy;
-    ihh *= app->sxy;
+    iww *= app->config->sxy;
+    ihh *= app->config->sxy;
     dup->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     dup->width = iww;
@@ -147,8 +146,8 @@ Planet *planet_dup(Planet *planet)
 
     uri = APPDATA_ROOT"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     int r = iww/2;
     int cnt = rand()%4 + 1;
     double rad = 360.0/cnt;
@@ -223,8 +222,8 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
 
     int iw, ih;
     file_get_image_wh(uri, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     planet->one = one = IMAGE_CREATE(group, iw, ih, uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
@@ -244,14 +243,14 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
     }
 
     file_get_image_wh(uri0, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     planet->ring0 = one = IMAGE_CREATE(group, iw, ih, uri0);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     int iww, ihh;
     file_get_image_wh(uri1, &iww, &ihh);
-    iww *= app->sxy;
-    ihh *= app->sxy;
+    iww *= app->config->sxy;
+    ihh *= app->config->sxy;
     planet->ring1 = one = IMAGE_CREATE(group, iww, ihh, uri1);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     planet->width = iww;
@@ -259,8 +258,8 @@ Planet *planet_create(PlanetView *view, ConfigApp *app, const char *uri)
 
     uri = APPDATA_ROOT"/ring/shine.png";
     file_get_image_wh(uri, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
     int r = iww/2;
     int cnt = rand()%3 + 1;
     double rad = 360.0/cnt;
@@ -381,7 +380,7 @@ static void _planet_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct 
         if (!over) {
             char args[PATH_MAX];
             snprintf(args, PATH_MAX, "--width;%d;--height;%d;--planet;%s",
-                    (int)(540 * view->app->sxy), (int)(540 * view->app->sxy),
+                    (int)(540 * view->app->config->sxy), (int)(540 * view->app->config->sxy),
                     planet->uri);
             nemo_execute(view->uuid, "app", "/opt/pkgs/nemo.universe-menu/exec", args, "off",
                     ex, ey, 0.0, 1.0, 1.0);
@@ -465,8 +464,8 @@ PlanetView *planet_viewcreate(NemoWidget *parent, int width, int height, ConfigA
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, APPDATA_ROOT"/sun/%05d.png", 0);
     file_get_image_wh(buf, &iw, &ih);
-    iw *= app->sxy;
-    ih *= app->sxy;
+    iw *= app->config->sxy;
+    ih *= app->config->sxy;
 
     int backline_cnt = 0;
     List *files = fileinfo_readdir(app->backline_path);
@@ -546,48 +545,6 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->config = config_load(domain, filename, argc, argv);
-
-    Xml *xml;
-    if (app->config->path) {
-        xml = xml_load_from_path(app->config->path);
-        if (!xml) ERR("Load configuration failed: %s", app->config->path);
-    } else {
-        xml = xml_load_from_domain(domain, filename);
-        if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
-    }
-    if (!xml) {
-        config_unload(app->config);
-        free(app);
-        return NULL;
-    }
-
-    const char *prefix = "config";
-    char buf[PATH_MAX];
-    const char *temp;
-
-    int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
-    temp = xml_get_value(xml, buf, "width");
-    if (!temp) {
-        ERR("No size width in %s", prefix);
-    } else {
-        width = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "height");
-    if (!temp) {
-        ERR("No size height in %s", prefix);
-    } else {
-        height = atoi(temp);
-    }
-
-    double sx = 1.0;
-    double sy = 1.0;
-    if (width > 0) sx = (double)app->config->width/width;
-    if (height > 0) sy = (double)app->config->height/height;
-    if (sx > sy) app->sxy = sy;
-    else app->sxy = sx;
-
-    xml_unload(xml);
 
     int id = 0;
     struct option options[] = {

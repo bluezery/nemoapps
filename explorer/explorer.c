@@ -1735,53 +1735,57 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         xml = xml_load_from_domain(domain, filename);
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
-    if (xml) {
-        const char *root= "config";
-        char buf[PATH_MAX];
-        const char *temp;
-
-        snprintf(buf, PATH_MAX, "%s/background", root);
-        temp = xml_get_value(xml, buf, "localpath");
-        if (temp && strlen(temp) > 0) {
-            app->bgpath_local = strdup(temp);
-        } else {
-            ERR("No background path in configuration file");
-        }
-        temp = xml_get_value(xml, buf, "path");
-        if (temp && strlen(temp) > 0) {
-            app->bgpath = strdup(temp);
-        } else {
-            ERR("No background path in configuration file");
-        }
-
-        List *execs = NULL;
-        snprintf(buf, PATH_MAX, "%s/exec", root);
-        List *_execs = xml_search_tags(xml, buf);
-        List *l;
-        XmlTag *tag;
-        LIST_FOR_EACH(_execs, l, tag) {
-            Exec *exec = exec_parse_tag(tag);
-            if (!exec) continue;
-            execs = list_append(execs, exec);
-        }
-
-        snprintf(buf, PATH_MAX, "%s/filetype", root);
-        List *types = xml_search_tags(xml, buf);
-        LIST_FOR_EACH(types, l, tag) {
-            FileType *filetype = filetype_parse_tag(tag, execs);
-            if (!filetype) continue;
-            __filetypes = list_append(__filetypes, filetype);
-        }
-
-        Exec *exec;
-        LIST_FREE(execs, exec) {
-            free(exec->type);
-            free(exec->path);
-            free(exec);
-        }
-
-        xml_unload(xml);
+    if (!xml) {
+        config_unload(app->config);
+        free(app);
+        return NULL;
     }
+
+    const char *root= "config";
+    char buf[PATH_MAX];
+    const char *temp;
+
+    snprintf(buf, PATH_MAX, "%s/background", root);
+    temp = xml_get_value(xml, buf, "localpath");
+    if (temp && strlen(temp) > 0) {
+        app->bgpath_local = strdup(temp);
+    } else {
+        ERR("No background path in configuration file");
+    }
+    temp = xml_get_value(xml, buf, "path");
+    if (temp && strlen(temp) > 0) {
+        app->bgpath = strdup(temp);
+    } else {
+        ERR("No background path in configuration file");
+    }
+
+    List *execs = NULL;
+    snprintf(buf, PATH_MAX, "%s/exec", root);
+    List *_execs = xml_search_tags(xml, buf);
+    List *l;
+    XmlTag *tag;
+    LIST_FOR_EACH(_execs, l, tag) {
+        Exec *exec = exec_parse_tag(tag);
+        if (!exec) continue;
+        execs = list_append(execs, exec);
+    }
+
+    snprintf(buf, PATH_MAX, "%s/filetype", root);
+    List *types = xml_search_tags(xml, buf);
+    LIST_FOR_EACH(types, l, tag) {
+        FileType *filetype = filetype_parse_tag(tag, execs);
+        if (!filetype) continue;
+        __filetypes = list_append(__filetypes, filetype);
+    }
+
+    Exec *exec;
+    LIST_FREE(execs, exec) {
+        free(exec->type);
+        free(exec->path);
+        free(exec);
+    }
+
+    xml_unload(xml);
 
     struct option options[] = {
         {"file", required_argument, NULL, 'f'},

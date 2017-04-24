@@ -1607,88 +1607,92 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         xml = xml_load_from_domain(domain, filename);
         if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
     }
-    if (xml) {
-        const char *prefix= "config";
-        char buf[PATH_MAX];
-        const char *temp;
-
-        snprintf(buf, PATH_MAX, "%s/background", prefix);
-        temp = xml_get_value(xml, buf, "localpath");
-        if (temp && strlen(temp) > 0) {
-            app->bgpath_local = strdup(temp);
-        }
-        temp = xml_get_value(xml, buf, "path");
-        if (temp && strlen(temp) > 0) {
-            app->bgpath = strdup(temp);
-        } else {
-            ERR("No background path in configuration file");
-        }
-        temp = xml_get_value(xml, buf, "titlepath");
-        if (temp && strlen(temp) > 0) {
-            app->titlepath = strdup(temp);
-        }
-
-        snprintf(buf, PATH_MAX, "%s/title", prefix);
-        temp = xml_get_value(xml, buf, "ltx");
-        if (temp && strlen(temp) > 0) {
-            app->title_ltx = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "lty");
-        if (temp && strlen(temp) > 0) {
-            app->title_lty = atoi(temp);
-        }
-
-        snprintf(buf, PATH_MAX, "%s/item", prefix);
-        temp = xml_get_value(xml, buf, "ltx");
-        if (temp && strlen(temp) > 0) {
-            app->item_ltx = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "lty");
-        if (temp && strlen(temp) > 0) {
-            app->item_lty = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "gap");
-        if (temp && strlen(temp) > 0) {
-            app->item_gap = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "width");
-        if (temp && strlen(temp) > 0) {
-            app->item_w = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "height");
-        if (temp && strlen(temp) > 0) {
-            app->item_h = atoi(temp);
-        }
-        temp = xml_get_value(xml, buf, "txt_height");
-        if (temp && strlen(temp) > 0) {
-            app->item_txt_h = atoi(temp);
-        }
-
-        List *l;
-        XmlTag *tag;
-
-        List *execs = NULL;
-        snprintf(buf, PATH_MAX, "%s/exec", prefix);
-        List *_execs = xml_search_tags(xml, buf);
-        LIST_FOR_EACH(_execs, l, tag) {
-            Exec *exec = tag_parse_exec(tag);
-            if (!exec) continue;
-            execs = list_append(execs, exec);
-        }
-
-        snprintf(buf, PATH_MAX, "%s/filetype", prefix);
-        List *types = xml_search_tags(xml, buf);
-        LIST_FOR_EACH(types, l, tag) {
-            FileType *ft = tag_parse_filetype(tag, execs);
-            if (!ft) continue;
-            app->filetypes = list_append(app->filetypes, ft);
-        }
-
-        Exec *exec;
-        LIST_FREE(execs, exec) exec_destroy(exec);
-
-        xml_unload(xml);
+    if (!xml) {
+        config_unload(app->config);
+        free(app);
+        return NULL;
     }
+
+    const char *prefix= "config";
+    char buf[PATH_MAX];
+    const char *temp;
+
+    snprintf(buf, PATH_MAX, "%s/background", prefix);
+    temp = xml_get_value(xml, buf, "localpath");
+    if (temp && strlen(temp) > 0) {
+        app->bgpath_local = strdup(temp);
+    }
+    temp = xml_get_value(xml, buf, "path");
+    if (temp && strlen(temp) > 0) {
+        app->bgpath = strdup(temp);
+    } else {
+        ERR("No background path in configuration file");
+    }
+    temp = xml_get_value(xml, buf, "titlepath");
+    if (temp && strlen(temp) > 0) {
+        app->titlepath = strdup(temp);
+    }
+
+    snprintf(buf, PATH_MAX, "%s/title", prefix);
+    temp = xml_get_value(xml, buf, "ltx");
+    if (temp && strlen(temp) > 0) {
+        app->title_ltx = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "lty");
+    if (temp && strlen(temp) > 0) {
+        app->title_lty = atoi(temp);
+    }
+
+    snprintf(buf, PATH_MAX, "%s/item", prefix);
+    temp = xml_get_value(xml, buf, "ltx");
+    if (temp && strlen(temp) > 0) {
+        app->item_ltx = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "lty");
+    if (temp && strlen(temp) > 0) {
+        app->item_lty = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "gap");
+    if (temp && strlen(temp) > 0) {
+        app->item_gap = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "width");
+    if (temp && strlen(temp) > 0) {
+        app->item_w = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "height");
+    if (temp && strlen(temp) > 0) {
+        app->item_h = atoi(temp);
+    }
+    temp = xml_get_value(xml, buf, "txt_height");
+    if (temp && strlen(temp) > 0) {
+        app->item_txt_h = atoi(temp);
+    }
+
+    List *l;
+    XmlTag *tag;
+
+    List *execs = NULL;
+    snprintf(buf, PATH_MAX, "%s/exec", prefix);
+    List *_execs = xml_search_tags(xml, buf);
+    LIST_FOR_EACH(_execs, l, tag) {
+        Exec *exec = tag_parse_exec(tag);
+        if (!exec) continue;
+        execs = list_append(execs, exec);
+    }
+
+    snprintf(buf, PATH_MAX, "%s/filetype", prefix);
+    List *types = xml_search_tags(xml, buf);
+    LIST_FOR_EACH(types, l, tag) {
+        FileType *ft = tag_parse_filetype(tag, execs);
+        if (!ft) continue;
+        app->filetypes = list_append(app->filetypes, ft);
+    }
+
+    Exec *exec;
+    LIST_FREE(execs, exec) exec_destroy(exec);
+
+    xml_unload(xml);
 
     struct option options[] = {
         {"file", required_argument, NULL, 'f'},

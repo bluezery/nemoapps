@@ -353,7 +353,7 @@ BackgroundView *background_view_create(NemoWidget *parent, int width, int height
     view->height = height;
 
     Background *bg;
-    view->bg = bg = background_create(parent, width, height, app->sxy, app->bgpath, app->config->framerate);
+    view->bg = bg = background_create(parent, width, height, app->config->sxy, app->bgpath, app->config->framerate);
 
     return view;
 }
@@ -367,48 +367,6 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 {
     ConfigApp *app = calloc(sizeof(ConfigApp), 1);
     app->config = config_load(domain, filename, argc, argv);
-
-    Xml *xml;
-    if (app->config->path) {
-        xml = xml_load_from_path(app->config->path);
-        if (!xml) ERR("Load configuration failed: %s", app->config->path);
-    } else {
-        xml = xml_load_from_domain(domain, filename);
-        if (!xml) ERR("Load configuration failed: %s:%s", domain, filename);
-    }
-    if (!xml) {
-        config_unload(app->config);
-        free(app);
-        return NULL;
-    }
-
-    const char *prefix = "config";
-    char buf[PATH_MAX];
-    const char *temp;
-
-    int width, height;
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
-    temp = xml_get_value(xml, buf, "width");
-    if (!temp) {
-        ERR("No size width in %s", prefix);
-    } else {
-        width = atoi(temp);
-    }
-    temp = xml_get_value(xml, buf, "height");
-    if (!temp) {
-        ERR("No size height in %s", prefix);
-    } else {
-        height = atoi(temp);
-    }
-
-    double sx = 1.0;
-    double sy = 1.0;
-    if (width > 0) sx = (double)app->config->width/width;
-    if (height > 0) sy = (double)app->config->height/height;
-    if (sx > sy) app->sxy = sy;
-    else app->sxy = sx;
-
-    xml_unload(xml);
 
     struct option options[] = {
         {"file", required_argument, NULL, 'f'},
