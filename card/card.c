@@ -137,8 +137,8 @@ static CardGuide *card_create_guide(struct nemotool *tool, struct showone *paren
     CardGuide *guide = calloc(sizeof(CardGuide), 1);
     guide->tool = tool;
     guide->parent = parent;
-    guide->duration = duration;
     guide->ro = ro;
+    guide->duration = duration;
 
     const char *uri = APP_ICON_DIR"/menu_drag.svg";
     double ww, hh;
@@ -154,8 +154,8 @@ static CardGuide *card_create_guide(struct nemotool *tool, struct showone *paren
     nemoshow_item_set_height(group, hh);
 
     guide->one = one = SVG_PATH_CREATE(group, ww, hh, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
-    nemoshow_item_set_alpha(one, 0.9);
     nemoshow_item_rotate(one, ro);
 
     return guide;
@@ -172,56 +172,45 @@ void card_guide_translate(CardGuide *guide, uint32_t easetype, int duration, int
     }
 }
 
-void card_guide_show(CardGuide *guide)
+void card_guide_show(CardGuide *guide, double tx0, double ty0, double tx, double ty)
 {
     _nemoshow_item_motion(guide->group, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
-            "alpha", 0.75,
+            "alpha", 0.9,
             NULL);
 
     struct nemoshow *show = guide->group->show;
     NemoMotion *m;
 
-    double tx, ty;
-    tx = 0.0;
-    ty = 0.0;
-    if (guide->ro == 0) {
-        ty = 100.0;
-    } else if (guide->ro == 180) {
-        ty = -100.0;
-    } else if (guide->ro == 90) {
-        tx = -100.0;
-    } else if (guide->ro == 270) {
-        tx = 100.0;
-    }
+    nemoshow_item_translate(guide->group, tx0, ty0);
     m = nemomotion_create(show, NEMOEASE_LINEAR_TYPE, guide->duration, 0);
     nemomotion_attach(m, 0.1,
             guide->one, "alpha", 1.0,
             NULL);
     nemomotion_attach(m, 0.4,
-            guide->one, "tx", tx,
-            guide->one, "ty", ty,
+            guide->group, "tx", tx,
+            guide->group, "ty", ty,
             NULL);
     nemomotion_attach(m, 0.45,
             guide->one, "alpha", 0.0,
             NULL);
     nemomotion_attach(m, 0.5,
-            guide->one, "tx", 0.0,
-            guide->one, "ty", 0.0,
+            guide->group, "tx", tx0,
+            guide->group, "ty", ty0,
             NULL);
 
     nemomotion_attach(m, 0.6,
             guide->one, "alpha", 1.0,
             NULL);
     nemomotion_attach(m, 0.9,
-            guide->one, "tx", tx,
-            guide->one, "ty", ty,
+            guide->group, "tx", tx,
+            guide->group, "ty", ty,
             NULL);
     nemomotion_attach(m, 0.95,
             guide->one, "alpha", 0.0,
             NULL);
     nemomotion_attach(m, 1.0,
-            guide->one, "tx", 0.0,
-            guide->one, "ty", 0.0,
+            guide->group, "tx", tx0,
+            guide->group, "ty", ty0,
             NULL);
 
     nemomotion_run(m);
@@ -757,8 +746,8 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         double ro = 0.0;
         if (card->launch_type) {
             if (!strcmp(card->launch_type, "table")) {
-                if (!RECTS_CROSS(card->cx, card->cy, card->cw, card->ch,
-                            ex, ey, 5, 5)) {
+                if (RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
+                            card->cw, card->ch, ex, ey, 5, 5)) {
                     float x, y;
                     nemoshow_transform_to_viewport(show,
                             NEMOSHOW_ITEM_AT(dup->group, tx),
@@ -790,8 +779,8 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     } else if (nemoshow_event_is_up(show, event)) {
         CardItem *itt = nemowidget_grab_get_data(grab, "item");
 		if (!itt) return;
-        if (RECTS_CROSS(card->cx, card->cy, card->cw, card->ch,
-                    ex, ey, 5, 5)) {
+        if (RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
+                    card->cw, card->ch, ex, ey, 5, 5)) {
             card_item_hide_destroy(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             card_item_scale(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.0, 0.0);
             if (itt->org) {
@@ -934,22 +923,34 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
 {
     Card *card = userdata;
     if (card->guide_idx == 0) {
-        card_guide_show(card->guide[0]);
+        card_guide_show(card->guide[0],
+                card->cx, card->cy,
+                card->cx, card->cy + card->ih/2);
+
         card_guide_hide(card->guide[1]);
         card_guide_hide(card->guide[2]);
         card_guide_hide(card->guide[3]);
     } else if (card->guide_idx == 1) {
-        card_guide_show(card->guide[1]);
+        card_guide_show(card->guide[1],
+                card->cx, card->cy,
+                card->cx, card->cy - card->ih/2);
+
         card_guide_hide(card->guide[0]);
         card_guide_hide(card->guide[2]);
         card_guide_hide(card->guide[3]);
     } else if (card->guide_idx == 2) {
-        card_guide_show(card->guide[2]);
+        card_guide_show(card->guide[2],
+                card->cx - card->cw/2 + card->iw/2, card->cy,
+                card->cx - card->cw/2, card->cy);
+
         card_guide_hide(card->guide[0]);
         card_guide_hide(card->guide[1]);
         card_guide_hide(card->guide[3]);
     } else if (card->guide_idx == 3) {
-        card_guide_show(card->guide[3]);
+        card_guide_show(card->guide[3],
+                card->cx + card->cw/2 - card->iw/2, card->cy,
+                card->cx + card->cw/2, card->cy);
+
         card_guide_hide(card->guide[0]);
         card_guide_hide(card->guide[1]);
         card_guide_hide(card->guide[2]);
@@ -980,13 +981,13 @@ Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     card->mirrors = app->mirrors;
     if (app->launch_type) card->launch_type = strdup(app->launch_type);
 
-    card->cw = card->iw * (card->cnt + 1) + card->igap * card->cnt;
+    card->cw = card->iw * card->cnt + card->igap * card->cnt;
     card->ch = card->ih;
 
     card->cx = card->width * app->item_px;
     card->cy = card->height * app->item_py;
 
-    card->ix = card->cx - card->cw/2.0 + card->iw/2.0;
+    card->ix = card->cx - card->cw/2.0;
     card->iy = card->cy - card->ch/2.0 + card->ih/2.0;
     double rx, ry;
     rx = (double)app->config->sxy;
@@ -1000,16 +1001,18 @@ Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     struct showone *group;
     card->item_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
+    // XXXXXXXX
+    struct showone *one;
+    one = RECT_CREATE(group, card->cw, card->ch);
+    nemoshow_item_translate(one, card->cx - card->cw/2.0, card->cy - card->ch/2.0);
+    nemoshow_item_set_fill_color(one, RGBA(BLUE));
+
     struct nemotimer *timer;
     card->guide_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     card->guide[0] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 0);
-    card_guide_translate(card->guide[0], 0, 0, 0, card->cx, card->cy);
     card->guide[1] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 180);
-    card_guide_translate(card->guide[1], 0, 0, 0, card->cx, card->cy);
     card->guide[2] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 90);
-    card_guide_translate(card->guide[2], 0, 0, 0, card->cx - card->cw/2 + card->iw * 2, card->cy);
     card->guide[3] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 270);
-    card_guide_translate(card->guide[3], 0, 0, 0, card->cx + card->cw/2 - card->iw * 2, card->cy);
 
     card->guide_timer = timer = TOOL_ADD_TIMER(card->tool, 0, _card_guide_timeout, card);
 
