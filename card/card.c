@@ -744,37 +744,30 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         card_item_translate(dup, 0, 0, 0, ex, ey);
 
         double ro = 0.0;
-        if (card->launch_type) {
-            if (!strcmp(card->launch_type, "table")) {
-                if (RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
-                            card->cw, card->ch, ex, ey, 5, 5)) {
-                    float x, y;
-                    nemoshow_transform_to_viewport(show,
-                            NEMOSHOW_ITEM_AT(dup->group, tx),
-                            NEMOSHOW_ITEM_AT(dup->group, ty),
-                            &x, &y);
+        if (!strcmp(card->launch_type, "table")) {
+            if (!RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
+                        card->cw, card->ch, ex, ey, 5, 5)) {
 
-                    int rw, rh;
-                    rw = (card->width - card->cw)/2;
-                    rh = (card->height - card->ch)/2;
-                    if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 45;
-                    } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
-                        ro = 90;
-                    } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 135;
-                    } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
-                        ro = 180;
-                    } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 225;
-                    } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
-                        ro = 270;
-                    } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 315;
-                    }
+                int rw, rh;
+                rw = (card->width - card->cw)/2;
+                rh = (card->height - card->ch)/2;
+                if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                    ro = 45;
+                } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
+                    ro = 90;
+                } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
+                    ro = 135;
+                } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
+                    ro = 180;
+                } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
+                    ro = 225;
+                } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
+                    ro = 270;
+                } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                    ro = 315;
                 }
-                card_item_rotate(dup, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, ro);
             }
+            card_item_rotate(dup, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, ro);
         }
     } else if (nemoshow_event_is_up(show, event)) {
         CardItem *itt = nemowidget_grab_get_data(grab, "item");
@@ -802,26 +795,25 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
             double ro = 0.0;
 
-            if (card->launch_type) {
-                if (!strcmp(card->launch_type, "table")) {
-                    int rw, rh;
-                    rw = (card->width - card->cw)/2;
-                    rh = (card->height - card->ch)/2;
-                    if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 45;
-                    } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
-                        ro = 90;
-                    } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 135;
-                    } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
-                        ro = 180;
-                    } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 225;
-                    } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
-                        ro = 270;
-                    } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 315;
-                    }
+            ERR("%s", card->launch_type);
+            if (!strcmp(card->launch_type, "table")) {
+                int rw, rh;
+                rw = (card->width - card->cw)/2;
+                rh = (card->height - card->ch)/2;
+                if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                    ro = 45;
+                } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
+                    ro = 90;
+                } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
+                    ro = 135;
+                } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
+                    ro = 180;
+                } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
+                    ro = 225;
+                } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
+                    ro = 270;
+                } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                    ro = 315;
                 }
             }
 
@@ -848,7 +840,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             bus = NEMOBUS_CREATE();
             msg = NEMOMSG_CREATE_CMD(itt->type, path);
 
-            ERR("[%s] %lf %lf %s %s %s", card->launch_type, x, y, itt->type, path, args);
+            ERR("%lf %lf %s %s %s", x, y, itt->type, path, args);
             one = nemoitem_one_create();
             nemoitem_one_set_attr_format(one, "x", "%f", x);
             nemoitem_one_set_attr_format(one, "y", "%f", y);
@@ -979,7 +971,11 @@ Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     card->guide_duration = app->guide_duration;
     card->guide_idx = 0;
     card->mirrors = app->mirrors;
-    if (app->launch_type) card->launch_type = strdup(app->launch_type);
+    if (app->launch_type) {
+        card->launch_type = strdup(app->launch_type);
+    } else {
+        card->launch_type = strdup("table");
+    }
 
     card->cw = card->iw * card->cnt + card->igap * card->cnt;
     card->ch = card->ih;
@@ -1000,12 +996,6 @@ Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 
     struct showone *group;
     card->item_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-
-    // XXXXXXXX
-    struct showone *one;
-    one = RECT_CREATE(group, card->cw, card->ch);
-    nemoshow_item_translate(one, card->cx - card->cw/2.0, card->cy - card->ch/2.0);
-    nemoshow_item_set_fill_color(one, RGBA(BLUE));
 
     struct nemotimer *timer;
     card->guide_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
