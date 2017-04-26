@@ -1,5 +1,6 @@
 usr/lib/lib*.so
 usr/share/nemoapps/*
+etc/nemoapps/base.conf
 usr/bin/nemoudevd
 etc/nemoapps/udevd.conf
 opt/pkgs/nemoapps/*
