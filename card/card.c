@@ -422,8 +422,8 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
 
     struct showone *one;
     it->bg0 = one = RECT_CREATE(group, it->width, it->height);
-    nemoshow_item_set_fill_color(one, RGBA(RED));
-    //nemoshow_item_set_alpha(one, 0.0);
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    nemoshow_item_set_alpha(one, 0.0);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_tag(one, 0x999);
     nemoshow_one_set_userdata(one, it);
