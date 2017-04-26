@@ -795,7 +795,6 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
             double ro = 0.0;
 
-            ERR("%s", card->launch_type);
             if (!strcmp(card->launch_type, "table")) {
                 int rw, rh;
                 rw = (card->width - card->cw)/2;

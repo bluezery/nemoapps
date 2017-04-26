@@ -498,24 +498,16 @@ struct _ConfigApp {
     List *filetypes;
 };
 
-
-
-
-
-
-
-
-
-static struct showone *_clip_create(struct showone *parent, int w, int h)
+static struct showone *_clip_create(struct showone *parent, int x, int y, int w, int h)
 {
     struct showone *clip;
     clip = PATH_CREATE(parent);
-    nemoshow_item_path_moveto(clip, 0, 0);
-    nemoshow_item_path_lineto(clip, w, 0);
+    nemoshow_item_path_moveto(clip, x, y);
+    nemoshow_item_path_lineto(clip, w, y);
     nemoshow_item_path_lineto(clip, w, h);
-    nemoshow_item_path_lineto(clip, 0, h);
+    nemoshow_item_path_lineto(clip, x, h);
     nemoshow_item_path_close(clip);
-    //nemoshow_item_set_fill_color(clip, RGBA(RED));
+    nemoshow_item_set_fill_color(clip, RGBA(RED));
     return clip;
 }
 
@@ -622,7 +614,7 @@ struct _FBView {
     NemoWidget *widget;
 
     struct showone *bg_group;
-    struct showone *bg0;
+    Image *bg0;
 
     char *bgpath_local;
     char *bgpath;
@@ -949,7 +941,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     struct showone *clip;
 
     if (file->ft->bg) {
-        it->bg_clip = clip = _clip_create(group, it->w, it->h);
+        it->bg_clip = clip = _clip_create(group, 0, 0, it->w, it->h);
 
         List *fileinfos = fileinfo_readdir(file->ft->bg);
         if (fileinfos) {
@@ -968,7 +960,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
         FileInfo *fileinfo;
         LIST_FREE(fileinfos, fileinfo) fileinfo_destroy(fileinfo);
     } else {
-        it->bg_clip = clip = _clip_create(group, it->w, it->h - it->name_h);
+        it->bg_clip = clip = _clip_create(group, 0, 0, it->w, it->h - it->name_h);
 
         if (it->type == ITEM_TYPE_IMG) {
             Image *img;
@@ -1117,7 +1109,7 @@ static void view_destroy(FBView *view)
     LIST_FREE(view->bgfileinfos, fileinfo) fileinfo_destroy(fileinfo);
     nemotimer_destroy(view->bg_change_timer);
     image_destroy(view->bg);
-    nemoshow_one_destroy(view->bg0);
+    image_destroy(view->bg0);
     nemoshow_one_destroy(view->bg_group);
 
     nemowidget_destroy(view->widget);
@@ -1232,13 +1224,12 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
     struct showone *group;
     view->bg_group = group = GROUP_CREATE(canvas);
 
-    view->bg0 = one = RECT_CREATE(group, view->w, view->h);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
+    Image *img;
+    view->bg0 = img = image_create(group);
 
     const char *font_family = view->app->config->font_family;
     const char *font_style = view->app->config->font_style;
 
-    Image *img;
     view->bg = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
     image_set_alpha(img, 0, 0, 0, 0.0);
@@ -1488,8 +1479,16 @@ static void _fb_file_thread_done(bool cancel, void *userdata)
 
         // FIXME: nemowidget_resize scaling it's all content
         //nemowidget_resize(nemowidget_get_top_widget(view->widget), view->w, view->h);
-        nemoshow_item_set_width(view->bg0, view->w);
-        nemoshow_item_set_height(view->bg0, view->h);
+        const char *img_path = APP_RES_DIR"/back.png";
+        int w, h;
+        if (!image_get_wh(img_path, &w, &h)) {
+            ERR("image get wh failed: %s", img_path);
+        } else {
+            image_load(view->bg0, view->tool, img_path, w, h, NULL, NULL);
+            image_translate(view->bg0, 0, 0, 0, 0, view->h - h);
+            image_set_alpha(view->bg0, 0, 0, 0, 1.0);
+            ERR("%s", APP_RES_DIR"/back.png");
+        }
 
         if (view->bgdir_thread) thread_destroy(view->bgdir_thread);
         BackThreadData *bgdata = calloc(sizeof(BackThreadData), 1);
