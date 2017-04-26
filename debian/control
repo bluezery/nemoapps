@@ -1,7 +1,7 @@
 Source: nemoapps
 Priority: optional
 Maintainer: Taehwan Kim <taehwan@nemoux.net>
-Build-Depends: debhelper (>=9), libc6-dev, nemocore-dev, skia-dev, uuid-dev, libharfbuzz-dev, libpixman-1-dev, libexpat1-dev, libjson-c-dev, libcurl4-openssl-dev, libmagickwand-dev, libmagic-dev, libsqlite3-dev, libao-dev, libudev-dev, libmount-dev, libprocps-dev, libdbus-1-dev, libssl-dev, libavutil-dev, libavcodec-dev, libsndfile1-dev, libmupdf-dev, libjbig2dec0-dev, libopenjp2-7-dev, mujs-dev
+Build-Depends: debhelper (>=9), libc6-dev, nemocore-dev, nemoover-dev, skia-dev, uuid-dev, libharfbuzz-dev, libpixman-1-dev, libexpat1-dev, libjson-c-dev, libcurl4-openssl-dev, libmagickwand-dev, libmagic-dev, libsqlite3-dev, libao-dev, libudev-dev, libmount-dev, libprocps-dev, libdbus-1-dev, libssl-dev, libavutil-dev, libavcodec-dev, libsndfile1-dev, libmupdf-dev, libjbig2dec0-dev, libopenjp2-7-dev, mujs-dev
 Standards-Version: 3.9.8
 Section: libs
 Homepage: http://www.nemoux.net
@@ -12,7 +12,7 @@ Package: nemoapps
 Priority: optional
 Section: libs
 Architecture: any
-Depends: nemocore, ${shlibs:Depends}, ${misc:Depends}
+Depends: nemocore, nemoover, ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's inhouse application libraries
  <insert long description, indented with spaces>
 
