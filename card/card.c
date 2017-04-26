@@ -30,9 +30,10 @@ struct _ConfigApp {
     List *menu_items;
     List *mirrors;
     int item_cnt;
-    int item_area_width, item_area_height;
+    int item_gap;
     int item_duration;
     double item_px, item_py;
+    double item_ro;
     int item_width, item_height;
     double item_icon_px, item_icon_py, item_txt_px, item_txt_py;
     int item_grab_min_time;
@@ -104,7 +105,8 @@ struct _Card {
     int start;
     int cnt;
     int cx, cy, cw, ch;
-    int ix, iy, iw, ih;
+    int ix, iy, iw, ih, igap;
+    double iro;
 	int item_grab_min_time;
     int item_duration;
     List *items;
@@ -549,13 +551,11 @@ void card_item_set_alpha(CardItem *it, uint32_t easetype, int duration, int dela
 void card_item_show(CardItem *it, uint32_t easetype, int duration, int delay)
 {
     nemoshow_one_above(it->group, NULL);
-    card_item_set_alpha(it, easetype, duration, delay, 1.0);
     if (it->icon_anim) nemotimer_set_timeout(it->icon_timer, 100 + delay);
 }
 
 void card_item_hide(CardItem *it, uint32_t easetype, int duration, int delay)
 {
-    card_item_set_alpha(it, easetype, duration, delay, 0.0);
     if (it->icon_timer) nemotimer_set_timeout(it->icon_timer, 0);
 }
 
@@ -605,25 +605,27 @@ void card_show(Card *card)
     int duration = 1000;
     int delay = 150;
 
-    card->start = card->cnt - 1;
-    int i = 0;
-    CardItem *it;
-    List *l;
+    card->start = 0;
 
-    LIST_FOR_EACH(card->items, l, it) {
-        card_item_translate(it, 0, 0, 0, card->ix + card->cw, card->iy);
-        card_item_show(it, easetype, duration, delay * i);
-        card_item_rotate(it, easetype, duration, delay * (i + 1),
-                25);
-        card_item_scale(it, easetype, duration, delay * i,
-                1.0, 1.0);
+    int i;
+    for (i = 0; i < card->cnt; i++) {
+        CardItem *it = LIST_DATA(list_get_nth(card->items, i));
+        if (!it) {
+            ERR("item is NULL at index(%d)", i);
+            break;
+        }
+
+        if (i != 0) {
+            card_item_rotate(it, easetype, duration, delay * i, card->iro);
+            card_item_show(it, easetype, duration, delay * i);
+            card_item_set_alpha(it, easetype, duration, delay * i, 1.0);
+            card_item_scale(it, easetype, duration, delay * i, 1.0, 1.0);
+        }
         card_item_translate(it, easetype, duration, delay * i,
-                card->ix + card->cw - (card->cw/card->cnt) * (i + 1), card->iy);
-        i++;
-        if (i >= card->cnt - 1) break;
+                card->ix + (card->iw + card->igap) * i, card->iy);
     }
-    nemotimer_set_timeout(card->timer, duration + delay * (i - 1) + 10);
 
+    nemotimer_set_timeout(card->timer, duration + delay * (i - 1) + 10);
     nemotimer_set_timeout(card->guide_timer, delay * (i - 1) + 10);
 
     nemoshow_dispatch_frame(card->show);
@@ -665,6 +667,7 @@ void card_hide(Card *card)
         card_item_scale(it, easetype, duration, 0, 0.0, 0.0);
         card_item_translate(it, easetype, duration, 0, card->ix, card->iy);
     }
+
     nemotimer_set_timeout(card->timer, 0);
 
     nemotimer_set_timeout(card->guide_timer, 0);
@@ -680,53 +683,53 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
 {
     Card *card = userdata;
 
-    if (list_count(card->items) <= card->cnt) {
-        ERR("Number(%d) of appended item should be bigger than number(%d) of viewable items",
+    int cnt = list_count(card->items);
+    if (cnt <= card->cnt) {
+        ERR("Number(%d) of appended items should be bigger than number(%d) of viewable items",
                 card->cnt, list_count(card->items));
         return;
     }
 
-    uint32_t easetype = NEMOEASE_LINEAR_TYPE;
-    int duration = card->item_duration - 20;
-
-    int cnt = list_count(card->items);
-
-    CardItem *it;
     List *l;
     l = list_get_nth(card->items, card->start);
     RET_IF(!l);
 
-    int i;
+    int i, j;
+    j = card->start;
     for (i = 0; i < card->cnt ; i++) {
-        it = LIST_DATA(l);
+        uint32_t easetype = NEMOEASE_LINEAR_TYPE;
+        int duration = card->item_duration - 20;
 
+        CardItem *it = LIST_DATA(list_get_nth(card->items, j));
+        if (!it) {
+            ERR("item is NULL at index(%d)", j);
+            break;
+        }
+
+        card_item_show(it, NEMOEASE_CUBIC_OUT_TYPE, duration, 0);
         if (i == 0) {
-            card_item_set_alpha(it, 0, 0, 0, 0.0);
-            card_item_rotate(it, 0, 0, 0, 0);
-            card_item_scale(it, 0, 0, 0, 0.0, 0.0);
+            card_item_rotate(it, 0, 0, 0, 0.0);
             card_item_translate(it, 0, 0, 0, card->ix, card->iy);
 
-            card_item_show(it, NEMOEASE_CUBIC_OUT_TYPE, duration, 0);
-            card_item_rotate(it, NEMOEASE_CUBIC_OUT_TYPE, duration, 0, 25);
-            card_item_scale(it, NEMOEASE_CUBIC_OUT_TYPE, duration, 0, 1.0, 1.0);
-        }
-        if (i == card->cnt - 1) {
+            card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, card->iro);
+            card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0);
+            card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0, 1.0);
+        } else if (i == card->cnt - 1) {
+            card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
-            card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 45);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0, 0.0);
         }
         card_item_translate(it, easetype, duration, 0,
-                card->ix + (card->cw/card->cnt) * (i + 1), card->iy);
-
-        l = l->prev;
-        if (!l) {
-            l = LIST_LAST(card->items);
+                card->ix + (card->iw + card->igap) * (i + 1), card->iy);
+        j++;
+        if ( j >= cnt ) {
+            j = 0;
         }
     }
 
-    card->start++;
-    if (card->start >= cnt) {
-        card->start = 0;
+    card->start--;
+    if (card->start < 0) {
+        card->start = cnt - 1;
     }
 
     nemotimer_set_timeout(timer, card->item_duration);
@@ -964,7 +967,7 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(card->show);
 }
 
-Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int item_area_width, int item_area_height, int item_duration, double item_px, double item_py, int item_width, int item_height, int item_grab_min_time, int guide_duration, const char *launch_type, const char *logfile, List *mirrors)
+Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
     Card *card = calloc(sizeof(Card), 1);
     card->show = nemowidget_get_show(parent);
@@ -972,35 +975,29 @@ Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int i
     card->uuid = nemowidget_get_uuid(parent);
     card->width = width;
     card->height = height;
-    card->cnt = item_cnt;
-    card->iw = item_width;
-    card->ih = item_height;
-    card->item_duration = item_duration;
-	card->item_grab_min_time = item_grab_min_time;
-    card->guide_duration = guide_duration;
+    card->cnt = app->item_cnt;
+    card->iw = app->item_width;
+    card->ih = app->item_height;
+    card->iro = app->item_ro;
+    card->igap = app->item_gap;
+    card->item_duration = app->item_duration;
+	card->item_grab_min_time = app->item_grab_min_time;
+    card->guide_duration = app->guide_duration;
     card->guide_idx = 0;
-    card->mirrors = mirrors;
-    if (launch_type) card->launch_type = strdup(launch_type);
+    card->mirrors = app->mirrors;
+    if (app->launch_type) card->launch_type = strdup(app->launch_type);
 
+    card->cw = card->iw * (card->cnt + 1) + card->igap * card->cnt;
+    card->ch = card->ih;
+
+    card->cx = card->width * app->item_px;
+    card->cy = card->height * app->item_py;
+
+    card->ix = card->cx - card->cw/2.0 + card->iw/2.0;
+    card->iy = card->cy - card->ch/2.0 + card->ih/2.0;
     double rx, ry;
-    rx = (double)card->width/3240;
-    ry = (double)card->height/1920;
-
-    if (item_area_width > 0) {
-        card->cw = item_area_width;
-    } else {
-        card->cw = card->width/2;
-    }
-    if (item_area_height > 0) {
-        card->ch = item_area_height;
-    } else {
-        card->ch = card->height/3;
-    }
-    card->cx = (card->width - card->cw) * item_px;
-    card->cy = (card->height - card->ch) * item_py;
-
-    card->ix = card->cx;
-    card->iy = card->cy + card->ch/2;
+    rx = (double)app->config->sxy;
+    ry = (double)app->config->sxy;
 
     NemoWidget *widget;
     card->widget = widget = nemowidget_create_vector(parent, width, height);
@@ -1012,13 +1009,13 @@ Card *card_create(NemoWidget *parent, int width, int height, int item_cnt, int i
 
     struct nemotimer *timer;
     card->guide_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-    card->guide[0] = card_create_guide(card->tool, group, rx, ry, guide_duration, 0);
+    card->guide[0] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 0);
     card_guide_translate(card->guide[0], 0, 0, 0, card->cx + card->cw/2, card->cy + card->ch/2);
-    card->guide[1] = card_create_guide(card->tool, group, rx, ry, guide_duration, 180);
+    card->guide[1] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 180);
     card_guide_translate(card->guide[1], 0, 0, 0, card->cx + card->cw/2, card->cy + card->ch/2);
-    card->guide[2] = card_create_guide(card->tool, group, rx, ry, guide_duration, 90);
+    card->guide[2] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 90);
     card_guide_translate(card->guide[2], 0, 0, 0, card->cx + 100, card->cy + card->ch/2);
-    card->guide[3] = card_create_guide(card->tool, group, rx, ry, guide_duration, 270);
+    card->guide[3] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 270);
     card_guide_translate(card->guide[3], 0, 0, 0, card->cx + card->cw - 100, card->cy + card->ch/2);
 
     card->guide_timer = timer = TOOL_ADD_TIMER(card->tool, 0, _card_guide_timeout, card);
@@ -1186,20 +1183,14 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     } else {
         app->item_cnt = atoi(temp);
     }
-    temp = xml_get_value(xml, buf, "area_width");
+    temp = xml_get_value(xml, buf, "gap");
     if (!temp) {
         ERR("No item area width in %s", prefix);
     } else {
-        app->item_area_width = atoi(temp);
+        app->item_gap = atoi(temp);
     }
-    app->item_area_width *= app->config->sxy;
-    temp = xml_get_value(xml, buf, "area_height");
-    if (!temp) {
-        ERR("No item area height in %s", prefix);
-    } else {
-        app->item_area_height = atoi(temp);
-    }
-    app->item_area_height *= app->config->sxy;
+    app->item_gap *= app->config->sxy;
+
     temp = xml_get_value(xml, buf, "duration");
     if (!temp) {
         ERR("No item duration in %s", prefix);
@@ -1219,6 +1210,12 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     } else {
         app->item_py = atof(temp);
     }
+    temp = xml_get_value(xml, buf, "ro");
+    if (!temp) {
+        ERR("No item py in %s", prefix);
+    } else {
+        app->item_ro = atof(temp);
+    }
     temp = xml_get_value(xml, buf, "width");
     if (!temp) {
         ERR("No item width in %s", prefix);
@@ -1236,27 +1233,19 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 
     // Position
     temp = xml_get_value(xml, buf, "icon_px");
-    if (!temp) {
-        ERR("No item icon_px in %s", prefix);
-    } else {
+    if (temp) {
         app->item_icon_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "icon_py");
-    if (!temp) {
-        ERR("No item icon_py in %s", prefix);
-    } else {
+    if (temp) {
         app->item_icon_py = atof(temp);
     }
     temp = xml_get_value(xml, buf, "txt_px");
-    if (!temp) {
-        ERR("No item txt_px in %s", prefix);
-    } else {
+    if (temp) {
         app->item_txt_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "txt_py");
-    if (!temp) {
-        ERR("No item txt_py in %s", prefix);
-    } else {
+    if (temp) {
         app->item_txt_py = atof(temp);
     }
 
@@ -1285,9 +1274,7 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
 
     snprintf(buf, PATH_MAX, "%s/log", prefix);
     temp = xml_get_value(xml, buf, "file");
-    if (!temp) {
-        ERR("No log file in %s", prefix);
-    } else {
+    if (temp) {
         app->logfile = strdup(temp);
     }
 
@@ -1352,11 +1339,7 @@ int main(int argc, char *argv[])
     nemowidget_win_enable_rotate(win, 0);
     nemowidget_win_enable_scale(win, 0);
 
-    Card *card = card_create(win, app->config->width, app->config->height,
-            app->item_cnt, app->item_area_width, app->item_area_height, app->item_duration,
-            app->item_px, app->item_py, app->item_width, app->item_height,
-            app->item_grab_min_time,
-            app->guide_duration, app->launch_type, app->logfile, app->mirrors);
+    Card *card = card_create(win, app->config->width, app->config->height, app);
 
     List *l;
     MenuItem *it;
