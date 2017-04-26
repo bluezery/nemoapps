@@ -615,6 +615,7 @@ struct _FBView {
 
     struct showone *bg_group;
     Image *bg0;
+    struct showone *clip;
 
     char *bgpath_local;
     char *bgpath;
@@ -1106,6 +1107,8 @@ static void view_destroy(FBView *view)
     text_destroy(view->title);
     text_destroy(view->title1);
 
+    nemoshow_one_destroy(view->clip);
+
     LIST_FREE(view->bgfileinfos, fileinfo) fileinfo_destroy(fileinfo);
     nemotimer_destroy(view->bg_change_timer);
     image_destroy(view->bg);
@@ -1138,6 +1141,20 @@ static void _fb_bg_change_timer(struct nemotimer *timer, void *userdata)
 
     if (list_count(view->bgfileinfos) > 1)
         nemotimer_set_timeout(timer, BACK_INTERVAL);
+
+    const char *img_path = APP_RES_DIR"/back.png";
+    int ww, hh;
+    if (!image_get_wh(img_path, &ww, &hh)) {
+        ERR("image get wh failed: %s", img_path);
+    } else {
+        if (view->clip) nemoshow_one_destroy(view->clip);
+        struct showone *clip;
+        view->clip = clip = _clip_create(view->bg_group, 0, 0, view->w, view->h - h);
+        image_load(view->bg0, view->tool, img_path, ww, hh, NULL, NULL);
+        image_translate(view->bg0, 0, 0, 0, 0, h - 1);
+        image_set_alpha(view->bg0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 500, 1.0);
+        image_set_clip(view->bg0, clip);
+    }
 
     nemoshow_dispatch_frame(view->show);
 }
@@ -1217,7 +1234,6 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
     nemowidget_show(widget, 0, 0, 0);
     view->widget = widget;
 
-    struct showone *one;
     struct showone *canvas;
     canvas = nemowidget_get_canvas(widget);
 
@@ -1479,16 +1495,6 @@ static void _fb_file_thread_done(bool cancel, void *userdata)
 
         // FIXME: nemowidget_resize scaling it's all content
         //nemowidget_resize(nemowidget_get_top_widget(view->widget), view->w, view->h);
-        const char *img_path = APP_RES_DIR"/back.png";
-        int w, h;
-        if (!image_get_wh(img_path, &w, &h)) {
-            ERR("image get wh failed: %s", img_path);
-        } else {
-            image_load(view->bg0, view->tool, img_path, w, h, NULL, NULL);
-            image_translate(view->bg0, 0, 0, 0, 0, view->h - h);
-            image_set_alpha(view->bg0, 0, 0, 0, 1.0);
-            ERR("%s", APP_RES_DIR"/back.png");
-        }
 
         if (view->bgdir_thread) thread_destroy(view->bgdir_thread);
         BackThreadData *bgdata = calloc(sizeof(BackThreadData), 1);
@@ -1563,6 +1569,7 @@ static void view_hide(FBView *view)
     nemowidget_hide(view->widget, 0, 0, 0);
 
     if (view->filethread) thread_destroy(view->filethread);
+    image_set_alpha(view->bg0, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
     image_set_alpha(view->bg, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
 
     text_set_alpha(view->title, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0.0);
