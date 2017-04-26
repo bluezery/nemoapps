@@ -507,7 +507,7 @@ static struct showone *_clip_create(struct showone *parent, int x, int y, int w,
     nemoshow_item_path_lineto(clip, w, h);
     nemoshow_item_path_lineto(clip, x, h);
     nemoshow_item_path_close(clip);
-    nemoshow_item_set_fill_color(clip, RGBA(RED));
+    //nemoshow_item_set_fill_color(clip, RGBA(RED));
     return clip;
 }
 
