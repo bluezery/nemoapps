@@ -13,7 +13,6 @@
 #include <nemoegl.h>
 #include <nemomisc.h>
 #include <nemocanvas.h>
-#include <nemoglib.h>
 
 #include <showhelper.h>
 
@@ -121,14 +120,6 @@ static inline void TOOL_DESTROY(struct nemotool *tool)
 {
     nemotool_disconnect_wayland(tool);
     nemotool_destroy(tool);
-}
-
-static inline void TOOL_RUN_GLIB(struct nemotool *tool)
-{
-    GMainLoop *loop;
-    loop = g_main_loop_new(NULL, FALSE);
-	nemoglib_run_tool(loop, tool);
-	g_main_loop_unref(loop);
 }
 
 pthread_mutex_t __worker_mutex;

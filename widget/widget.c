@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <nemoglib.h>
-
 #include "nemoutil.h"
 #include "widget.h"
 
