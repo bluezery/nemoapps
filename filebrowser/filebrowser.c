@@ -830,7 +830,7 @@ static void _bg_video_timer(struct nemotimer *timer, void *userdata)
     if (nemoshow_item_get_width(it->bg_video) <= 0 ||
             nemoshow_item_get_height(it->bg_video) <= 0) {
         int w, h;
-        if (!image_get_wh(path, &w, &h)) {
+        if (!file_get_image_wh(path, &w, &h)) {
             ERR("image get wh failed: %s", path);
         } else {
             _rect_ratio_full(w, h, it->w, it->h, &w, &h);
@@ -1087,13 +1087,6 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
 
 static void view_destroy(FBView *view)
 {
-
-    /*
-    FBItem *it;
-    while((it = LIST_DATA(LIST_FIRST(view->items)))) {
-        fb_remove_item(view, it);
-    }
-    */
     FBItem *it;
     LIST_FREE(view->items, it) view_item_destroy(it);
 
@@ -1129,11 +1122,12 @@ static void _fb_bg_change_timer(struct nemotimer *timer, void *userdata)
 
     FileInfo *file = LIST_DATA(list_get_nth(view->bgfileinfos, view->bgfileinfos_idx));
 
+
     int w, h;
     file_get_image_wh(file->path, &w, &h);
-    image_load_fit(view->bg, view->tool, file->path, view->w, view->h, NULL, NULL);
+    image_load(view->bg, view->tool, file->path, w, h, NULL, NULL);
     image_set_alpha(view->bg, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0, 1.0);
-    image_translate(view->bg, 0, 0, 0, w/2, h/2);
+    image_translate(view->bg, 0, 0, 0, w/2.0, h/2.0);
 
     view->bgfileinfos_idx++;
     if (view->bgfileinfos_idx >= list_count(view->bgfileinfos))
@@ -1144,14 +1138,14 @@ static void _fb_bg_change_timer(struct nemotimer *timer, void *userdata)
 
     const char *img_path = APP_RES_DIR"/back.png";
     int ww, hh;
-    if (!image_get_wh(img_path, &ww, &hh)) {
+    if (!file_get_image_wh(img_path, &ww, &hh)) {
         ERR("image get wh failed: %s", img_path);
     } else {
         if (view->clip) nemoshow_one_destroy(view->clip);
         struct showone *clip;
         view->clip = clip = _clip_create(view->bg_group, 0, 0, view->w, view->h - h);
         image_load(view->bg0, view->tool, img_path, ww, hh, NULL, NULL);
-        image_translate(view->bg0, 0, 0, 0, 0, h - 1);
+        image_translate(view->bg0, 0, 0, 0, 0, h);
         image_set_alpha(view->bg0, NEMOEASE_CUBIC_OUT_TYPE, 2000, 500, 1.0);
         image_set_clip(view->bg0, clip);
     }
