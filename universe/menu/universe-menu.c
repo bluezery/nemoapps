@@ -763,7 +763,7 @@ int main(int argc, char *argv[])
 
     ERR("%d %d %lf", app->config->width, app->config->height, app->config->sxy);
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     nemowidget_win_enable_scale(win, -1);
     nemowidget_win_enable_rotate(win, -1);
 

@@ -1740,7 +1740,7 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
 
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
 
     FBView *view;
     view = view_create(win, app->config->width, app->config->height, app->rootpath, app);

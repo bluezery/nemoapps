@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <size width="7680" height="2160"/>
+    <window layer="background" width="7680" height="2160"/>
     <blink cnt="45"/>
 </config>

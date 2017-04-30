@@ -50,32 +50,35 @@ static void _config_override(Config *config, Xml *xml)
         if (config->layer) free(config->layer);
         config->layer = strdup(temp);
     }
-
-    snprintf(buf, PATH_MAX, "%s/size", prefix);
+    temp = xml_get_value(xml, buf, "enable_fullscreen");
+    if (temp && strlen(temp) > 0) {
+        if (!strcasecmp(temp, "true")) {
+            config->enable_fullscreen = true;
+        }
+    }
     temp = xml_get_value(xml, buf, "width");
     if (temp && strlen(temp) > 0)  config->width = atoi(temp);
     temp = xml_get_value(xml, buf, "height");
     if (temp && (strlen(temp) > 0)) config->height = atoi(temp);
 
-    snprintf(buf, PATH_MAX, "%s/scale", prefix);
-    temp = xml_get_value(xml, buf, "x");
+    temp = xml_get_value(xml, buf, "sx");
     if (temp && (strlen(temp) > 0)) sx = atof(temp);
-    temp = xml_get_value(xml, buf, "y");
+    temp = xml_get_value(xml, buf, "sy");
     if (temp && (strlen(temp) > 0)) sy = atof(temp);
 
-    temp = xml_get_value(xml, buf, "min_x");
+    temp = xml_get_value(xml, buf, "min_sx");
     if (temp && (strlen(temp) > 0)) min_sx = atof(temp);
-    temp = xml_get_value(xml, buf, "min_y");
+    temp = xml_get_value(xml, buf, "min_sy");
     if (temp && (strlen(temp) > 0)) min_sy = atof(temp);
 
-    temp = xml_get_value(xml, buf, "max_x");
+    temp = xml_get_value(xml, buf, "max_sx");
     if (temp && (strlen(temp) > 0)) max_sx = atof(temp);
-    temp = xml_get_value(xml, buf, "max_y");
+    temp = xml_get_value(xml, buf, "max_sy");
     if (temp && (strlen(temp) > 0)) max_sy = atof(temp);
 
-    temp = xml_get_value(xml, buf, "exit_x");
+    temp = xml_get_value(xml, buf, "exit_sx");
     if (temp && (strlen(temp) > 0)) exit_sx = atof(temp);
-    temp = xml_get_value(xml, buf, "exit_y");
+    temp = xml_get_value(xml, buf, "exit_sy");
     if (temp && (strlen(temp) > 0)) exit_sy = atof(temp);
 
     snprintf(buf, PATH_MAX, "%s/scene", prefix);

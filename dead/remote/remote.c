@@ -727,7 +727,7 @@ int main(int argc, char *argv[])
     config = config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, config);
     nemowidget_win_set_layer(win, "overlay");
 
     RemoteView *view = remoteview_create(win, config->width, config->height);

@@ -1396,7 +1396,7 @@ int main(int argc, char *argv[])
     WELLRNG512_INIT();
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
 
     BackgroundView *view = background_create(win, app);
     nemowidget_append_callback(win, "layer", _background_win_layer, view);

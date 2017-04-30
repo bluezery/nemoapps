@@ -1271,8 +1271,7 @@ int main(int argc, char *argv[])
             &(app->config->width), &(app->config->height));
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_enable_fullscreen(win, true);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
 
     PlayerView *view = playerview_create(win,
             app->config->width, app->config->height, vw, vh,

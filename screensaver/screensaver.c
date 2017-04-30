@@ -157,11 +157,9 @@ int main(int argc, char *argv[])
     }
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     // XXX: all windows are not visible under screensaver
     nemowidget_win_enable_state(win, "opaque", true);
-    nemowidget_win_set_anchor(win, 0.0, 0.0);
-    nemowidget_win_set_layer(win, "overlay");
 
     SaverView *view = saver_view_create(win, app->config->width, app->config->height,
             app->path, app->enable_audio);

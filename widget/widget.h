@@ -384,7 +384,7 @@ typedef bool (*NemoWidget_Win_Area)(NemoWidget *win, double x, double y, void *u
 extern NemoWidgetClass NEMOWIDGET_WIN;
 
 NemoWidget *nemowidget_create_win(struct nemotool *tool, const char *name, int width, int height);
-NemoWidget *nemowidget_create_win_base(struct nemotool *tool, const char *name, Config *base);
+NemoWidget *nemowidget_create_win_config(struct nemotool *tool, const char *name, Config *base);
 void nemowidget_win_load_scene(NemoWidget *widget, int width, int height);
 
 void nemowidget_win_set_anchor(NemoWidget *win, double ax, double ay);

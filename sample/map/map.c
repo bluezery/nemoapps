@@ -685,7 +685,7 @@ int main(int argc, char *argv[])
     struct nemotool *tool = TOOL_CREATE();
 
     NemoWidget *win;
-    win = nemowidget_create_win_base(tool, APPNAME, base);
+    win = nemowidget_create_win_config(tool, APPNAME, base);
 
     TestMap *test = test_map_create(win, base->width, base->height);
     nemowidget_append_callback(win, "exit", _win_exit, test);

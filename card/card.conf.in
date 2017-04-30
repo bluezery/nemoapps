@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <size width="3240" height="1920"/>
+    <window layer="underlay" width="3240" height="1920"/>
     <frame rate="30"/>
     <launch type="table"/>
     <guide duration="5000"/>
@@ -18,4 +18,3 @@
     <items bg="@IMG_DIR@/culturecenter_bg.png" icon="@ICON_DIR@/culturecenter_icon.svg" txt="@ICON_DIR@/culturecenter.svg" exec="/usr/bin/electron;@LINK_DIR@/culturecenter" resize="off" sxy="0.5"/>
     <items bg="@IMG_DIR@/entertainment_bg.png" icon="@ICON_DIR@/entertainment_icon.svg" txt="@ICON_DIR@/entertainment.svg" exec="/usr/bin/electron;@LINK_DIR@/entertainment" resize="off" sxy="0.5"/>
 </config>
-

@@ -60,6 +60,7 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     char buf[PATH_MAX];
     const char *temp;
 
+    snprintf(buf, PATH_MAX, "%s/size", prefix);
     temp = xml_get_value(xml, buf, "col");
     if (!temp) {
         ERR("No size col in %s", prefix);
@@ -657,8 +658,7 @@ int main(int argc, char *argv[])
     }
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_enable_fullscreen(win, true);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     nemowidget_win_enable_move(win, 3);
     nemowidget_win_enable_rotate(win, 3);
     nemowidget_win_enable_scale(win, 3);

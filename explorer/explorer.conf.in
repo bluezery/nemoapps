@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <size width="768" height="768"/>
+    <window width="768" height="768"/>
     <exec type="image" path="@NEMOIMAGE@;-f"/>
     <exec type="video" path="@NEMOPLAYER@;-f"/>
     <exec type="pdf" path="@NEMOPDF@;-f"/>

@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     }
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     nemowidget_win_set_anchor(win, 0, 0);
     nemowidget_win_set_layer(win, "background");
     nemowidget_win_enable_move(win, 0);

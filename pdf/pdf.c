@@ -1007,8 +1007,7 @@ int main(int argc, char *argv[])
             app->path, app->slideshow_timeout, app->repeat);
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_enable_fullscreen(win, true);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     if (app->config->layer && !strcmp(app->config->layer, "background")) {
         nemowidget_enable_event(win, false);
     }

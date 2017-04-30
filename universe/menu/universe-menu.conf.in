@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <size width="540" height="540"/>
+    <window width="540" height="540"/>
     <items group="content" icon="@APPDATA_ROOT@/sub/content/biztworld.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/BizTWorld"/>
     <items group="content" icon="@APPDATA_ROOT@/sub/content/lifeplatform.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/LifePlatform"/>
     <items group="content" icon="@APPDATA_ROOT@/sub/content/lunawatch.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/LunaWatch"/>

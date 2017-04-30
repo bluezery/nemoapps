@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <window layer="overlay" width="980" height="416"/>
     <layout name="eng"/>
-    <size width="980" height="416"/>
 </config>

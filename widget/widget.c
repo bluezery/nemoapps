@@ -1717,16 +1717,15 @@ NemoWidget *nemowidget_create_win(struct nemotool *tool, const char *name, int w
     struct nemoshow *show;
     show = nemoshow_create_view(tool, width, height);
     nemoshow_set_name(show, name);
-    nemoshow_view_set_anchor(show, -0.5, -0.5);
     nemoshow_view_set_state(show, "layer");
     nemoshow_view_put_state(show, "keypad");
     nemoshow_view_put_state(show, "sound");
     nemoshow_set_state(show, NEMOSHOW_ONTIME_STATE);
     nemoshow_set_userdata(show, win);
 
+    nemoshow_set_dispatch_event(show, _nemowidget_win_dispatch_show_event);
     nemoshow_set_dispatch_resize(show, _nemowidget_win_dispatch_resize);
     nemoshow_set_dispatch_destroy(show, _nemowidget_win_dispatch_show_destroy);
-    nemoshow_set_dispatch_event(show, _nemowidget_win_dispatch_show_event);
     nemoshow_set_dispatch_layer(show, _nemowidget_win_dispatch_show_layer);
     nemoshow_set_dispatch_fullscreen(show, _nemowidget_win_dispatch_fullscren);
 
@@ -1746,7 +1745,7 @@ NemoWidget *nemowidget_create_win(struct nemotool *tool, const char *name, int w
     return win;
 }
 
-NemoWidget *nemowidget_create_win_base(struct nemotool *tool, const char *name, Config *base)
+NemoWidget *nemowidget_create_win_config(struct nemotool *tool, const char *name, Config *base)
 {
     NemoWidget *win;
 
@@ -1755,6 +1754,10 @@ NemoWidget *nemowidget_create_win_base(struct nemotool *tool, const char *name, 
 
     if (base->layer) {
         nemowidget_win_set_layer(win, base->layer);
+    }
+    if (!base->enable_fullscreen) {
+        // XXX: default is true in nemocore
+        nemowidget_win_enable_fullscreen(win, false);
     }
 
     if (base->min_width > 0 && base->min_height > 0) {
@@ -1814,6 +1817,10 @@ void nemowidget_win_set_layer(NemoWidget *win, const char *layer)
         nemowidget_win_enable_move(win, 0);
         nemowidget_win_enable_rotate(win, 0);
         nemowidget_win_enable_scale(win, 0);
+    } else {
+        nemowidget_win_enable_move(win, 1);
+        nemowidget_win_enable_rotate(win, 2);
+        nemowidget_win_enable_scale(win, 2);
     }
     if (!strcmp(layer, "background")) {
         nemoshow_view_set_opaque(show, 0, 0, show->width, show->height);

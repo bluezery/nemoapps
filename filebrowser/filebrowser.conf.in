@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <!--<font family="Lato" size="10"/>-->
-    <size width="745" height="530"/>
+    <font family="Lato" size="10"/>
+    <window width="745" height="530"/>
+
     <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg" titlepath=".@APPNAME@/title"/>
 
     <title ltx="45" lty="35"/>

@@ -397,7 +397,7 @@ int main(int argc, char *argv[])
     base = config_load(PROJECT_NAME, APPNAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, base);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, base);
     nemowidget_win_load_scene_base(win);
     nemowidget_show(win, 0, 0, 0);
     g_win = win;

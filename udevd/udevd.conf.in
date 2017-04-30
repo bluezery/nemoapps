@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <window width="512" height="512"/>
     <mount exec="@NEMOEXPLORER@;-f"/>
-    <size width="512" height="512"/>
 </config>
 

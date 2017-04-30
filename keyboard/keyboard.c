@@ -1013,11 +1013,9 @@ int main(int argc, char *argv[])
     ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
     if (app->config->id)
         nemoshow_view_focus_to(nemowidget_get_show(win), app->config->id);
-    nemowidget_win_set_anchor(win, -0.5, -0.5);
-    nemowidget_win_set_layer(win, "overlay");
     nemowidget_win_set_type(win, "keypad");
     nemowidget_win_enable_state(win, "keypad", false);
     nemowidget_win_enable_move(win, 2);

@@ -1,2 +1,0 @@
-#ADD_SUBDIRECTORY(karim)
-#ADD_SUBDIRECTORY(olympus)

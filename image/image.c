@@ -769,9 +769,8 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win;
-    win =nemowidget_create_win_base(tool, APPNAME, app->config);
+    win =nemowidget_create_win_config(tool, APPNAME, app->config);
     RET_IF(!win, -1);
-    nemowidget_win_enable_fullscreen(win, true);
     if (app->config->layer && !strcmp(app->config->layer, "background")) {
         nemowidget_enable_event(win, false);
     }

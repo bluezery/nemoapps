@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<@APPNAME@>
-    <window layer=""/>
-    <size width="512" height="512"/>
+<config>
+    <window enable_fullscreen="true" width="512" height="512"/>
     <slideshow slideshow="off" timeout="5" repeat="-1"/>
-</@APPNAME@>
+</config>
 

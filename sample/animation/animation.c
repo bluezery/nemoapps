@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     struct nemotool *tool = TOOL_CREATE();
 
     NemoWidget *win;
-    win = nemowidget_create_win_base(tool, APPNAME, base);
+    win = nemowidget_create_win_config(tool, APPNAME, base);
 
     NemoWidget *vector;
     vector = nemowidget_create_vector(win, base->width, base->height);

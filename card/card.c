@@ -84,8 +84,8 @@ void log_destroy(Log *log)
 Log *_log;
 
 typedef struct _CardGuide CardGuide;
-typedef struct _Card Card;
-struct _Card {
+typedef struct _CardView CardView;
+struct _CardView {
     int log;
 
     List *mirrors;
@@ -226,7 +226,7 @@ void card_guide_hide(CardGuide *guide)
 
 typedef struct _CardItem CardItem;
 struct _CardItem {
-    Card *card;
+    CardView *view;
     CardItem *org;
     int width, height;
     struct showone *group;
@@ -309,14 +309,14 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
         nemomotion_run(m);
         nemotimer_set_timeout(timer, 2510);
     }
-    nemoshow_dispatch_frame(it->card->show);
+    nemoshow_dispatch_frame(it->view->show);
 }
 
 CardItem *card_item_dup(CardItem *it)
 {
-    Card *card = it->card;
+    CardView *view = it->view;
     CardItem *dup = calloc(sizeof(CardItem), 1);
-    dup->card = card;
+    dup->view = view;
     dup->width = it->width;;
     dup->height = it->height;
     dup->type = strdup(it->type);
@@ -331,7 +331,7 @@ CardItem *card_item_dup(CardItem *it)
     dup->org = it;
 
     struct showone *group;
-    dup->group = group = GROUP_CREATE(nemowidget_get_canvas(card->widget));
+    dup->group = group = GROUP_CREATE(nemowidget_get_canvas(view->widget));
     nemoshow_item_set_width(group, dup->width);
     nemoshow_item_set_height(group, dup->height);
     nemoshow_item_pivot(group, 0.5, 0.5);
@@ -378,7 +378,7 @@ CardItem *card_item_dup(CardItem *it)
     }
 
     if (dup->icon && dup->icon_anim_type)
-        dup->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, dup);
+        dup->icon_timer = TOOL_ADD_TIMER(view->tool, 0, _card_item_icon_timeout, dup);
 
     if (it->txt_uri) {
         dup->txt = one = SVG_PATH_CREATE(group,
@@ -394,12 +394,12 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
-CardItem *card_create_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri,  const char *icon_anim_type, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
+CardItem *card_create_item(CardView *view, double global_sxy, const char *type, const char *bg_uri, char *icon_uri,  const char *icon_anim_type, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
-    it->card = card;
-    it->width = card->iw;
-    it->height = card->ih;
+    it->view = view;
+    it->width = view->iw;
+    it->height = view->ih;
     it->type = strdup(type);
     it->bg_uri = strdup(bg_uri);
     if (icon_uri) it->icon_uri = strdup(icon_uri);
@@ -412,7 +412,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
 	it->grab_time = 0;
 
     struct showone *group;
-    it->group = group = GROUP_CREATE(card->item_group);
+    it->group = group = GROUP_CREATE(view->item_group);
     nemoshow_item_set_width(group, it->width);
     nemoshow_item_set_height(group, it->height);
     nemoshow_item_pivot(group, 0.5, 0.5);
@@ -463,7 +463,7 @@ CardItem *card_create_item(Card *card, double global_sxy, const char *type, cons
                 nemoshow_item_set_anchor(one, 0.5, 0.5);
                 nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
             }
-            it->icon_timer = TOOL_ADD_TIMER(card->tool, 0, _card_item_icon_timeout, it);
+            it->icon_timer = TOOL_ADD_TIMER(view->tool, 0, _card_item_icon_timeout, it);
         } else {
             nemoshow_item_set_anchor(one, 0.5, 0.5);
             nemoshow_item_translate(one, it->width * app->item_icon_px, it->height * app->item_icon_py);
@@ -498,12 +498,12 @@ void card_item_destroy(CardItem *it)
     free(it);
 }
 
-CardItem *card_append_item(Card *card, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, char *icon_anim_type, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
+CardItem *card_append_item(CardView *view, double global_sxy, const char *type, const char *bg_uri, char *icon_uri, char *icon_anim_type, const char *txt_uri, const char *exec, bool resize, double sxy, char *mirror, ConfigApp *app)
 {
     CardItem *it;
-    it = card_create_item(card, global_sxy, type, bg_uri, icon_uri, icon_anim_type, txt_uri, exec, resize, sxy, mirror, app);
+    it = card_create_item(view, global_sxy, type, bg_uri, icon_uri, icon_anim_type, txt_uri, exec, resize, sxy, mirror, app);
     RET_IF(!it, NULL);
-    card->items = list_append(card->items, it);
+    view->items = list_append(view->items, it);
 
     return it;
 }
@@ -552,7 +552,7 @@ static void _card_item_hide_destroy(struct nemotimer *timer, void *userdata)
 void card_item_hide_destroy(CardItem *it, uint32_t easetype, int duration, int delay)
 {
     card_item_hide(it, easetype, duration, delay);
-    TOOL_ADD_TIMER(it->card->tool, duration + delay + 100, _card_item_hide_destroy, it);
+    TOOL_ADD_TIMER(it->view->tool, duration + delay + 100, _card_item_hide_destroy, it);
 }
 
 void card_item_scale(CardItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
@@ -578,39 +578,39 @@ void card_item_rotate(CardItem *it, uint32_t easetype, int duration, int delay, 
     }
 }
 
-void card_show(Card *card)
+void card_show(CardView *view)
 {
-    nemowidget_show(card->widget, 0, 0, 0);
-    nemowidget_show(card->event, 0, 0, 0);
+    nemowidget_show(view->widget, 0, 0, 0);
+    nemowidget_show(view->event, 0, 0, 0);
 
     uint32_t easetype = NEMOEASE_CUBIC_OUT_TYPE;
     int duration = 1000;
     int delay = 150;
 
-    card->start = 0;
+    view->start = 0;
 
     int i;
-    for (i = 0; i < card->cnt; i++) {
-        CardItem *it = LIST_DATA(list_get_nth(card->items, i));
+    for (i = 0; i < view->cnt; i++) {
+        CardItem *it = LIST_DATA(list_get_nth(view->items, i));
         if (!it) {
             ERR("item is NULL at index(%d)", i);
             break;
         }
 
         if (i != 0) {
-            card_item_rotate(it, easetype, duration, delay * i, card->iro);
+            card_item_rotate(it, easetype, duration, delay * i, view->iro);
             card_item_show(it, easetype, duration, delay * i);
             card_item_set_alpha(it, easetype, duration, delay * i, 1.0);
             card_item_scale(it, easetype, duration, delay * i, 1.0, 1.0);
         }
         card_item_translate(it, easetype, duration, delay * i,
-                card->ix + (card->iw + card->igap) * i, card->iy);
+                view->ix + (view->iw + view->igap) * i, view->iy);
     }
 
-    nemotimer_set_timeout(card->timer, duration + delay * (i - 1) + 10);
-    nemotimer_set_timeout(card->guide_timer, delay * (i - 1) + 10);
+    nemotimer_set_timeout(view->timer, duration + delay * (i - 1) + 10);
+    nemotimer_set_timeout(view->guide_timer, delay * (i - 1) + 10);
 
-    nemoshow_dispatch_frame(card->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void card_item_revoke(CardItem *it)
@@ -633,56 +633,56 @@ static void card_item_revoke(CardItem *it)
     }
 }
 
-void card_hide(Card *card)
+void card_hide(CardView *view)
 {
-    nemowidget_hide(card->widget, 0, 0, 0);
-    nemowidget_hide(card->event, 0, 0, 0);
+    nemowidget_hide(view->widget, 0, 0, 0);
+    nemowidget_hide(view->event, 0, 0, 0);
 
     uint32_t easetype = NEMOEASE_CUBIC_IN_TYPE;
     int duration = 500;
     List *l;
     CardItem *it;
-    LIST_FOR_EACH(card->items, l, it) {
+    LIST_FOR_EACH(view->items, l, it) {
         card_item_revoke(it);
         card_item_hide(it, easetype, duration, 0);
         card_item_rotate(it, easetype, duration, 0, 0);
         card_item_scale(it, easetype, duration, 0, 0.0, 0.0);
-        card_item_translate(it, easetype, duration, 0, card->ix, card->iy);
+        card_item_translate(it, easetype, duration, 0, view->ix, view->iy);
     }
 
-    nemotimer_set_timeout(card->timer, 0);
+    nemotimer_set_timeout(view->timer, 0);
 
-    nemotimer_set_timeout(card->guide_timer, 0);
-    card_guide_hide(card->guide[0]);
-    card_guide_hide(card->guide[1]);
-    card_guide_hide(card->guide[2]);
-    card_guide_hide(card->guide[3]);
+    nemotimer_set_timeout(view->guide_timer, 0);
+    card_guide_hide(view->guide[0]);
+    card_guide_hide(view->guide[1]);
+    card_guide_hide(view->guide[2]);
+    card_guide_hide(view->guide[3]);
 
-    nemoshow_dispatch_frame(card->show);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _card_timeout(struct nemotimer *timer, void *userdata)
 {
-    Card *card = userdata;
+    CardView *view = userdata;
 
-    int cnt = list_count(card->items);
-    if (cnt <= card->cnt) {
+    int cnt = list_count(view->items);
+    if (cnt <= view->cnt) {
         ERR("Number(%d) of appended items should be bigger than number(%d) of viewable items",
-                card->cnt, list_count(card->items));
+                view->cnt, list_count(view->items));
         return;
     }
 
     List *l;
-    l = list_get_nth(card->items, card->start);
+    l = list_get_nth(view->items, view->start);
     RET_IF(!l);
 
     int i, j;
-    j = card->start;
-    for (i = 0; i < card->cnt ; i++) {
+    j = view->start;
+    for (i = 0; i < view->cnt ; i++) {
         uint32_t easetype = NEMOEASE_LINEAR_TYPE;
-        int duration = card->item_duration - 20;
+        int duration = view->item_duration - 20;
 
-        CardItem *it = LIST_DATA(list_get_nth(card->items, j));
+        CardItem *it = LIST_DATA(list_get_nth(view->items, j));
         if (!it) {
             ERR("item is NULL at index(%d)", j);
             break;
@@ -691,37 +691,37 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
         card_item_show(it, NEMOEASE_CUBIC_OUT_TYPE, duration, 0);
         if (i == 0) {
             card_item_rotate(it, 0, 0, 0, 0.0);
-            card_item_translate(it, 0, 0, 0, card->ix, card->iy);
+            card_item_translate(it, 0, 0, 0, view->ix, view->iy);
 
-            card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, card->iro);
+            card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, view->iro);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0, 1.0);
-        } else if (i == card->cnt - 1) {
+        } else if (i == view->cnt - 1) {
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0, 0.0);
         }
         card_item_translate(it, easetype, duration, 0,
-                card->ix + (card->iw + card->igap) * (i + 1), card->iy);
+                view->ix + (view->iw + view->igap) * (i + 1), view->iy);
         j++;
         if ( j >= cnt ) {
             j = 0;
         }
     }
 
-    card->start--;
-    if (card->start < 0) {
-        card->start = cnt - 1;
+    view->start--;
+    if (view->start < 0) {
+        view->start = cnt - 1;
     }
 
-    nemotimer_set_timeout(timer, card->item_duration);
-    nemoshow_dispatch_frame(card->show);
+    nemotimer_set_timeout(timer, view->item_duration);
+    nemoshow_dispatch_frame(view->show);
 }
 
 static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     CardItem *it = userdata;
-    Card *card = it->card;
+    CardView *view = it->view;
 
     struct nemoshow *show = nemowidget_get_show(widget);
     double ex, ey;
@@ -731,7 +731,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
     if (nemoshow_event_is_down(show, event)) {
 		uint32_t grab_time = nemoshow_event_get_time(event);
-		if (grab_time - it->grab_time >= card->item_grab_min_time) {
+		if (grab_time - it->grab_time >= view->item_grab_min_time) {
 			it->grab_time = nemoshow_event_get_time(event);
 			CardItem *dup = card_item_dup(it);
 			card_item_show(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
@@ -744,26 +744,26 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         card_item_translate(dup, 0, 0, 0, ex, ey);
 
         double ro = 0.0;
-        if (!strcmp(card->launch_type, "table")) {
-            if (!RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
-                        card->cw, card->ch, ex, ey, 5, 5)) {
+        if (!strcmp(view->launch_type, "table")) {
+            if (!RECTS_CROSS(view->cx - view->cw/2.0, view->cy - view->ch/2.0,
+                        view->cw, view->ch, ex, ey, 5, 5)) {
 
                 int rw, rh;
-                rw = (card->width - card->cw)/2;
-                rh = (card->height - card->ch)/2;
-                if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                rw = (view->width - view->cw)/2;
+                rh = (view->height - view->ch)/2;
+                if (RECTS_CROSS(0, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
                     ro = 45;
-                } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(0, rh, rw, view->ch, ex, ey, 1, 1)) {
                     ro = 90;
                 } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
                     ro = 135;
-                } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw, 0, view->cw, rh, ex, ey, 1, 1)) {
                     ro = 180;
-                } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, 0, rw, rh, ex, ey, 1, 1)) {
                     ro = 225;
-                } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, rh, rw, view->ch, ex, ey, 1, 1)) {
                     ro = 270;
-                } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
                     ro = 315;
                 }
             }
@@ -772,8 +772,8 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     } else if (nemoshow_event_is_up(show, event)) {
         CardItem *itt = nemowidget_grab_get_data(grab, "item");
 		if (!itt) return;
-        if (RECTS_CROSS(card->cx - card->cw/2.0, card->cy - card->ch/2.0,
-                    card->cw, card->ch, ex, ey, 5, 5)) {
+        if (RECTS_CROSS(view->cx - view->cw/2.0, view->cy - view->ch/2.0,
+                    view->cw, view->ch, ex, ey, 5, 5)) {
             card_item_hide_destroy(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             card_item_scale(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.0, 0.0);
             if (itt->org) {
@@ -795,23 +795,23 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
 
             double ro = 0.0;
 
-            if (!strcmp(card->launch_type, "table")) {
+            if (!strcmp(view->launch_type, "table")) {
                 int rw, rh;
-                rw = (card->width - card->cw)/2;
-                rh = (card->height - card->ch)/2;
-                if (RECTS_CROSS(0, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                rw = (view->width - view->cw)/2;
+                rh = (view->height - view->ch)/2;
+                if (RECTS_CROSS(0, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
                     ro = 45;
-                } else if (RECTS_CROSS(0, rh, rw, card->ch, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(0, rh, rw, view->ch, ex, ey, 1, 1)) {
                     ro = 90;
                 } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
                     ro = 135;
-                } else if (RECTS_CROSS(rw, 0, card->cw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw, 0, view->cw, rh, ex, ey, 1, 1)) {
                     ro = 180;
-                } else if (RECTS_CROSS(rw + card->cw, 0, rw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, 0, rw, rh, ex, ey, 1, 1)) {
                     ro = 225;
-                } else if (RECTS_CROSS(rw + card->cw, rh, rw, card->ch, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, rh, rw, view->ch, ex, ey, 1, 1)) {
                     ro = 270;
-                } else if (RECTS_CROSS(rw + card->cw, rh + card->ch, rw, rh, ex, ey, 1, 1)) {
+                } else if (RECTS_CROSS(rw + view->cw, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
                     ro = 315;
                 }
             }
@@ -846,7 +846,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             nemoitem_one_set_attr_format(one, "r", "%f", ro);
             nemoitem_one_set_attr_format(one, "sx", "%f", itt->sxy);
             nemoitem_one_set_attr_format(one, "sy", "%f", itt->sxy);
-            nemoitem_one_set_attr(one, "owner", card->uuid);
+            nemoitem_one_set_attr(one, "owner", view->uuid);
             nemoitem_one_set_attr(one, "resize", itt->resize? "on" : "off");
             nemoitem_one_save_attrs(one, states, ';');
             nemoitem_one_destroy(one);
@@ -860,7 +860,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             } else {
                 List *l;
                 Mirror *mirror;
-                LIST_FOR_EACH(card->mirrors, l, mirror) {
+                LIST_FOR_EACH(view->mirrors, l, mirror) {
                     if (RECTS_CROSS(x, y, 1, 1, mirror->x, mirror->y, mirror->width, mirror->height)) {
                         nemobus_msg_set_attr_format(msg, "mirrorscreen", mirror->target);
                         break;
@@ -886,7 +886,7 @@ static void _card_event(NemoWidget *widget, const char *id, void *info, void *us
 {
     struct showevent *event = info;
     struct nemoshow *show = nemowidget_get_show(widget);
-    Card *card = userdata;
+    CardView *view = userdata;
 
     double ex, ey;
     nemowidget_transform_from_global(widget,
@@ -895,7 +895,7 @@ static void _card_event(NemoWidget *widget, const char *id, void *info, void *us
 
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
-        one = nemowidget_pick_one(card->widget, ex, ey);
+        one = nemowidget_pick_one(view->widget, ex, ey);
         if (one && 0x999 == nemoshow_one_get_tag(one)) {
             CardItem *it = nemoshow_one_get_userdata(one);
             nemowidget_create_grab(widget, event,
@@ -912,107 +912,107 @@ static void _card_event(NemoWidget *widget, const char *id, void *info, void *us
 
 static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
 {
-    Card *card = userdata;
-    if (card->guide_idx == 0) {
-        card_guide_show(card->guide[0],
-                card->cx, card->cy,
-                card->cx, card->cy + card->ih/2);
+    CardView *view = userdata;
+    if (view->guide_idx == 0) {
+        card_guide_show(view->guide[0],
+                view->cx, view->cy,
+                view->cx, view->cy + view->ih/2);
 
-        card_guide_hide(card->guide[1]);
-        card_guide_hide(card->guide[2]);
-        card_guide_hide(card->guide[3]);
-    } else if (card->guide_idx == 1) {
-        card_guide_show(card->guide[1],
-                card->cx, card->cy,
-                card->cx, card->cy - card->ih/2);
+        card_guide_hide(view->guide[1]);
+        card_guide_hide(view->guide[2]);
+        card_guide_hide(view->guide[3]);
+    } else if (view->guide_idx == 1) {
+        card_guide_show(view->guide[1],
+                view->cx, view->cy,
+                view->cx, view->cy - view->ih/2);
 
-        card_guide_hide(card->guide[0]);
-        card_guide_hide(card->guide[2]);
-        card_guide_hide(card->guide[3]);
-    } else if (card->guide_idx == 2) {
-        card_guide_show(card->guide[2],
-                card->cx - card->cw/2 + card->iw/2, card->cy,
-                card->cx - card->cw/2, card->cy);
+        card_guide_hide(view->guide[0]);
+        card_guide_hide(view->guide[2]);
+        card_guide_hide(view->guide[3]);
+    } else if (view->guide_idx == 2) {
+        card_guide_show(view->guide[2],
+                view->cx - view->cw/2 + view->iw/2, view->cy,
+                view->cx - view->cw/2, view->cy);
 
-        card_guide_hide(card->guide[0]);
-        card_guide_hide(card->guide[1]);
-        card_guide_hide(card->guide[3]);
-    } else if (card->guide_idx == 3) {
-        card_guide_show(card->guide[3],
-                card->cx + card->cw/2 - card->iw/2, card->cy,
-                card->cx + card->cw/2, card->cy);
+        card_guide_hide(view->guide[0]);
+        card_guide_hide(view->guide[1]);
+        card_guide_hide(view->guide[3]);
+    } else if (view->guide_idx == 3) {
+        card_guide_show(view->guide[3],
+                view->cx + view->cw/2 - view->iw/2, view->cy,
+                view->cx + view->cw/2, view->cy);
 
-        card_guide_hide(card->guide[0]);
-        card_guide_hide(card->guide[1]);
-        card_guide_hide(card->guide[2]);
+        card_guide_hide(view->guide[0]);
+        card_guide_hide(view->guide[1]);
+        card_guide_hide(view->guide[2]);
     }
-    card->guide_idx++;
-    if (card->guide_idx >= 4) card->guide_idx = 0;
-    nemotimer_set_timeout(timer, card->guide_duration + 1000);
-    nemoshow_dispatch_frame(card->show);
+    view->guide_idx++;
+    if (view->guide_idx >= 4) view->guide_idx = 0;
+    nemotimer_set_timeout(timer, view->guide_duration + 1000);
+    nemoshow_dispatch_frame(view->show);
 }
 
-Card *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
+CardView *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
 {
-    Card *card = calloc(sizeof(Card), 1);
-    card->show = nemowidget_get_show(parent);
-    card->tool = nemowidget_get_tool(parent);
-    card->uuid = nemowidget_get_uuid(parent);
-    card->width = width;
-    card->height = height;
-    card->cnt = app->item_cnt;
-    card->iw = app->item_width;
-    card->ih = app->item_height;
-    card->iro = app->item_ro;
-    card->igap = app->item_gap;
-    card->item_duration = app->item_duration;
-	card->item_grab_min_time = app->item_grab_min_time;
-    card->guide_duration = app->guide_duration;
-    card->guide_idx = 0;
-    card->mirrors = app->mirrors;
+    CardView *view = calloc(sizeof(CardView), 1);
+    view->show = nemowidget_get_show(parent);
+    view->tool = nemowidget_get_tool(parent);
+    view->uuid = nemowidget_get_uuid(parent);
+    view->width = width;
+    view->height = height;
+    view->cnt = app->item_cnt;
+    view->iw = app->item_width;
+    view->ih = app->item_height;
+    view->iro = app->item_ro;
+    view->igap = app->item_gap;
+    view->item_duration = app->item_duration;
+	view->item_grab_min_time = app->item_grab_min_time;
+    view->guide_duration = app->guide_duration;
+    view->guide_idx = 0;
+    view->mirrors = app->mirrors;
     if (app->launch_type) {
-        card->launch_type = strdup(app->launch_type);
+        view->launch_type = strdup(app->launch_type);
     } else {
-        card->launch_type = strdup("table");
+        view->launch_type = strdup("table");
     }
 
-    card->cw = card->iw * card->cnt + card->igap * card->cnt;
-    card->ch = card->ih;
+    view->cw = view->iw * view->cnt + view->igap * view->cnt;
+    view->ch = view->ih;
 
-    card->cx = card->width * app->item_px;
-    card->cy = card->height * app->item_py;
+    view->cx = view->width * app->item_px;
+    view->cy = view->height * app->item_py;
 
-    card->ix = card->cx - card->cw/2.0;
-    card->iy = card->cy - card->ch/2.0 + card->ih/2.0;
+    view->ix = view->cx - view->cw/2.0;
+    view->iy = view->cy - view->ch/2.0 + view->ih/2.0;
     double rx, ry;
     rx = (double)app->config->sxy;
     ry = (double)app->config->sxy;
 
     NemoWidget *widget;
-    card->widget = widget = nemowidget_create_vector(parent, width, height);
+    view->widget = widget = nemowidget_create_vector(parent, width, height);
     nemowidget_enable_event_repeat(widget, true);
     nemowidget_enable_event(widget, false);
 
     struct showone *group;
-    card->item_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->item_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
     struct nemotimer *timer;
-    card->guide_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-    card->guide[0] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 0);
-    card->guide[1] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 180);
-    card->guide[2] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 90);
-    card->guide[3] = card_create_guide(card->tool, group, rx, ry, card->guide_duration, 270);
+    view->guide_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+    view->guide[0] = card_create_guide(view->tool, group, rx, ry, view->guide_duration, 0);
+    view->guide[1] = card_create_guide(view->tool, group, rx, ry, view->guide_duration, 180);
+    view->guide[2] = card_create_guide(view->tool, group, rx, ry, view->guide_duration, 90);
+    view->guide[3] = card_create_guide(view->tool, group, rx, ry, view->guide_duration, 270);
 
-    card->guide_timer = timer = TOOL_ADD_TIMER(card->tool, 0, _card_guide_timeout, card);
+    view->guide_timer = timer = TOOL_ADD_TIMER(view->tool, 0, _card_guide_timeout, view);
 
-    card->event = widget = nemowidget_create_pixman(parent, width, height);
-    nemowidget_append_callback(widget, "event", _card_event, card);
+    view->event = widget = nemowidget_create_pixman(parent, width, height);
+    nemowidget_append_callback(widget, "event", _card_event, view);
     nemowidget_enable_event_repeat(widget, true);
 
-    card->timer = timer = TOOL_ADD_TIMER(card->tool, card->item_duration,
-            _card_timeout, card);
+    view->timer = timer = TOOL_ADD_TIMER(view->tool, view->item_duration,
+            _card_timeout, view);
 
-    return card;
+    return view;
 }
 
 typedef struct _MenuItem MenuItem;
@@ -1184,15 +1184,11 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     }
 
     temp = xml_get_value(xml, buf, "px");
-    if (!temp) {
-        ERR("No item px in %s", prefix);
-    } else {
+    if (temp) {
         app->item_px = atof(temp);
     }
     temp = xml_get_value(xml, buf, "py");
-    if (!temp) {
-        ERR("No item py in %s", prefix);
-    } else {
+    if (temp) {
         app->item_py = atof(temp);
     }
     temp = xml_get_value(xml, buf, "ro");
@@ -1293,17 +1289,17 @@ static void _config_unload(ConfigApp *app)
 
 static void _card_win_layer(NemoWidget *win, const char *id, void *info, void *userdata)
 {
-    Card *card = userdata;
+    CardView *view = userdata;
     int32_t visible = (intptr_t)info;
     if (visible == -1) {
-        if (card->visible) {
-            card_hide(card);
-            card->visible = false;
+        if (view->visible) {
+            card_hide(view);
+            view->visible = false;
         }
     } else {
-        if (!card->visible) {
-            card_show(card);
-            card->visible = true;
+        if (!view->visible) {
+            card_show(view);
+            view->visible = true;
         }
     }
 }
@@ -1317,25 +1313,20 @@ int main(int argc, char *argv[])
     WELLRNG512_INIT();
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, app->config);
-    nemowidget_win_set_anchor(win, 0, 0);
-    nemowidget_win_set_layer(win, "underlay");
-    nemowidget_win_enable_move(win, 0);
-    nemowidget_win_enable_rotate(win, 0);
-    nemowidget_win_enable_scale(win, 0);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
 
-    Card *card = card_create(win, app->config->width, app->config->height, app);
+    CardView *view = card_create(win, app->config->width, app->config->height, app);
 
     List *l;
     MenuItem *it;
     LIST_FOR_EACH(app->menu_items, l, it) {
-        CardItem *_it = card_append_item(card, app->config->sxy,
+        CardItem *_it = card_append_item(view, app->config->sxy,
                 it->type, it->bg, it->icon, it->icon_anim_type, it->txt, it->exec,
                 it->resize, it->sxy, it->mirror, app);
-        card_item_translate(_it, 0, 0, 0, card->ix, card->iy);
+        card_item_translate(_it, 0, 0, 0, view->ix, view->iy);
     }
-    card_show(card);
-    nemowidget_append_callback(win, "layer", _card_win_layer, card);
+    card_show(view);
+    nemowidget_append_callback(win, "layer", _card_win_layer, view);
 
     nemowidget_show(win, 0, 0, 0);
     nemotool_run(tool);

@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <font family="NanumGothic" size="10"/>
-    <window layer=""/>
-    <size width="512" height="512"/>
-    <scale x="1.0" y="1.0"/>
+    <window fullscreen="off" width="512" height="512" sx="1.0" sy="1.0"/>
     <!--<frame rate="60"/>-->
-    <!--<scale min_x="0.25" min_y="0.25"/>-->
-    <!--<scale max_x="2.0" max_y="2.0"/>-->
-    <!--<scale exit_x="0.27" exit_y="0.27"/>-->
-    <!--<scene width="512" height="512"/>-->
 </config>

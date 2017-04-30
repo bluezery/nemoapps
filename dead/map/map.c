@@ -558,7 +558,7 @@ int main(int argc, char *argv[])
     con_init();
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, config);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, config);
     RET_IF(!win, -1);
 
     MapView *view = mapview_create(win, config->width, config->height);

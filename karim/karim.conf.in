@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <window layer="background" width="1920" height="1080"/>
     <frame rate="30"/>
-    <size width="1920" height="1080"/>
 </config>
 

@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     base->height = ctx->height = height;
 
     struct nemotool *tool = TOOL_CREATE();
-    NemoWidget *win = nemowidget_create_win_base(tool, APPNAME, base);
+    NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, base);
     nemowidget_append_callback(win, "frame", _win_frame, ctx);
     ctx->win = win;
 
