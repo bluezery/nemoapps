@@ -196,7 +196,7 @@ static void _viewer_item_btn_grab_event(NemoWidgetGrab *grab, NemoWidget *widget
             char name[PATH_MAX];
             char args[PATH_MAX];
 
-            snprintf(name, PATH_MAX, "/usr/bin/electron");
+            snprintf(name, PATH_MAX, "/opt/pkgs/nemo.electron/exec");
             snprintf(path, PATH_MAX, "%s", name);
             snprintf(args, PATH_MAX, "%s", item->url);
 

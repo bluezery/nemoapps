@@ -10,20 +10,20 @@
     <items group="content" icon="@APPDATA_ROOT@/sub/content/tworld.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/TWorld"/>
     <items group="content" icon="@APPDATA_ROOT@/sub/content/tum.png" type="app" exec="@NEMOEXPLORER@;-f;/opt/contents/skt/Tum"/>
 
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/monopoly.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/monopoly"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/bmwi8.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/3d/bmwi8"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/hex.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/2d/hex"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/sorcerer.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/downloaded/sorcerer"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/googlemap.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/googlemap"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/memonotepad.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/memonotepad"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/setting.png" type="xapp" exec="/usr/bin/electron;/opt/games/electron/utility/setting"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/journey.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/sketchfab/journey"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/carvisualizer.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/3d/carvisualizer"/>
-    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/3dgis.png" type="xapp" exec="/usr/bin/electron;--touch-events;/opt/games/electron/utility/3dgis"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/monopoly.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/3d/monopoly"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/bmwi8.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/3d/bmwi8"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/hex.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/2d/hex"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/sorcerer.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/downloaded/sorcerer"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/googlemap.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/utility/googlemap"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/memonotepad.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/utility/memonotepad"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/setting.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;/opt/games/electron/utility/setting"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/journey.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;--touch-events;/opt/games/electron/sketchfab/journey"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/carvisualizer.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;--touch-events;/opt/games/electron/3d/carvisualizer"/>
+    <items group="entertainment" icon="@APPDATA_ROOT@/sub/entertainment/3dgis.png" type="xapp" exec="/opt/pkgs/nemo.electron/exec;--touch-events;/opt/games/electron/utility/3dgis"/>
 
-    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/skt.png" type="xapp"  exec="/usr/bin/electron;http://www.sktelecom.com"/>
-    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/nemoux.png" type="xapp"  exec="/usr/bin/electron;http://www.nemoux.net"/>
-    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/tworld.png" type="xapp"  exec="/usr/bin/electron;http://www.tworld.co.kr"/>
+    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/skt.png" type="xapp"  exec="/opt/pkgs/nemo.electron/exec;http://www.sktelecom.com"/>
+    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/nemoux.png" type="xapp"  exec="/opt/pkgs/nemo.electron/exec;http://www.nemoux.net"/>
+    <items group="internet" icon="@APPDATA_ROOT@/sub/internet/tworld.png" type="xapp"  exec="/opt/pkgs/nemo.electron/exec;http://www.tworld.co.kr"/>
 
     <items group="setting" icon="@APPDATA_ROOT@/sub/setting/weston-terminal.png" type="xapp" exec="/usr/bin/weston-terminal"/>
     <items group="setting" icon="@APPDATA_ROOT@/sub/setting/nemokeyboard.png" type="app" exec="@NEMOKEYBOARD@"/>
