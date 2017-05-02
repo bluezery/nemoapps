@@ -1372,6 +1372,7 @@ struct _NemoWidgetGrabData {
 // User grabs
 struct _NemoWidgetGrab
 {
+    bool done;
     NemoWidget *widget;
     NemoWidgetGrab_Callback callback;
     void *userdata;
@@ -1435,6 +1436,16 @@ void *nemowidget_grab_get_data(NemoWidgetGrab *grab, const char *key)
 void *nemowidget_grab_get_userdata(NemoWidgetGrab *grab)
 {
     return grab->userdata;
+}
+
+void nemowidget_grab_set_done(NemoWidgetGrab *grab, bool done)
+{
+    grab->done = !!done;
+}
+
+bool nemowidget_grab_is_done(NemoWidgetGrab *grab)
+{
+    return grab->done;
 }
 
 // Widget grab

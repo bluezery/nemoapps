@@ -359,6 +359,8 @@ NemoWidgetGrab *nemowidget_create_grab(NemoWidget *widget, struct showevent *eve
 void nemowidget_grab_set_data(NemoWidgetGrab *grab, const char *key, void *data);
 void *nemowidget_grab_get_data(NemoWidgetGrab *grab, const char *key);
 void *nemowidget_grab_get_userdata(NemoWidgetGrab *grab);
+void nemowidget_grab_set_done(NemoWidgetGrab *grab, bool done);
+bool nemowidget_grab_is_done(NemoWidgetGrab *grab);
 
 // **************************** //
 // NemoWideget Item
