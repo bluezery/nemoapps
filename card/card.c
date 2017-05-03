@@ -339,6 +339,7 @@ struct _CardItem {
     CardItem *org;
     int width, height;
     struct showone *group;
+    struct showone *ro_group;
     struct showone *bg0;
     struct showone *bg;
     struct showone *icon;
@@ -449,8 +450,8 @@ CardItem *card_item_dup(CardItem *it)
     nemoshow_item_pivot(group, 0.5, 0.5);
     nemoshow_item_set_anchor(group, 0.5, 0.5);
     nemoshow_item_set_alpha(group, 1.0);
-    nemoshow_item_rotate(group, nemoshow_item_get_rotate(it->group));
-    dup->ro = nemoshow_item_get_rotate(it->group);
+    dup->ro = nemoshow_item_get_rotate(it->ro_group);
+    nemoshow_item_rotate(group, dup->ro);
     nemoshow_item_translate(group,
             nemoshow_item_get_translate_x(it->group),
             nemoshow_item_get_translate_y(it->group));
@@ -506,7 +507,58 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
-CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
+void card_item_translate(CardItem *it, uint32_t easetype, int duration, int delay, double tx, double ty)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "tx", tx, "ty", ty,
+                NULL);
+    } else {
+        nemoshow_item_translate(it->group, tx, ty);
+    }
+}
+
+void card_item_set_alpha(CardItem *it, uint32_t easetype, int duration, int delay, double alpha)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "alpha", alpha,
+                NULL);
+    } else {
+        nemoshow_item_set_alpha(it->group, alpha);
+    }
+}
+
+void card_item_scale(CardItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion(it->group, easetype, duration, delay,
+                "sx", sx, "sy", sy,
+                NULL);
+    } else {
+        nemoshow_item_scale(it->group, sx, sy);
+    }
+}
+void card_item_rotate(CardItem *it, uint32_t easetype, int duration, int delay, double ro)
+{
+    if (EQUAL(it->ro, ro)) return;
+    it->ro = ro;
+    if (duration > 0) {
+        _nemoshow_item_motion(it->ro_group, easetype, duration, delay,
+                "ro", ro,
+                NULL);
+    } else {
+        nemoshow_item_rotate(it->group, ro);
+    }
+
+    List *l;
+    CardItem *subit;
+    LIST_FOR_EACH(it->items, l, subit) {
+        card_item_rotate(subit, easetype, duration, delay, ro);
+    }
+}
+
+CardItem *card_create_item(CardView *view, struct showone *parent, MenuItem *mi, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
     it->view = view;
@@ -523,19 +575,26 @@ CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
     if (mi->mirror) it->mirror = strdup(mi->mirror);
 	it->grab_time = 0;
 
+    double global_sxy = app->config->sxy;
+
+    struct showone *group;
+    it->group = group = GROUP_CREATE(parent);
+    it->ro_group = GROUP_CREATE(it->group);
+
     MenuItem *submi;
     List *l;
     LIST_FOR_EACH(mi->items, l, submi) {
-        CardItem *subit = card_create_item(view, submi, app);
+        CardItem *subit = card_create_item(view, it->group, submi, app);
         if (subit) {
+            nemoshow_one_above(it->ro_group, subit->group);
+            card_item_set_alpha(subit, 0, 0, 0, 1.0);
+            card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
+            card_item_translate(subit, 0, 0, 0, it->width/2, it->height/2);
+            nemoshow_one_set_tag(subit->bg0, 0x0);
             it->items = list_append(it->items, subit);
         }
     }
 
-    double global_sxy = app->config->sxy;
-
-    struct showone *group;
-    it->group = group = GROUP_CREATE(view->item_group);
     nemoshow_item_set_width(group, it->width);
     nemoshow_item_set_height(group, it->height);
     nemoshow_item_pivot(group, 0.5, 0.5);
@@ -544,14 +603,14 @@ CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
     nemoshow_item_scale(group, 0.0, 0.0);
 
     struct showone *one;
-    it->bg0 = one = RECT_CREATE(group, it->width, it->height);
+    it->bg0 = one = RECT_CREATE(it->ro_group, it->width, it->height);
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
     nemoshow_item_set_alpha(one, 0.0);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_tag(one, 0x999);
     nemoshow_one_set_userdata(one, it);
 
-    it->bg = one = IMAGE_CREATE(group, it->width, it->height, it->bg_uri);
+    it->bg = one = IMAGE_CREATE(it->ro_group, it->width, it->height, it->bg_uri);
 
     if (it->icon_uri) {
         if (file_is_svg(it->icon_uri)) {
@@ -560,7 +619,7 @@ CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
             svg_get_wh(it->icon_uri, &ww, &hh);
             w = ww * global_sxy;
             h = hh * global_sxy;
-            it->icon = one = SVG_PATH_CREATE(group, w, h, it->icon_uri);
+            it->icon = one = SVG_PATH_CREATE(it->ro_group, w, h, it->icon_uri);
             nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
         } else if (file_is_image(it->icon_uri)) {
             double w, h;
@@ -568,7 +627,7 @@ CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
             image_get_wh(it->icon_uri, &ww, &hh);
             w = ww * global_sxy;
             h = hh * global_sxy;
-            it->icon = one = IMAGE_CREATE(group, w, h, it->icon_uri);
+            it->icon = one = IMAGE_CREATE(it->ro_group, w, h, it->icon_uri);
         } else {
             ERR("Not supported icon file type: %s", it->icon_uri);
         }
@@ -599,7 +658,7 @@ CardItem *card_create_item(CardView *view, MenuItem *mi, ConfigApp *app)
         svg_get_wh(it->txt_uri, &ww, &hh);
         w = ww * global_sxy;
         h = hh * global_sxy;
-        it->txt = one = SVG_PATH_GROUP_CREATE(group, w, h, it->txt_uri);
+        it->txt = one = SVG_PATH_GROUP_CREATE(it->ro_group, w, h, it->txt_uri);
         nemoshow_item_set_anchor(one, 0.5, 0.5);
         nemoshow_item_translate(one,
                 it->width * app->item_txt_px,
@@ -624,74 +683,11 @@ void card_item_destroy(CardItem *it)
 CardItem *view_append_item(CardView *view, MenuItem *mi, ConfigApp *app)
 {
     CardItem *it;
-    it = card_create_item(view, mi, app);
+    it = card_create_item(view, view->item_group, mi, app);
     RET_IF(!it, NULL);
     view->items = list_append(view->items, it);
 
     return it;
-}
-
-void card_item_translate(CardItem *it, uint32_t easetype, int duration, int delay, double tx, double ty)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(it->group, easetype, duration, delay,
-                "tx", tx, "ty", ty,
-                NULL);
-    } else {
-        nemoshow_item_translate(it->group, tx, ty);
-    }
-}
-
-void card_item_set_alpha(CardItem *it, uint32_t easetype, int duration, int delay, double alpha)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(it->group, easetype, duration, delay,
-                "alpha", alpha,
-                NULL);
-    } else {
-        nemoshow_item_set_alpha(it->group, alpha);
-    }
-
-    List *l;
-    CardItem *subit;
-    LIST_FOR_EACH(it->items, l, subit) {
-        card_item_set_alpha(subit, easetype, duration, delay, alpha);
-    }
-}
-
-void card_item_scale(CardItem *it, uint32_t easetype, int duration, int delay, double sx, double sy)
-{
-    if (duration > 0) {
-        _nemoshow_item_motion(it->group, easetype, duration, delay,
-                "sx", sx, "sy", sy,
-                NULL);
-    } else {
-        nemoshow_item_scale(it->group, sx, sy);
-    }
-
-    List *l;
-    CardItem *subit;
-    LIST_FOR_EACH(it->items, l, subit) {
-        card_item_scale(subit, easetype, duration, delay, sx, sy);
-    }
-}
-void card_item_rotate(CardItem *it, uint32_t easetype, int duration, int delay, double ro)
-{
-    if (EQUAL(it->ro, ro)) return;
-    it->ro = ro;
-    if (duration > 0) {
-        _nemoshow_item_motion(it->group, easetype, duration, delay,
-                "ro", ro,
-                NULL);
-    } else {
-        nemoshow_item_rotate(it->group, ro);
-    }
-
-    List *l;
-    CardItem *subit;
-    LIST_FOR_EACH(it->items, l, subit) {
-        card_item_rotate(subit, easetype, duration, delay, ro);
-    }
 }
 
 void card_item_show(CardItem *it, uint32_t easetype, int duration, int delay)
@@ -748,12 +744,6 @@ void card_show(CardView *view)
         tx = view->ix + (view->iw + view->igap) * i;
         ty = view->iy;
         card_item_translate(it, easetype, duration, delay * i, tx, ty);
-
-        List *l;
-        CardItem *subit;
-        LIST_FOR_EACH(it->items, l, subit) {
-            card_item_translate(subit, easetype, duration, delay, tx, ty);
-        }
     }
 
     nemotimer_set_timeout(view->timer, duration + delay * (i - 1) + 10);
@@ -766,7 +756,7 @@ static void card_item_revoke(CardItem *it)
 {
     struct nemoshow *show = it->group->show;
     nemoshow_revoke_transition_one(show, it->group, "alpha");
-    nemoshow_revoke_transition_one(show, it->group, "ro");
+    nemoshow_revoke_transition_one(show, it->ro_group, "ro");
     nemoshow_revoke_transition_one(show, it->group, "sx");
     nemoshow_revoke_transition_one(show, it->group, "sy");
     nemoshow_revoke_transition_one(show, it->group, "tx");
@@ -798,11 +788,13 @@ void card_hide(CardView *view)
         card_item_scale(it, easetype, duration, 0, 0.0, 0.0);
         card_item_translate(it, easetype, duration, 0, view->ix, view->iy);
 
+        /*
         List *l;
         CardItem *subit;
         LIST_FOR_EACH(it->items, l, subit) {
             card_item_translate(subit, easetype, duration, 0, view->ix, view->iy);
         }
+        */
     }
 
     nemotimer_set_timeout(view->timer, 0);
@@ -847,11 +839,6 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
         if (i == 0) {
             card_item_rotate(it, 0, 0, 0, 0.0);
             card_item_translate(it, 0, 0, 0, view->ix, view->iy);
-            List *l;
-            CardItem *subit;
-            LIST_FOR_EACH(it->items, l, subit) {
-                card_item_translate(subit, 0, 0, 0, view->ix, view->iy);
-            }
 
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, view->iro);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0);
@@ -870,12 +857,6 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
         tx = view->ix + (view->iw + view->igap) * (i + 1);
         ty = view->iy;
         card_item_translate(it, easetype, duration, 0, tx, ty);
-
-        List *l;
-        CardItem *subit;
-        LIST_FOR_EACH(it->items, l, subit) {
-            card_item_translate(subit, easetype, duration, 0, tx, ty);
-        }
 
         j++;
         if ( j >= cnt ) {
@@ -1069,6 +1050,16 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             if (!it->grab || it->grab != grab) return;
             card_item_scale(it, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0, 1.0, 1.0);
             it->grab = NULL;
+            int i = 0;
+            if (nemoshow_event_is_single_click(show, event)) {
+                List *l;
+                CardItem *subit;
+                LIST_FOR_EACH(it->items, l, subit) {
+                    card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                            it->width/2 + it->width * i, it->height + it->height/2);
+                    i++;
+                }
+            }
         }
     }
     nemoshow_dispatch_frame(show);
@@ -1415,13 +1406,6 @@ int main(int argc, char *argv[])
     LIST_FOR_EACH(app->menu_items, l, mi) {
         CardItem *it = view_append_item(view, mi, app);
         card_item_translate(it, 0, 0, 0, view->ix, view->iy);
-
-        List *l;
-        CardItem *subit;
-        LIST_FOR_EACH(it->items, l, subit) {
-            card_item_translate(subit, 0, 0, 0, view->ix, view->iy);
-            nemoshow_one_above(it->group, subit->group);
-        }
     }
     card_show(view);
     nemowidget_append_callback(win, "layer", _card_win_layer, view);
