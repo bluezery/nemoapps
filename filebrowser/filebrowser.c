@@ -1304,7 +1304,7 @@ static void view_show_page(FBView *view, int page_idx)
             FileType *ft;
             ft = _fileinfo_match_type(view->app->filetypes, fileinfo);
             if (!ft) {
-                ERR("Not supported ft: %s", fileinfo->path);
+                ERR("Not supported file type: %s", fileinfo->path);
                 continue;
             }
             file = fb_file_create(ft, fileinfo);
