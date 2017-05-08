@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
+    <!-- Lato does not support hangul fonts
     <font family="Lato" size="10"/>
+    -->
     <window width="745" height="530"/>
 
     <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg" titlepath=".@APPNAME@/title"/>
