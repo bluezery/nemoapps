@@ -338,7 +338,8 @@ struct _CardItem {
     CardView *view;
     CardItem *org;
     int width, height;
-    struct showone *parent;
+    CardItem *parent;
+    struct showone *parent_one;
     struct showone *group;
     struct showone *ro_group;
     struct showone *bg0;
@@ -362,7 +363,7 @@ struct _CardItem {
     NemoWidgetGrab *grab;
     bool open;
 
-    List *items;
+    List *children;
 };
 
 static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
@@ -430,11 +431,11 @@ static void _card_item_icon_timeout(struct nemotimer *timer, void *userdata)
 void card_item_get_translate(CardItem *it, double *tx, double *ty)
 {
     double x = nemoshow_item_get_translate_x(it->group);
-    double y = nemoshow_item_get_translate_x(it->group);
+    double y = nemoshow_item_get_translate_y(it->group);
 
     if (it->parent) {
-        x += nemoshow_item_get_translate_x(it->parent);
-        y += nemoshow_item_get_translate_y(it->parent);
+        x += nemoshow_item_get_translate_x(it->parent->group) - it->width/2.0;
+        y += nemoshow_item_get_translate_y(it->parent->group) - it->height/2.0;
     }
 
     if (tx) *tx = x;
@@ -493,7 +494,7 @@ void card_item_rotate(CardItem *it, uint32_t easetype, int duration, int delay, 
 
     List *l;
     CardItem *subit;
-    LIST_FOR_EACH(it->items, l, subit) {
+    LIST_FOR_EACH(it->children, l, subit) {
         card_item_rotate(subit, easetype, duration, delay, ro);
     }
 }
@@ -531,7 +532,6 @@ CardItem *card_item_dup(CardItem *it)
     double tx, ty;
     card_item_get_translate(it, &tx, &ty);
     nemoshow_item_translate(group, tx, ty);
-    ERR("%lf %lf", tx, ty);
 
     struct showone *one;
     dup->bg0 = one = RRECT_CREATE(group,
@@ -582,7 +582,7 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
-CardItem *card_create_item(CardView *view, struct showone *parent, MenuItem *mi, ConfigApp *app)
+CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
     it->parent = parent;
@@ -603,19 +603,23 @@ CardItem *card_create_item(CardView *view, struct showone *parent, MenuItem *mi,
     double global_sxy = app->config->sxy;
 
     struct showone *group;
-    it->group = group = GROUP_CREATE(parent);
+    if (it->parent) {
+        it->group = group = GROUP_CREATE(it->parent->group);
+    } else {
+        it->group = group = GROUP_CREATE(view->item_group);
+    }
     it->ro_group = GROUP_CREATE(it->group);
 
     MenuItem *submi;
     List *l;
     LIST_FOR_EACH(mi->items, l, submi) {
-        CardItem *subit = card_create_item(view, it->group, submi, app);
+        CardItem *subit = card_create_item(view, it, submi, app);
         if (subit) {
             nemoshow_one_above(it->ro_group, subit->group);
             card_item_set_alpha(subit, 0, 0, 0, 1.0);
             card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
             card_item_translate(subit, 0, 0, 0, subit->width/2, subit->height/2);
-            it->items = list_append(it->items, subit);
+            it->children = list_append(it->children, subit);
         }
     }
 
@@ -707,7 +711,7 @@ void card_item_destroy(CardItem *it)
 CardItem *view_append_item(CardView *view, MenuItem *mi, ConfigApp *app)
 {
     CardItem *it;
-    it = card_create_item(view, view->item_group, mi, app);
+    it = card_create_item(view, NULL, mi, app);
     RET_IF(!it, NULL);
     view->items = list_append(view->items, it);
 
@@ -737,6 +741,110 @@ void card_item_hide_destroy(CardItem *it, uint32_t easetype, int duration, int d
 {
     card_item_hide(it, easetype, duration, delay);
     TOOL_ADD_TIMER(it->view->tool, duration + delay + 100, _card_item_hide_destroy, it);
+}
+
+void card_item_execute(CardItem *it, double ex, double ey)
+{
+    CardView *view = it->view;
+    struct nemoshow *show = it->view->show;
+    card_item_hide_destroy(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+    card_item_scale(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.0, 0.0);
+    card_item_rotate(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0);
+
+    float x, y;
+    nemoshow_transform_to_viewport(show,
+            NEMOSHOW_ITEM_AT(it->group, tx),
+            NEMOSHOW_ITEM_AT(it->group, ty),
+            &x, &y);
+
+    double ro = 0.0;
+    if (!strcmp(view->launch_type, "table")) {
+        int rw, rh;
+        rw = (view->width - view->cw)/2;
+        rh = (view->height - view->ch)/2;
+        if (RECTS_CROSS(0, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
+            ro = 45;
+        } else if (RECTS_CROSS(0, rh, rw, view->ch, ex, ey, 1, 1)) {
+            ro = 90;
+        } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
+            ro = 135;
+        } else if (RECTS_CROSS(rw, 0, view->cw, rh, ex, ey, 1, 1)) {
+            ro = 180;
+        } else if (RECTS_CROSS(rw + view->cw, 0, rw, rh, ex, ey, 1, 1)) {
+            ro = 225;
+        } else if (RECTS_CROSS(rw + view->cw, rh, rw, view->ch, ex, ey, 1, 1)) {
+            ro = 270;
+        } else if (RECTS_CROSS(rw + view->cw, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
+            ro = 315;
+        }
+    }
+
+    nemoshow_view_set_anchor(show, 0.5, 0.5);
+
+    char path[PATH_MAX];
+    char name[PATH_MAX];
+    char args[PATH_MAX];
+    char *buf;
+    char *tok;
+    buf = strdup(it->exec);
+    tok = strtok(buf, ";");
+    snprintf(name, PATH_MAX, "%s", tok);
+    snprintf(path, PATH_MAX, "%s", tok);
+    tok = strtok(NULL, "");
+    snprintf(args, PATH_MAX, "%s", tok);
+    free(buf);
+
+    struct nemobus *bus;
+    struct busmsg *msg;
+    struct itemone *one;
+    char states[512];
+
+    bus = NEMOBUS_CREATE();
+
+    const char *type = it->type;
+    if (!type) {
+        type="app";
+    }
+    msg = NEMOMSG_CREATE_CMD(type, path);
+
+    ERR("%lf %lf %s %s %s", x, y, type, path, args);
+    one = nemoitem_one_create();
+    nemoitem_one_set_attr_format(one, "x", "%f", x);
+    nemoitem_one_set_attr_format(one, "y", "%f", y);
+    nemoitem_one_set_attr_format(one, "r", "%f", ro);
+    nemoitem_one_set_attr_format(one, "sx", "%f", it->sxy);
+    nemoitem_one_set_attr_format(one, "sy", "%f", it->sxy);
+    nemoitem_one_set_attr(one, "owner", view->uuid);
+    nemoitem_one_set_attr(one, "resize", it->resize? "on" : "off");
+    nemoitem_one_save_attrs(one, states, ';');
+    nemoitem_one_destroy(one);
+
+    nemobus_msg_set_attr(msg, "args", args);
+    nemobus_msg_set_attr(msg, "states", states);
+
+    if (it->mirror) {
+        if (strstr(it->mirror, "/nemoshell/fullscreen"))
+            nemobus_msg_set_attr_format(msg, "mirrorscreen", it->mirror);
+    } else {
+        List *l;
+        Mirror *mirror;
+        LIST_FOR_EACH(view->mirrors, l, mirror) {
+            if (RECTS_CROSS(x, y, 1, 1, mirror->x, mirror->y, mirror->width, mirror->height)) {
+                nemobus_msg_set_attr_format(msg, "mirrorscreen", mirror->target);
+                break;
+            }
+        }
+    }
+    NEMOMSG_SEND(bus, msg);
+
+    nemosound_play(APP_SOUND_DIR"/show.wav");
+
+    char buff[PATH_MAX];
+    Clock now;
+    now = clock_get();
+    snprintf(buff, PATH_MAX, "%d %d %d %d %d %d %s %s", now.year, now.month, now.day,
+            now.hours, now.mins, now.secs, path, args);
+    if (_log) log_write(_log, buff);
 }
 
 void card_show(CardView *view)
@@ -815,7 +923,7 @@ void card_hide(CardView *view)
         /*
         List *l;
         CardItem *subit;
-        LIST_FOR_EACH(it->items, l, subit) {
+        LIST_FOR_EACH(it->children, l, subit) {
             card_item_translate(subit, easetype, duration, 0, view->ix, view->iy);
         }
         */
@@ -871,6 +979,15 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0, 0.0);
+            int delay = 0;
+            List *l;
+            CardItem *subit;
+            LIST_FOR_EACH_REVERSE(it->children, l, subit) {
+                card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay, it->width/2, it->height/2);
+                delay += 150;
+            }
+            it->open = false;
+
             if (it->grab) {
                 nemowidget_grab_set_done(it->grab, true);
                 it->grab = NULL;
@@ -958,116 +1075,36 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         }
     } else if (nemoshow_event_is_up(show, event)) {
         if (it->exec) {
-            CardItem *itt = nemowidget_grab_get_data(grab, "item");
-            if (!itt) return;
-            if (RECTS_CROSS(view->cx - view->cw/2.0, view->cy - view->ch/2.0,
+            CardItem *dup = nemowidget_grab_get_data(grab, "item");
+            if (!dup || !dup->org) return;
+
+            double px = 0, py = 0;
+            int cnt = 0;
+            if (dup->org->parent) {
+                card_item_get_translate(dup->org->parent, &px, &py);
+                cnt = list_count(dup->org->parent->children);
+            }
+
+            if (dup->org->parent && RECTS_CROSS(px - it->width/2.0, py + it->height/2.0,
+                        cnt * it->width, it->height, ex, ey, 5, 5)) {
+                card_item_hide_destroy(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+                card_item_set_alpha(dup, NEMOEASE_CUBIC_OUT_TYPE, 900, 0, 0);
+                card_item_scale(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.25, 0.25);
+
+                double tx, ty;
+                card_item_get_translate(dup->org, &tx, &ty);
+                card_item_translate(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, tx, ty);
+            } else if (RECTS_CROSS(view->cx - view->cw/2.0, view->cy - view->ch/2.0,
                         view->cw, view->ch, ex, ey, 5, 5)) {
-                card_item_hide_destroy(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-                card_item_scale(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.0, 0.0);
-                if (itt->org) {
-                    double tx, ty;
-                    card_item_get_translate(itt->org, &tx, &ty);
-                    card_item_translate(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, tx, ty);
-                }
+                card_item_hide_destroy(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+                card_item_set_alpha(dup, NEMOEASE_CUBIC_OUT_TYPE, 900, 0, 0);
+                card_item_scale(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.25, 0.25);
+
+                double tx, ty;
+                card_item_get_translate(dup->org, &tx, &ty);
+                card_item_translate(dup, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, tx, ty);
             } else {
-                card_item_hide_destroy(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-                card_item_scale(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0.0, 0.0);
-                card_item_rotate(itt, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, 0);
-
-                float x, y;
-                nemoshow_transform_to_viewport(show,
-                        NEMOSHOW_ITEM_AT(itt->group, tx),
-                        NEMOSHOW_ITEM_AT(itt->group, ty),
-                        &x, &y);
-
-                double ro = 0.0;
-                if (!strcmp(view->launch_type, "table")) {
-                    int rw, rh;
-                    rw = (view->width - view->cw)/2;
-                    rh = (view->height - view->ch)/2;
-                    if (RECTS_CROSS(0, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 45;
-                    } else if (RECTS_CROSS(0, rh, rw, view->ch, ex, ey, 1, 1)) {
-                        ro = 90;
-                    } else if (RECTS_CROSS(0, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 135;
-                    } else if (RECTS_CROSS(rw, 0, view->cw, rh, ex, ey, 1, 1)) {
-                        ro = 180;
-                    } else if (RECTS_CROSS(rw + view->cw, 0, rw, rh, ex, ey, 1, 1)) {
-                        ro = 225;
-                    } else if (RECTS_CROSS(rw + view->cw, rh, rw, view->ch, ex, ey, 1, 1)) {
-                        ro = 270;
-                    } else if (RECTS_CROSS(rw + view->cw, rh + view->ch, rw, rh, ex, ey, 1, 1)) {
-                        ro = 315;
-                    }
-                }
-
-                nemoshow_view_set_anchor(show, 0.5, 0.5);
-
-                char path[PATH_MAX];
-                char name[PATH_MAX];
-                char args[PATH_MAX];
-                char *buf;
-                char *tok;
-                buf = strdup(itt->exec);
-                tok = strtok(buf, ";");
-                snprintf(name, PATH_MAX, "%s", tok);
-                snprintf(path, PATH_MAX, "%s", tok);
-                tok = strtok(NULL, "");
-                snprintf(args, PATH_MAX, "%s", tok);
-                free(buf);
-
-                struct nemobus *bus;
-                struct busmsg *msg;
-                struct itemone *one;
-                char states[512];
-
-                bus = NEMOBUS_CREATE();
-
-                const char *type = itt->type;
-                if (!type) {
-                    type="app";
-                }
-                msg = NEMOMSG_CREATE_CMD(type, path);
-
-                ERR("%lf %lf %s %s %s", x, y, type, path, args);
-                one = nemoitem_one_create();
-                nemoitem_one_set_attr_format(one, "x", "%f", x);
-                nemoitem_one_set_attr_format(one, "y", "%f", y);
-                nemoitem_one_set_attr_format(one, "r", "%f", ro);
-                nemoitem_one_set_attr_format(one, "sx", "%f", itt->sxy);
-                nemoitem_one_set_attr_format(one, "sy", "%f", itt->sxy);
-                nemoitem_one_set_attr(one, "owner", view->uuid);
-                nemoitem_one_set_attr(one, "resize", itt->resize? "on" : "off");
-                nemoitem_one_save_attrs(one, states, ';');
-                nemoitem_one_destroy(one);
-
-                nemobus_msg_set_attr(msg, "args", args);
-                nemobus_msg_set_attr(msg, "states", states);
-
-                if (itt->mirror) {
-                    if (strstr(itt->mirror, "/nemoshell/fullscreen"))
-                        nemobus_msg_set_attr_format(msg, "mirrorscreen", itt->mirror);
-                } else {
-                    List *l;
-                    Mirror *mirror;
-                    LIST_FOR_EACH(view->mirrors, l, mirror) {
-                        if (RECTS_CROSS(x, y, 1, 1, mirror->x, mirror->y, mirror->width, mirror->height)) {
-                            nemobus_msg_set_attr_format(msg, "mirrorscreen", mirror->target);
-                            break;
-                        }
-                    }
-                }
-                NEMOMSG_SEND(bus, msg);
-
-                nemosound_play(APP_SOUND_DIR"/show.wav");
-
-                char buff[PATH_MAX];
-                Clock now;
-                now = clock_get();
-                snprintf(buff, PATH_MAX, "%d %d %d %d %d %d %s %s", now.year, now.month, now.day,
-                        now.hours, now.mins, now.secs, path, args);
-                if (_log) log_write(_log, buff);
+                card_item_execute(dup, ex, ey);
             }
         } else {
             if (!it->grab || it->grab != grab) return;
@@ -1079,7 +1116,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                     int delay = 0;
                     List *l;
                     CardItem *subit;
-                    LIST_FOR_EACH(it->items, l, subit) {
+                    LIST_FOR_EACH(it->children, l, subit) {
                         card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
                                 it->width/2 + it->width * i, it->height + it->height/2);
                         i++;
@@ -1090,7 +1127,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                     int delay = 0;
                     List *l;
                     CardItem *subit;
-                    LIST_FOR_EACH(it->items, l, subit) {
+                    LIST_FOR_EACH(it->children, l, subit) {
                         card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
                                 subit->width/2, subit->height/2);
                         delay += 150;
@@ -1117,7 +1154,6 @@ static void _card_event(NemoWidget *widget, const char *id, void *info, void *us
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        ERR("1. ????????, %p, %x", one, nemoshow_one_get_tag(one));
         if (one && 0x999 == nemoshow_one_get_tag(one)) {
             CardItem *it = nemoshow_one_get_userdata(one);
             nemowidget_create_grab(widget, event,
