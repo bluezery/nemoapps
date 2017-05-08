@@ -25,22 +25,26 @@
 #define MAX_FILE_CNT 20
 #define VIDEO_INTERVAL (1000.0/24)
 
-static char *_parse_magic2url(const char *str)
+static char *_parse_url(const char *path)
 {
-    RET_IF(!str, NULL);
+    RET_IF(!path, NULL);
 
-    char *begin = strstr(str, "(URL=<");
-    if (!begin) return NULL;
-    begin+=6;
+    int line_len;
+    char **line_txt = file_read_line(path, &line_len);
 
-    char *end = strstr(str, ">)");
-    if (!end) return NULL;
-    end-=1;
+    RET_IF(!line_txt || !line_txt[0] || line_len <= 0, NULL);
 
-    if (begin == end) return NULL;
-    int cnt = end - begin + 1;
+    int i;
+    for (i = 0 ; i < line_len ; i++) {
+        if (!line_txt[i]) continue;
+        if (strstr(line_txt[i], "URL=")) {
+            char *begin = strstr(line_txt[i], "URL=");
+            begin+=4;
+            return strdup(begin);
+        }
+    }
 
-    return strndup(begin, cnt);
+    return NULL;
 }
 
 typedef struct _Pos Pos;
@@ -537,7 +541,6 @@ typedef enum {
 typedef struct _FBFile FBFile;
 struct _FBFile {
     const FileType *ft;
-    char *magic;
     char *name;
     char *path;
 };
@@ -548,7 +551,6 @@ static FBFile *fb_file_create(FileType *ft, const FileInfo *fileinfo)
     file->ft = ft;
     file->path = strdup(fileinfo->path);
     file->name = strdup(fileinfo->name);
-    file->magic = strdup(fileinfo->magic_str);
     return file;
 }
 
@@ -556,7 +558,6 @@ static void fb_file_destroy(FBFile *file)
 {
     free(file->path);
     free(file->name);
-    free(file->magic);
     free(file);
 }
 
@@ -754,7 +755,7 @@ static void item_exec(FBItem *it)
 
         char *path;
         if (it->type == ITEM_TYPE_URL) {
-            path = _parse_magic2url(it->file->magic);
+            path = _parse_url(it->file->path);
             if (!path) {
                 ERR("No url in the %s", it->file->path);
                 return;
