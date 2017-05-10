@@ -802,11 +802,10 @@ static bool _win_is_stat_area(NemoWidget *win, double x, double y, void *userdat
 static void _win_exit(NemoWidget *win, const char *id, void *data, void *userdata)
 {
     Stat *stat = userdata;
-    _nemoshow_destroy_transition_all(stat->show);
 
     stat_hide(stat, NEMOEASE_CUBIC_IN_TYPE, 1500, 0);
 
-    nemowidget_win_exit_if_no_trans(win);
+    nemowidget_win_exit_after(win, 1500);
 }
 
 int main(int argc, char *argv[])

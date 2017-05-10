@@ -4163,11 +4163,10 @@ static void karim_hide(Karim *karim, uint32_t easetype, int duration, int delay)
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {
     Karim *karim = userdata;
-    _nemoshow_destroy_transition_all(karim->show);
 
     karim_hide(karim, NEMOEASE_CUBIC_IN_TYPE, 500, 0);
 
-    nemowidget_win_exit_if_no_trans(win);
+    nemowidget_win_exit_after(win, 500);
 }
 
 int main(int argc, char *argv[])

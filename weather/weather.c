@@ -2688,10 +2688,9 @@ static void _weather_hide(Weather *weather, uint32_t easetype, int duration, int
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {
     Weather *weather = userdata;
-    _nemoshow_destroy_transition_all(weather->show);
 
     _weather_hide(weather, NEMOEASE_CUBIC_IN_TYPE, 1500, 0);
-    nemowidget_win_exit_if_no_trans(win);
+    nemowidget_win_exit_after(win, 1500);
 }
 
 typedef struct _ConfigApp ConfigApp;

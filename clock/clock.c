@@ -307,11 +307,9 @@ static void clock_hide(ClockView *clock, uint32_t easetype, int duration, int de
 static void _win_exit(NemoWidget *win, const char *id, void *info, void *userdata)
 {
     ClockView *clock = userdata;
-    _nemoshow_destroy_transition_all(clock->show);
-
     clock_hide(clock, NEMOEASE_CUBIC_IN_TYPE, 500, 0);
 
-    nemowidget_win_exit_if_no_trans(win);
+    nemowidget_win_exit_after(win, 500);
 }
 
 int main(int argc, char *argv[])
