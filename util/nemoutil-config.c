@@ -199,6 +199,11 @@ static char *get_configpath_from_parameter(int argc, char *argv[])
                 break;
         }
     }
+    for (i = 0 ; i < argc ; i++) {
+        free(_argv[i]);
+    }
+    free(_argv);
+
     optind = 1;
     return configpath;
 
@@ -249,6 +254,11 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
                 break;
         }
     }
+    for (i = 0 ; i < argc ; i++) {
+        free(_argv[i]);
+    }
+    free(_argv);
+
     optind = 1;
 
     double sx = 1.0;
