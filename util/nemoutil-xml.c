@@ -78,6 +78,7 @@ void xml_tag_change_attr(XmlTag *tag, const char *key, const char *val)
 
 static void xml_tag_set_content(XmlTag *tag, char *content)
 {
+    if (tag->content) free(tag->content);
     tag->content = content;
 }
 
@@ -352,8 +353,7 @@ static void _content(void *data, const char *content, int length)
         return;
     }
 
-    //ERR("%s", content);
-    char *buf = (char *)malloc(length + 1);
+    char *buf = malloc(length + 1);
     memset(buf, 0, length + 1);
     memcpy(buf, content, length);
 
