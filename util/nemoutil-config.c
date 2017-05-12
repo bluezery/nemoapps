@@ -39,10 +39,12 @@ static void _config_override(Config *config, Xml *xml)
     char buf[PATH_MAX];
     const char *temp;
 
-    if (!xml_search_tags(xml, prefix)) {
+    List *matches = xml_search_tags(xml, prefix);
+    if (!matches) {
         ERR("%s tag does not exist in the xml", prefix);
         return;
     }
+    list_free(matches);
 
     snprintf(buf, PATH_MAX, "%s/window", prefix);
     temp = xml_get_value(xml, buf, "layer");

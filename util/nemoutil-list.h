@@ -41,34 +41,34 @@ struct _List
     ((list) ? ((list)->data) : NULL)
 
 #define LIST_ITER(l, d) \
-    for (d = (l ? l->data : NULL) ; \
+    for (d = LIST_DATA(l) ; \
             l ; \
-            l = l->next, d = (__typeof__(d))(l ? l->data : NULL ))
+            l = l->next, d = (__typeof__(d))LIST_DATA(l))
 
 #define LIST_FOR_EACH(list, l, d) \
-    for (l = LIST_FIRST(list), d = (__typeof__(d))(l ? l->data : NULL) ; \
+    for (l = LIST_FIRST(list), d = (__typeof__(d))LIST_DATA(l) ; \
             l ; \
             l = l->next, d = (__typeof__(d))(l ? l->data : NULL ))
 
 #define LIST_FOR_EACH_SAFE(list, l, tmp, d) \
-    for (l = LIST_FIRST(list), d = (__typeof__(d))(l ? l->data : NULL), tmp = (l ? l->next : NULL) ; \
+    for (l = LIST_FIRST(list), d = (__typeof__(d))LIST_DATA(l), tmp = (l ? l->next : NULL) ; \
             l ; \
-            l = tmp, d = (__typeof__(d))(l ? l->data : NULL), tmp = (l ? l->next : NULL))
+            l = tmp, d = (__typeof__(d))LIST_DATA(l), tmp = (l ? l->next : NULL))
 
 #define LIST_FOR_EACH_REVERSE(list, l, d) \
-    for (l = LIST_LAST(list), d = (__typeof__(d))(l ? l->data : NULL) ; \
+    for (l = LIST_LAST(list), d = (__typeof__(d))LIST_DATA(l) ; \
             l ; \
             l = l->prev, d = (__typeof__(d))(l ? l->data : NULL ))
 
 #define LIST_FOR_EACH_REVERSE_SAFE(list, l, tmp, d) \
-    for (l = LIST_LAST(list), d = (__typeof__(d))(l ? l->data : NULL), tmp = (l ? l->prev : NULL) ; \
+    for (l = LIST_LAST(list), d = (__typeof__(d))LIST_DATA(l), tmp = (l ? l->prev : NULL) ; \
             l ; \
-            l = tmp, d = (__typeof__(d))(l ? l->data : NULL), tmp = (l ? l->prev : NULL))
+            l = tmp, d = (__typeof__(d))LIST_DATA(l), tmp = (l ? l->prev : NULL))
 
 #define LIST_FREE(list, d) \
-    for (list = LIST_FIRST(list), (list) ? free((list)->info) : (void)(NULL), d = (__typeof__(d))((list) ? (list)->data : NULL); \
+    for (list = LIST_FIRST(list), d = (__typeof__(d))((list) ? (list)->data : NULL); \
             list ; \
-            (list) ? free((list)->prev) : (void)(NULL), list = (list) ? (list)->next : NULL, d = (__typeof__(d))((list) ? (list)->data : NULL) )
+            list = list_remove_list(list, list), list = LIST_FIRST(list), d = (__typeof__(d))((list) ? (list)->data : NULL) )
 
 static inline List *list_insert_after(List *list, void *data)
 {
@@ -170,38 +170,41 @@ static inline List *list_find(List *list, void *data)
     return item;
 }
 
+static inline List *list_remove_list(List *list, List *l)
+{
+    if (!list || !l) return NULL;
+
+    if (l->prev) {
+        l->prev->next = l->next;
+    } else {
+        l->info->first = l->next;
+    }
+    if (l->next) {
+        l->next->prev = l->prev;
+    } else {
+        l->info->last = l->prev;
+    }
+
+    l->info->cnt--;
+    if (l->info->cnt == 0) {
+        free(l->info);
+        free(l);
+        return NULL;
+    }
+    if (list == l) {
+        list = list->info->first;
+    }
+    free(l);
+
+    return list;
+}
+
 static inline List *list_remove(List *list, void *data)
 {
     if (!list) return NULL;
 
-    List *item = list_find(list, data);
-    if (item) {
-        if (item->prev) {
-            item->prev->next = item->next;
-        } else {
-            item->info->first = item->next;
-        }
-        if (item->next) {
-            item->next->prev = item->prev;
-        } else {
-            item->info->last = item->prev;
-        }
-
-        item->info->cnt--;
-        if (item->info->cnt == 0) {
-            free(item->info);
-            free(item);
-            return NULL;
-        }
-        if (list == item) {
-            list = list->info->first;
-        }
-        free(item);
-    } else {
-        ERR("Could not find data(%p)", data);
-    }
-
-    return list;
+    List *l = list_find(list, data);
+    return list_remove_list(list, l);
 }
 
 static inline List *list_free(List *list)

@@ -430,22 +430,22 @@ List *xml_search_tags(Xml *xml, const char *xpath)
 {
     List *names = NULL;
 
-    char *_name;
+    char *name;
     char *tok;
-    _name = strdup(xpath);
-    tok = strtok(_name, "/");
+    name = strdup(xpath);
+    tok = strtok(name, "/");
     while (tok) {
         names = list_append(names, strdup(tok));
         tok = strtok(NULL, "/");
     }
-    free(_name);
+    free(name);
 
     if (!names) return NULL;
 
     List *matches = NULL;
     matches = _xml_search_tags(xml->root, LIST_FIRST(names), NULL);
 
-    LIST_FREE(names, _name) free(_name);
+    LIST_FREE(names, name) free(name);
 
     return matches;
 }
