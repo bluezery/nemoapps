@@ -184,14 +184,11 @@ static char *get_configpath_from_parameter(int argc, char *argv[])
         _argv[i] = strdup(argv[i]);
     }
 
-    optind = 1;
+    optind = 0;
     opterr = 0;
     int opt;
     while ((opt = getopt_long(argc, _argv, "c:", options, NULL)) != -1) {
         switch(opt) {
-            case 0:
-                ERR("xxx");
-                break;
             case 'c':
                 configpath = strdup(optarg);
                 break;
@@ -199,12 +196,12 @@ static char *get_configpath_from_parameter(int argc, char *argv[])
                 break;
         }
     }
+    optind = 0;
     for (i = 0 ; i < argc ; i++) {
         free(_argv[i]);
     }
     free(_argv);
 
-    optind = 1;
     return configpath;
 
 }
@@ -228,7 +225,7 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
 
     int width = 0;
     int height = 0;
-    optind = 1;
+    optind = 0;
     opterr = 0;
     int opt;
     while ((opt = getopt_long(argc, _argv, "i:w:h:r:y:", options, NULL)) != -1) {
@@ -254,12 +251,11 @@ static void config_override_from_parameter(Config *config, int argc, char *argv[
                 break;
         }
     }
+    optind = 0;
     for (i = 0 ; i < argc ; i++) {
         free(_argv[i]);
     }
     free(_argv);
-
-    optind = 1;
 
     double sx = 1.0;
     double sy = 1.0;
