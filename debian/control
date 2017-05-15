@@ -12,7 +12,7 @@ Package: nemoapps
 Priority: optional
 Section: libs
 Architecture: any
-Depends: nemocore, nemoover, ${shlibs:Depends}, ${misc:Depends}
+Depends: nemocore, nemoover, ${shlibs:Depends}, ${misc:Depends}, mujs, skia
 Description: NEMOUX's inhouse application libraries
  <insert long description, indented with spaces>
 
