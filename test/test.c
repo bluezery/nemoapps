@@ -53,11 +53,15 @@ int main(int argc, char *argv[])
         nemoshow_item_set_fill_color(one, RGBA(RED));
         ones = list_append(ones, one);
     }
+
     struct nemotimer *timer = TOOL_ADD_TIMER(tool, 20, _timeout, ones);
 
     nemoshow_dispatch_frame(nemowidget_get_show(win));
 
     nemotool_run(tool);
+
+    LIST_FREE(ones, one) nemoshow_one_destroy(one);
+
     nemotimer_destroy(timer);
     nemoshow_one_destroy(group);
     nemowidget_destroy(widget);
