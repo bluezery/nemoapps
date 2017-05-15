@@ -1,12 +1,30 @@
+nemoapps (0.1.0) unstable; urgency=medium
+
+  * Release
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 15 May 2017 13:01:19 +0900
+
+nemoapps (0.0.7) unstable; urgency=medium
+
+  * Add skia as dependency explicitly
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 15 May 2017 12:51:07 +0900
+
+nemoapps (0.0.6) unstable; urgency=medium
+
+  * Bump up
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Sat, 13 May 2017 16:34:44 +0900
+
 nemoapps (0.0.5) unstable; urgency=medium
 
-  * Bump up 
+  * Bump up
 
  -- Taehwan Kim <taehwan@nemoux.net>  Tue, 02 May 2017 12:24:48 +0900
 
 nemoapps (0.0.4) unstable; urgency=medium
 
-  * Bump up 
+  * Bump up
 
  -- Taehwan Kim <taehwan@nemoux.net>  Mon, 01 May 2017 21:25:33 +0900
 
