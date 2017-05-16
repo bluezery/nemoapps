@@ -1018,11 +1018,29 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
             ERR("svg_get_wh() failed");
         }
     }
-    // FIXME: multibyte & length calculation for fixed size
+    // FIXME: need to calculate exact width of text for fixed size
     char buf[PATH_MAX];
     Text *txt;
 
-    snprintf(buf, it->w/7, "%s", file->name);
+    int cnt = 0;
+    int len = 0;
+    while (file->name[len]) {
+        if (cnt >= 10) break;
+        if ((file->name[len] & 0xF0) == 0xF0)  { // 4 bytes
+            len+=4;
+        } else if ((file->name[len] & 0xE0) == 0xE0) { // 3 bytes
+            len+=3;
+        } else if ((file->name[len] & 0xC0) == 0xC0) { // 2 bytes
+            len+=2;
+        } else { // a byte
+            len+=1;
+        }
+        cnt++;
+    }
+    // XXX: don't use snprintf because it's unicode, not simple string!
+    memcpy(buf, file->name, len);
+    buf[len] = '\0';
+
     it->name = txt = text_create(view->tool, group, font_family, font_style, font_size);
     text_set_anchor(txt, 0.0, 0.0);
     text_update(txt, 0, 0, 0, buf);
@@ -1030,13 +1048,13 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     text_set_scale(txt, 0, 0, 0, 0.0, 1.0);
 
     if (it->type == ITEM_TYPE_IMG || it->type == ITEM_TYPE_SVG) {
-        snprintf(buf, it->w/7, "%s", "Image");
+        snprintf(buf, PATH_MAX, "%s", "Image");
     } else if (it->type == ITEM_TYPE_VIDEO) {
-        snprintf(buf, it->w/7, "%s", "Video");
+        snprintf(buf, PATH_MAX, "%s", "Video");
     } else if (it->type == ITEM_TYPE_PDF) {
-        snprintf(buf, it->w/7, "%s", "PDF");
+        snprintf(buf, PATH_MAX, "%s", "PDF");
     } else if (it->type == ITEM_TYPE_URL) {
-        snprintf(buf, it->w/7, "%s", "URL");
+        snprintf(buf, PATH_MAX, "%s", "URL");
     }
     it->name1 = txt = text_create(view->tool, group, font_family, font_style, font_size/2);
     text_set_anchor(txt, 0.0, 0.0);
