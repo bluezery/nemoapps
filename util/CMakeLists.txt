@@ -22,6 +22,8 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoutil-path.c
     nemoutil-path.h
     nemoutil-json.h
+    nemoutil-string.c
+    nemoutil-string.h
     )
 
 TARGET_LINK_LIBRARIES(${LIBNAME}
@@ -47,6 +49,7 @@ INSTALL(FILES
     nemoutil-con.h
     nemoutil-path.h
     nemoutil-json.h
+    nemoutil-string.h
     ../helper/nemowrapper.h
     DESTINATION ${CMAKE_INSTALL_INCDIR}/${LIBNAME}
     )
