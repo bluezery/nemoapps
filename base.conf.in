@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <font family="NanumGothic" size="10"/>
+    <font family="Noto Sans CJK KR" size="10"/>
     <window fullscreen="off" width="512" height="512" sx="1.0" sy="1.0"/>
     <!--<frame rate="60"/>-->
 </config>
