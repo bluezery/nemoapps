@@ -1,3 +1,9 @@
+nemoapps (0.2.0) unstable; urgency=medium
+
+  * Release
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Thu, 18 May 2017 01:18:27 +0900
+
 nemoapps (0.1.1) unstable; urgency=medium
 
   * default font is Noto Sans CJK 
