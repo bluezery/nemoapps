@@ -10,9 +10,10 @@
 #include "nemoutil.h"
 #include "nemoui-thread.h"
 #include "nemoui-image.h"
+#include "skiahelper.hpp"
 
 struct _ImageBitmap {
-    SkBitmap *bitmap;
+    SkiaBitmap *bitmap;
 };
 
 struct _ImageLoader {
@@ -33,32 +34,6 @@ struct _Image {
     struct showone *clip;
 };
 
-static SkBitmap *_image_decode_skbitmap(const char *path)
-{
-    SkBitmap *bitmap = new SkBitmap;
-
-    sk_sp<SkData> data(SkData::MakeFromFileName(path));
-    SkCodec *codec(SkCodec::NewFromData(data));
-    if (!codec) {
-        ERR("No codec from data: %s", path);
-        return NULL;
-    }
-
-    SkImageInfo info = codec->getInfo().makeColorSpace(NULL);
-
-    bitmap->setInfo(info);
-    bitmap->allocPixels();
-
-    SkCodec::Result r = codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
-    delete codec;
-    if (r != SkCodec::kSuccess) {
-        ERR("getPixels failed(%d): %s", r, path);
-        return NULL;
-    }
-
-    return bitmap;
-}
-
 ImageBitmap *image_bitmap_create(const char *path)
 {
     RET_IF(!path, NULL);
@@ -76,7 +51,7 @@ ImageBitmap *image_bitmap_create(const char *path)
     }
 
     ImageBitmap *bitmap = (ImageBitmap *)calloc(sizeof(ImageBitmap), 1);
-    bitmap->bitmap = _image_decode_skbitmap(path);
+    bitmap->bitmap = skia_bitmap_create(path);
     if (!bitmap->bitmap) {
         ERR("image decode skbitmap failed, trying Magickwand");
 
@@ -111,14 +86,14 @@ ImageBitmap *image_bitmap_create(const char *path)
 ImageBitmap *image_bitmap_dup(ImageBitmap *src)
 {
     ImageBitmap *dst = (ImageBitmap *)calloc(sizeof(ImageBitmap), 1);
-    src->bitmap->deepCopyTo(dst->bitmap);
+    dst->bitmap = skia_bitmap_dup(src->bitmap);
 
     return dst;
 }
 
 void image_bitmap_destroy(ImageBitmap *bitmap)
 {
-    delete bitmap->bitmap;
+    skia_bitmap_destroy(bitmap->bitmap);
     free(bitmap);
 }
 
@@ -137,7 +112,8 @@ void image_set_bitmap(Image *img, int width, int height, ImageBitmap *bitmap)
     nemoshow_item_set_height(img->one, height);
     nemoshow_item_set_width(img->group, width);
     nemoshow_item_set_height(img->group, height);
-    nemoshow_item_set_bitmap(img->one, bitmap->bitmap);
+    SkBitmap *skbitmap = skia_bitmap_get_bitmap(bitmap->bitmap);
+    nemoshow_item_set_bitmap(img->one, skbitmap);
 }
 
 static void _image_decode_done(bool cancel, void *userdata)

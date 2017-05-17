@@ -25,6 +25,7 @@ ADD_LIBRARY(${LIBNAME} SHARED
     nemoui-text.c
     nemoui-text.h
     nemoui.h
+    $<TARGET_OBJECTS:skiahelper>
     )
 
 TARGET_LINK_LIBRARIES(${LIBNAME}

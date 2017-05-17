@@ -12,7 +12,11 @@ ADD_LIBRARY(meshhelper OBJECT
     meshhelper.cpp
     meshhelper.h
     )
-
+ADD_LIBRARY(skiahelper OBJECT
+    skiahelper.cpp
+    skiahelper.h
+    skiahelper.hpp
+    )
 #ADD_LIBRARY(oshelper OBJECT
 #    oshelper.c
 #    oshelper.h
