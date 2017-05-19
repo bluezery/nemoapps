@@ -142,7 +142,9 @@ static void playerview_overlay_show(PlayerView *view, uint32_t easetype, int dur
 {
     nemowidget_show(view->overlay, 0, 0, 0);
     nemowidget_set_alpha(view->overlay, easetype, duration, delay, 1.0);
-    nemotimer_set_timeout(view->overlay_timer, duration + delay + OVERLAY_TIMEOUT);
+    if (!sketch_is_enable(view->sketch)) {
+        nemotimer_set_timeout(view->overlay_timer, duration + delay + OVERLAY_TIMEOUT);
+    }
 }
 
 static void playerview_overlay_hide(PlayerView *view, uint32_t easetype, int duration, int delay)
