@@ -18,6 +18,8 @@
 #include "nemoui.h"
 #include "sound.h"
 
+#define SUBITEM_DIFF 3
+
 typedef struct _Mirror Mirror;
 struct _Mirror {
     int x, y, width, height;
@@ -492,6 +494,7 @@ void card_item_rotate(CardItem *it, uint32_t easetype, int duration, int delay, 
         nemoshow_item_rotate(it->group, ro);
     }
 
+    // XXX: rotate does not inherited from it's parent
     List *l;
     CardItem *subit;
     LIST_FOR_EACH(it->children, l, subit) {
@@ -582,6 +585,15 @@ CardItem *card_item_dup(CardItem *it)
     return dup;
 }
 
+void card_item_below(CardItem *it, CardItem *below)
+{
+    if (below) {
+        nemoshow_one_below(it->group, below->group);
+    } else {
+        nemoshow_one_below(it->group, NULL);
+    }
+}
+
 CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, ConfigApp *app)
 {
     CardItem *it = calloc(sizeof(CardItem), 1);
@@ -610,6 +622,7 @@ CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, Confi
     }
     it->ro_group = GROUP_CREATE(it->group);
 
+    int diff = 0;
     MenuItem *submi;
     List *l;
     LIST_FOR_EACH(mi->items, l, submi) {
@@ -618,8 +631,10 @@ CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, Confi
             nemoshow_one_above(it->ro_group, subit->group);
             card_item_set_alpha(subit, 0, 0, 0, 1.0);
             card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
-            card_item_translate(subit, 0, 0, 0, subit->width/2, subit->height/2);
+            card_item_translate(subit, 0, 0, 0, subit->width/2 + diff, subit->height/2 + diff);
+            card_item_below(subit, NULL);
             it->children = list_append(it->children, subit);
+            diff+=SUBITEM_DIFF;
         }
     }
 
@@ -919,14 +934,6 @@ void card_hide(CardView *view)
         card_item_rotate(it, easetype, duration, 0, 0);
         card_item_scale(it, easetype, duration, 0, 0.0, 0.0);
         card_item_translate(it, easetype, duration, 0, view->ix, view->iy);
-
-        /*
-        List *l;
-        CardItem *subit;
-        LIST_FOR_EACH(it->children, l, subit) {
-            card_item_translate(subit, easetype, duration, 0, view->ix, view->iy);
-        }
-        */
     }
 
     nemotimer_set_timeout(view->timer, 0);
@@ -1113,23 +1120,28 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             int i = 0;
             if (nemoshow_event_is_single_click(show, event)) {
                 if (!it->open) {
+                    int diff = 0;
                     int delay = 0;
                     List *l;
                     CardItem *subit;
                     LIST_FOR_EACH(it->children, l, subit) {
                         card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
-                                it->width/2 + it->width * i, it->height + it->height/2);
+                                it->width/2 + it->width * i + diff,
+                                it->height + it->height/2 + diff);
                         i++;
+                        diff+=SUBITEM_DIFF;
                         delay += 150;
                     }
                     it->open = true;
                 } else {
+                    int diff = 0;
                     int delay = 0;
                     List *l;
                     CardItem *subit;
                     LIST_FOR_EACH(it->children, l, subit) {
                         card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
-                                subit->width/2, subit->height/2);
+                                subit->width/2 + diff, subit->height/2 + diff);
+                        diff+=SUBITEM_DIFF;
                         delay += 150;
                     }
                     it->open = false;
