@@ -14,7 +14,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 
 #define UPDATE_WINDOW 1
@@ -128,40 +128,39 @@ static void _weather_daily_destroy(WeatherDaily *w)
     free(w);
 }
 
-static WeatherDaily *_weather_daily_create_openweather(const char *json)
+static WeatherDaily *_weather_daily_create_openweather(const char *data)
 {
-    struct json_object *jso = json_tokener_parse(json);
-    if (!jso) {
-        ERR("json_tokener_parse failed: %s", json);
+    XemoJson *json = xemojson_create(data);
+    if (!json) {
         return NULL;
     }
 
     WeatherDaily *w = calloc(sizeof(WeatherDaily), 1);
     Values *vals;
 
-    vals = _json_find(jso, "city/name");
+    vals = xemojson_find(json, "city/name");
     if (vals) {
         w->city = strdup(values_get_str(vals, 0));
     }
 
-    vals = _json_find(jso, "city/coord/lat");
+    vals = xemojson_find(json, "city/coord/lat");
     if (vals) {
         w->lat = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "city/coord/lon");
+    vals = xemojson_find(json, "city/coord/lon");
     if (vals) {
         w->lon = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "city/country");
+    vals = xemojson_find(json, "city/country");
     if (vals) {
         w->country = strdup(values_get_str(vals, 0));
     }
 
-    vals = _json_find(jso, "cnt");
+    vals = xemojson_find(json, "cnt");
     if (vals) {
         w->days_cnt = values_get_double(vals, 0);
         values_free(vals);
@@ -173,7 +172,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         w->days = list_append(w->days, day);
     }
 
-    vals = _json_find(jso, "list/dt");
+    vals = xemojson_find(json, "list/dt");
     if (vals && (w->days_cnt == vals->cnt)) {
         for (i = 0 ; i < vals->cnt ; i++) {
             WeatherDay *day = LIST_DATA(list_get_nth(w->days, i));
@@ -182,7 +181,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/temp/day");
+    vals = xemojson_find(json, "list/temp/day");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -192,7 +191,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/temp/min");
+    vals = xemojson_find(json, "list/temp/min");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -201,7 +200,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         }
         values_free(vals);
     }
-    vals = _json_find(jso, "list/temp/max");
+    vals = xemojson_find(json, "list/temp/max");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -211,7 +210,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/pressure");
+    vals = xemojson_find(json, "list/pressure");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -221,7 +220,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/humidity");
+    vals = xemojson_find(json, "list/humidity");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -231,7 +230,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/weather/id");
+    vals = xemojson_find(json, "list/weather/id");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -241,7 +240,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/weather/main");
+    vals = xemojson_find(json, "list/weather/main");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -251,7 +250,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         values_free(vals);
     }
 
-    vals = _json_find(jso, "list/weather/description");
+    vals = xemojson_find(json, "list/weather/description");
     if (vals && (w->days_cnt == vals->cnt)) {
         int i = 0;
         for (i = 0 ; i < vals->cnt ; i++) {
@@ -260,6 +259,7 @@ static WeatherDaily *_weather_daily_create_openweather(const char *json)
         }
         values_free(vals);
     }
+    xemojson_destroy(json);
     return w;
 }
 
@@ -319,148 +319,147 @@ _weather_now_destroy(WeatherNow *w)
 }
 
 static WeatherNow *
-_weather_now_create_openweather(const char *json)
+_weather_now_create_openweather(const char *data)
 {
-    struct json_object *jso = json_tokener_parse(json);
-    if (!jso) {
-        ERR("json_tokener_parse failed: %s", json);
+    XemoJson *json = xemojson_create(data);
+    if (!json) {
         return NULL;
     }
 
     WeatherNow *w = calloc(sizeof(WeatherNow), 1);
     Values *vals;
 
-    vals = _json_find(jso, "name");
+    vals = xemojson_find(json, "name");
     if (vals) {
         w->city = strdup(values_get_str(vals, 0));
     }
 
-    vals = _json_find(jso, "dt");
+    vals = xemojson_find(json, "dt");
     if (vals) {
         w->datetime = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "coord/lat");
+    vals = xemojson_find(json, "coord/lat");
     if (vals) {
         w->lat = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "coord/lon");
+    vals = xemojson_find(json, "coord/lon");
     if (vals) {
         w->lon = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "sys/country");
+    vals = xemojson_find(json, "sys/country");
     if (vals) {
         w->country = strdup(values_get_str(vals, 0));
         values_free(vals);
     }
 
-    vals = _json_find(jso, "sys/sunrise");
+    vals = xemojson_find(json, "sys/sunrise");
     if (vals) {
         w->sunrise = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "sys/sunset");
+    vals = xemojson_find(json, "sys/sunset");
     if (vals) {
         w->sunset = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "weather/id");
+    vals = xemojson_find(json, "weather/id");
     if (vals) {
         w->weather_id = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "weather/main");
+    vals = xemojson_find(json, "weather/main");
     if (vals) {
         w->weather_main = strdup(values_get_str(vals, 0));
         values_free(vals);
     }
 
-    vals = _json_find(jso, "weather/description");
+    vals = xemojson_find(json, "weather/description");
     if (vals) {
         w->weather_desc = strdup(values_get_str(vals, 0));
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/temp");
+    vals = xemojson_find(json, "main/temp");
     if (vals) {
         w->temp = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/temp_min");
+    vals = xemojson_find(json, "main/temp_min");
     if (vals) {
         w->temp_min = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/temp_max");
+    vals = xemojson_find(json, "main/temp_max");
     if (vals) {
         w->temp_max = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/humidity");
+    vals = xemojson_find(json, "main/humidity");
     if (vals) {
         w->humidity = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/pressure");
+    vals = xemojson_find(json, "main/pressure");
     if (vals) {
         w->pressure = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/grnd_level");
+    vals = xemojson_find(json, "main/grnd_level");
     if (vals) {
         w->pressure_ground = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "main/sea_level");
+    vals = xemojson_find(json, "main/sea_level");
     if (vals) {
         w->pressure_sea = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "wind/speed");
+    vals = xemojson_find(json, "wind/speed");
     if (vals) {
         w->wind_speed = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "wind/deg");
+    vals = xemojson_find(json, "wind/deg");
     if (vals) {
         w->wind_degree = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "clouds/all");
+    vals = xemojson_find(json, "clouds/all");
     if (vals) {
         w->cloud = values_get_int(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "rain/3h");
+    vals = xemojson_find(json, "rain/3h");
     if (vals) {
         w->rain = values_get_double(vals, 0);
         values_free(vals);
     }
 
-    vals = _json_find(jso, "snow/3h");
+    vals = xemojson_find(json, "snow/3h");
     if (vals) {
         w->snow = values_get_double(vals, 0);
         values_free(vals);
     }
-    json_object_put(jso);
+    xemojson_destroy(json);
 
     return w;
 }

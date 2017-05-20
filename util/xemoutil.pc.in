@@ -5,9 +5,9 @@ includedir=@CMAKE_INSTALL_INCDIR@
 libname=@LIBNAME@
 
 Name: @LIBNAME@
-Description: NEMO Utility Library
+Description: XEMO Utility Library
 Version: 0.1.0
-Requires: MagickWand expat dbus-1
+Requires: expat json-c dbus-1 libcurl fontconfig
 Requires.private:
 Libs: -L${libdir} -l${libname} -lmagic
 Cflags: -I${includedir}/${libname}

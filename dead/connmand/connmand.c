@@ -16,7 +16,7 @@
 #include <nemojson.h>
 #include <nemoitem.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 
 const char *TARGET = "net.connman";

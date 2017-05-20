@@ -1,5 +1,5 @@
-#ifndef __UTIL_COMMON_H__
-#define __UTIL_COMMON_H__
+#ifndef __XEMOUTIL_COMMON_H__
+#define __XEMOUTIL_COMMON_H__
 
 #include <stdint.h>
 #include <stdbool.h>

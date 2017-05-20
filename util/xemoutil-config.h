@@ -1,7 +1,7 @@
-#ifndef __UTIL_CONFIG_H__
-#define __UTIL_CONFIG_H__
+#ifndef __XEMOUTIL_CONFIG_H__
+#define __XEMOUTIL_CONFIG_H__
 
-#include <nemoutil-xml.h>
+#include <xemoutil-xml.h>
 
 typedef struct _Config Config;
 struct _Config {

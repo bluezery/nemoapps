@@ -1,6 +1,6 @@
-#include "nemoutil-internal.h"
-#include "nemoutil.h"
-#include "nemoutil-config.h"
+#include "xemoutil-internal.h"
+#include "xemoutil.h"
+#include "xemoutil-config.h"
 
 Xml *xml_load_from_domain(const char *domain, const char *filename)
 {

@@ -7,7 +7,7 @@ libname=@LIBNAME@
 Name: @LIBNAME@
 Description: NEMO Widget Library
 Version: 0.1.0
-Requires: nemoapps nemoutil
+Requires: nemoapps xemoutil
 Requires.private:
 Libs: -L${libdir} -l${libname}
 Cflags: -I${includedir}/${libname}

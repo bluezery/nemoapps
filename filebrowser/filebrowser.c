@@ -12,7 +12,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 
@@ -1022,10 +1022,11 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     char buf[PATH_MAX];
     Text *txt;
 
+    int max_cnt = 10;
     int cnt = 0;
     int len = 0;
     while (file->name[len]) {
-        if (cnt >= 10) break;
+        if (cnt >= max_cnt) break;
         if ((file->name[len] & 0xF0) == 0xF0)  { // 4 bytes
             len+=4;
         } else if ((file->name[len] & 0xE0) == 0xE0) { // 3 bytes

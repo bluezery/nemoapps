@@ -8,10 +8,10 @@ ADD_DEFINITIONS(-DCONFXML="${CONFXML}")
 ADD_EXECUTABLE(${APPNAME}
     ground.c
     )
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}

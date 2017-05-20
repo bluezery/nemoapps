@@ -18,7 +18,7 @@
 
 #include "color.h"
 #include "log.h"
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "config.h"
 #include "image.h"
 #include "widgets.h"

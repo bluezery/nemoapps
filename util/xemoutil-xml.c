@@ -1,7 +1,7 @@
 #include <expat.h>
-#include "nemoutil-internal.h"
-#include "nemoutil.h"
-#include "nemoutil-xml.h"
+#include "xemoutil-internal.h"
+#include "xemoutil.h"
+#include "xemoutil-xml.h"
 
 #ifdef XML_LARGE_SIZE
 #define XML_FMT_INT_MOD "ll"

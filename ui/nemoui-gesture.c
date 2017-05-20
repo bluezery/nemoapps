@@ -1,4 +1,4 @@
-#include <nemoutil.h>
+#include <xemoutil.h>
 #include "nemoui-gesture.h"
 
 #define SCALE_COEFF 0.05

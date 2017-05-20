@@ -12,7 +12,7 @@
 #include <nemoshow.h>
 
 #include "log.h"
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "config.h"
 #include "color.h"
 #include "nemowrapper.h"

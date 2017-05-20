@@ -2,8 +2,8 @@
 #include <wand/MagickWand.h>
 
 #include "pixmanhelper.h"
-#include "nemoutil.h"
-#include "nemoutil-image.h"
+#include "xemoutil.h"
+#include "xemoutil-image.h"
 
 void pixman_composite(pixman_image_t *target, pixman_image_t *src)
 {

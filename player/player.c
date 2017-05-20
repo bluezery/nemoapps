@@ -21,7 +21,7 @@
 #include <playback.h>
 #include <nemosound.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
 

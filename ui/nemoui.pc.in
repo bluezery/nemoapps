@@ -7,7 +7,7 @@ libname=@LIBNAME@
 Name: @LIBNAME@
 Description: NEMO View Library
 Version: 0.1.0
-Requires: nemoutil nemowidget nemoplay
+Requires: xemoutil nemowidget nemoplay
 Requires.private:
-Libs: -L${libdir} -l${libname} -lnemoutil -lnemowidget -lnemoplay
+Libs: -L${libdir} -l${libname} -lxemoutil -lnemowidget -lnemoplay
 Cflags: -I${includedir}/${libname}

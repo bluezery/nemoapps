@@ -14,7 +14,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 
 #define MAX_NUM_CPU 32

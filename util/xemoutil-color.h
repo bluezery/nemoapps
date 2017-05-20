@@ -1,5 +1,5 @@
-#ifndef __COLOR_H__
-#define __COLOR_H__
+#ifndef __XEMOUTIL_COLOR_H__
+#define __XEMOUTIL_COLOR_H__
 
 #include <stddef.h>
 

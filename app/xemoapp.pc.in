@@ -1,0 +1,13 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=@CMAKE_INSTALL_LIBDIR@
+includedir=@CMAKE_INSTALL_INCDIR@
+libname=@LIBNAME@
+
+Name: @LIBNAME@
+Description: XEMO Application Library
+Version: 0.1.0
+Requires: xemoutil
+Requires.private:
+Libs: -L${libdir} -l${libname}
+Cflags: -I${includedir}/${libname}

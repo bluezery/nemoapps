@@ -9,9 +9,9 @@ ADD_LIBRARY(${LIBNAME} SHARED
     #bars.c
     dim.c
     )
-ADD_DEPENDENCIES(${LIBNAME} nemoutil nemoui)
+ADD_DEPENDENCIES(${LIBNAME} xemoutil nemoui)
 TARGET_LINK_LIBRARIES(${LIBNAME}
-    nemoutil nemoui
+    xemoutil nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)
 

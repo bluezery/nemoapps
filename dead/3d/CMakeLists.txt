@@ -10,10 +10,10 @@ ADD_EXECUTABLE(${APPNAME}
     ${CMAKE_SOURCE_DIR}/thirds/tiny_obj_loader.cc
     ${CMAKE_SOURCE_DIR}/thirds/tiny_obj_loader.h
 	)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
     ${GL_LIBRARIES}

@@ -16,7 +16,7 @@
 
 #include <showhelper.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "pixmanhelper.h"
 
 typedef struct _OneProperty OneProperty;

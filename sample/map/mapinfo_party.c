@@ -7,7 +7,7 @@
 #include "color.h"
 #include "nemowrapper.h"
 #include "mapinfo.h"
-#include "mapinfo_nemoutil.h"
+#include "mapinfo_xemoutil.h"
 
 #define PI	3.14159265
 

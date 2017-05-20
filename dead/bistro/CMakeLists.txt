@@ -11,10 +11,10 @@ ADD_EXECUTABLE(${APPNAME}
     bistro.c
     $<TARGET_OBJECTS:sound>
     )
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)

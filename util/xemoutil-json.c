@@ -1,15 +1,33 @@
-#ifndef __JSONPARSE_H__
-#define __JSONPARSE_H__
-
 #include <json.h>
 #include <string.h>
-#include <nemoutil-common.h>
+#include "xemoutil.h"
 
-/********************************************************/
-/* Json Parser */
-/* ******************************************************/
-static inline Values *
-_json_find(struct json_object *obj, const char *names)
+struct _XemoJson
+{
+    struct json_object *obj;
+};
+
+void xemojson_destroy(XemoJson *json)
+{
+    json_object_put(json->obj);
+    free(json);
+}
+
+XemoJson *xemojson_create(const char *data)
+{
+    RET_IF(!data, NULL);
+
+    XemoJson *json = calloc(sizeof(XemoJson), 1);
+    json->obj = json_tokener_parse(data);
+    if (!json->obj) {
+        ERR("json_tokener_parse failed: %s", data);
+        return NULL;
+    }
+
+    return json;
+}
+
+Values *_json_find(struct json_object *obj, const char *names)
 {
     char *_names = strdup(names);
     char *name = strtok(_names, "/");
@@ -76,4 +94,10 @@ _json_find(struct json_object *obj, const char *names)
     free(_names);
     return ret;
 }
-#endif
+
+Values *xemojson_find(XemoJson *json, const char *names)
+{
+    RET_IF(!json, NULL);
+
+    return _json_find(json->obj, names);
+}

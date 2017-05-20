@@ -1,7 +1,7 @@
-#ifndef __UTIL_STRING_H__
-#define __UTIL_STRING_H__
+#ifndef __XEMOUTIL_STRING_H__
+#define __XEMOUTIL_STRING_H__
 
-#include <nemoutil-list.h>
+#include <xemoutil-list.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -6,7 +6,7 @@
 #include <nemomisc.h>
 #include <nemocanvas.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "nemowrapper.h"
 
 #ifdef __cplusplus

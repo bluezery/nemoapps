@@ -1,6 +1,7 @@
-#ifndef __UTIL_DBUS_H__
-#define __UTIL_DBUS_H__
+#ifndef __XEMOUTIL_DBUS_H__
+#define __XEMOUTIL_DBUS_H__
 
+// FIXME: Remove dbus dependencies to user
 #include <dbus/dbus.h>
 #include <nemotool.h>
 

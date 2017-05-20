@@ -1,5 +1,5 @@
-#ifndef __CONNECTION_H__
-#define __CONNECTION_H__
+#ifndef __XEMOUTIL_CON_H__
+#define __XEMOUTIL_CON_H__
 
 #include <stdbool.h>
 #include <nemotool.h>

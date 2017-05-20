@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <curl/curl.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 
 typedef struct _Context Context;
 struct _Context {

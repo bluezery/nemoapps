@@ -1,5 +1,5 @@
-#ifndef __UTIL_LOG_H__
-#define __UTIL_LOG_H__
+#ifndef __XEMOUTIL_LOG_H__
+#define __XEMOUTIL_LOG_H__
 
 #include <stdio.h>
 #include <time.h>

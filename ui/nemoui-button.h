@@ -2,7 +2,7 @@
 #define __NEMOUI_BTN_H__
 
 #include <nemoshow.h>
-#include <nemoutil.h>
+#include <xemoutil.h>
 
 #ifdef __cplusplus
 extern "C" {

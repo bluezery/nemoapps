@@ -18,7 +18,7 @@
 #include <nemotimer.h>
 #include <nemobus.h>
 
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "widgets.h"
 
 #define TIMEOUT 1000

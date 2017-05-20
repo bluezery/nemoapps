@@ -1,6 +1,6 @@
-#include "nemoutil-internal.h"
-#include "nemoutil.h"
-#include "nemoutil-common.h"
+#include "xemoutil-internal.h"
+#include "xemoutil.h"
+#include "xemoutil-common.h"
 
 void _rect_ratio_full(int w, int h, int cw, int ch, int *_w, int *_h)
 {

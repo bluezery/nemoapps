@@ -14,10 +14,10 @@ LINK_DIRECTORIES(${FREERDP_LIBRARY_DIRS})
 
 ADD_EXECUTABLE(${APPNAME}
     rdp.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
     ${FREERDP_LIBRARIES}

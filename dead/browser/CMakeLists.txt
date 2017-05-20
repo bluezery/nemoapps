@@ -21,12 +21,12 @@ ADD_EXECUTABLE(${APPNAME}
 	dispatch.c
 )
 
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemodavi)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemodavi)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
 	cef
 	nemodavi
-	nemoutil
+	xemoutil
 	${NEMOAPPS_COMMON_LIBRARIES}
 	${NEMONAVI_LIBRARIES}
 	${NEMOUTIL_LIBRARIES}

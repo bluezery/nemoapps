@@ -7,7 +7,7 @@
 #include <nemoshow.h>
 #include <showitem.hpp>
 #include "nemowrapper.h"
-#include "nemoutil.h"
+#include "xemoutil.h"
 #include "nemoui-thread.h"
 #include "nemoui-image.h"
 #include "skiahelper.hpp"

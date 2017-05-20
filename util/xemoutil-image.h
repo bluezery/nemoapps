@@ -1,5 +1,5 @@
-#ifndef __NEMOUTIL_IMAGE_H__
-#define __NEMOUTIL_IMAGE_H__
+#ifndef __XEMOUTIL_IMAGE_H__
+#define __XEMOUTIL_IMAGE_H__
 
 #include <stdbool.h>
 #include <pixman.h>

@@ -1,10 +1,10 @@
-#ifndef __UTIL_LIST_H__
-#define __UTIL_LIST_H__
+#ifndef __XEMOUTIL_LIST_H__
+#define __XEMOUTIL_LIST_H__
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <nemoutil-log.h>
+#include <xemoutil-log.h>
 
 #ifdef __cplusplus
 extern "C" {

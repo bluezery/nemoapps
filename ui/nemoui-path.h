@@ -2,7 +2,7 @@
 #define __NEMOUI_PATH_H__
 
 #include <nemoshow.h>
-#include <nemoutil-path.h>
+#include <xemoutil-path.h>
 
 #ifdef __cplusplus
 extern "C" {

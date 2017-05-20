@@ -6,10 +6,10 @@ ADD_DEFINITIONS(-DCONFXML="${CONFXML}")
 ADD_EXECUTABLE(${APPNAME}
     clock.c
 	)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)

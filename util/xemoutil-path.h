@@ -1,8 +1,8 @@
-#ifndef __NEMOUTIL_PATH_H__
-#define __NEMOUTIL_PATH_H__
+#ifndef __XEMOUTIL_PATH_H__
+#define __XEMOUTIL_PATH_H__
 
 #include <stdbool.h>
-#include <nemoutil-list.h>
+#include <xemoutil-list.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <nemoshow.h>
 #include <nemotool.h>
-#include <nemoutil-image.h>
+#include <xemoutil-image.h>
 
 #ifdef __cplusplus
 extern "C" {

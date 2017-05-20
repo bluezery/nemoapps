@@ -7,7 +7,7 @@
 
 #include <nemoui-image.h>
 
-#include <nemoutil.h>
+#include <xemoutil.h>
 #include <nemowrapper.h>
 #include <widget.h>
 

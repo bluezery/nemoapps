@@ -9,10 +9,10 @@ ADD_DEFINITIONS(-DREMOTE_IMG_DIR="${EXP_IMG_DIR}")
 
 ADD_EXECUTABLE(${APPNAME}
     remote.c)
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     ${NEMOAPPS_COMMON_LIBRARIES}
 	)

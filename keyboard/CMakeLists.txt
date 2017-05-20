@@ -9,8 +9,8 @@ ADD_EXECUTABLE(${APPNAME}
     ${APP}.c
 	)
 SET_TARGET_PROPERTIES(${APPNAME} PROPERTIES OUTPUT_NAME "exec")
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
-TARGET_LINK_LIBRARIES(${APPNAME} nemoutil nemowidget nemoui
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget nemoui)
+TARGET_LINK_LIBRARIES(${APPNAME} xemoutil nemowidget nemoui
     ${NEMOAPPS_COMMON_LIBRARIES}
     )
 INSTALL(TARGETS ${APPNAME}

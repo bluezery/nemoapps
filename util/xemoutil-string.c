@@ -1,6 +1,6 @@
-#include "nemoutil-internal.h"
-#include "nemoutil.h"
-#include "nemoutil-string.h"
+#include "xemoutil-internal.h"
+#include "xemoutil.h"
+#include "xemoutil-string.h"
 
 size_t string_count_utf(const char *str)
 {

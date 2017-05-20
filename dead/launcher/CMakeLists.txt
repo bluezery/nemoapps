@@ -13,10 +13,10 @@ ADD_EXECUTABLE(${APPNAME}
     launcher.c
     $<TARGET_OBJECTS:sound>
     )
-ADD_DEPENDENCIES(${APPNAME} nemoutil nemowidget nemoui)
+ADD_DEPENDENCIES(${APPNAME} xemoutil nemowidget nemoui)
 
 TARGET_LINK_LIBRARIES(${APPNAME}
-    nemoutil
+    xemoutil
     nemowidget
     nemoui
     ${NEMOPLAY_LIBRARIES}

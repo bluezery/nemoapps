@@ -8,8 +8,8 @@
 #include <sys/epoll.h>
 #include <dbus/dbus.h>
 
-#include "nemoutil.h"
-#include "nemoutil-dbus.h"
+#include "xemoutil.h"
+#include "xemoutil-dbus.h"
 
 /********************/
 /*** Introspect
