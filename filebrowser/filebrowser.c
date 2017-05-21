@@ -1024,29 +1024,46 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     char buf[PATH_MAX];
     Text *txt;
 
-    double ww = skia_calculate_text_width(font_family, font_style, font_size, file->name);
-    ERR("%lf %d", ww, it->w);
+    int gap = view->app->item_gap;
+    double tw = skia_calculate_text_width(font_family, font_style, font_size, file->name);
+    if (tw > it->w - 2 * gap) {
+        // Fit the string within it->w - 2 * gap
+        int maxlen = strlen(file->name);
+        int len = 0;
+        // FIXME: Use harfbuzz or freetype to reduce performance issue!!!
+        while (file->name[len] && len <= maxlen) {
+            int diff = 0;
+            if ((file->name[len] & 0xF0) == 0xF0)  { // 4 bytes
+                diff+=4;
+            } else if ((file->name[len] & 0xE0) == 0xE0) { // 3 bytes
+                diff+=3;
+            } else if ((file->name[len] & 0xC0) == 0xC0) { // 2 bytes
+                diff+=2;
+            } else { // a byte
+                diff+=1;
+            }
+            len += diff;
+            // XXX: don't use snprintf because it's unicode, not simple string!
+            memcpy(buf, file->name, len);
+            buf[len] = '\0';
+            tw = skia_calculate_text_width(font_family, font_style, font_size, buf);
 
-    int max_cnt = 10;
-    int cnt = 0;
-    int len = 0;
-    while (file->name[len]) {
-        if (cnt >= max_cnt) break;
-        if ((file->name[len] & 0xF0) == 0xF0)  { // 4 bytes
-            len+=4;
-        } else if ((file->name[len] & 0xE0) == 0xE0) { // 3 bytes
-            len+=3;
-        } else if ((file->name[len] & 0xC0) == 0xC0) { // 2 bytes
-            len+=2;
-        } else { // a byte
-            len+=1;
+            if (tw > (it->w - 2 * gap)) {
+                len -= diff;
+                if (len <= 0) {
+                    memset(buf, 0, sizeof(buf));
+                } else {
+                    memcpy(buf, file->name, len);
+                }
+                break;
+            }
         }
-        cnt++;
+    } else {
+        // XXX: don't use snprintf because it's unicode, not simple string!
+        memcpy(buf, file->name, strlen(file->name));
+        buf[strlen(file->name)] = '\0';
     }
 
-    // XXX: don't use snprintf because it's unicode, not simple string!
-    memcpy(buf, file->name, len);
-    buf[len] = '\0';
 
     it->name = txt = text_create(view->tool, group, font_family, font_style, font_size);
     text_set_anchor(txt, 0.0, 0.0);
