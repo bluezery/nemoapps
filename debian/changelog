@@ -1,6 +1,12 @@
+nemoapps (0.3.3) unstable; urgency=medium
+
+  * Cut the file name string withing the item width
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Sun, 21 May 2017 21:29:58 +0900
+
 nemoapps (0.3.2) unstable; urgency=medium
 
-  * Fix crash when filebrowser exiting 
+  * Fix crash when filebrowser exiting
 
  -- Taehwan Kim <taehwan@nemoux.net>  Sun, 21 May 2017 20:09:22 +0900
 
@@ -24,7 +30,7 @@ nemoapps (0.2.0) unstable; urgency=medium
 
 nemoapps (0.1.1) unstable; urgency=medium
 
-  * default font is Noto Sans CJK 
+  * default font is Noto Sans CJK
 
  -- Taehwan Kim <taehwan@nemoux.net>  Tue, 16 May 2017 14:32:20 +0900
 
