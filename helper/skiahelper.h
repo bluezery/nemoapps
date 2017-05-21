@@ -7,8 +7,9 @@ extern "C" {
 
 typedef struct _SkiaBitmap SkiaBitmap;
 SkiaBitmap *skia_bitmap_create(const char *path);
-void skia_bitmap_destroy(SkiaBitmap *bitmap);
 SkiaBitmap *skia_bitmap_dup(SkiaBitmap *bitmap);
+void skia_bitmap_destroy(SkiaBitmap *bitmap);
+double skia_cacluate_text_width(const char *fontfamily, double fontsize, const char *str);
 
 #ifdef __cplusplus
 }

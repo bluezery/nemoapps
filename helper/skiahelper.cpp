@@ -1,9 +1,13 @@
+// XXX: define, Before include skia headers
+#define SK_RELEASE
+
 #include <SkData.h>
 #include <SkRefCnt.h>
 #include <SkTemplates.h>
 #include <SkBitmap.h>
 #include <SkCodec.h>
 #include <SkPaint.h>
+#include <SkPath.h>
 #include <SkTypeface.h>
 
 #include "xemoutil.h"
@@ -61,49 +65,33 @@ SkiaBitmap *skia_bitmap_dup(SkiaBitmap *bitmap)
     return dst;
 }
 
-double skia_get_font_metrics(const char *fontfamily, double fontsize)
+double skia_cacluate_text_width(const char *fontfamily, double fontsize, const char *str)
 {
+    RET_IF(!fontfamily, !str);
 	SkPaint paint;
 	sk_sp<SkTypeface> face;
 	SkPaint::FontMetrics metrics;
 
-    XemoFont *font = xemofont_create(fontfamily, NULL, FC_SLANT_ROMAN, FC_WEIGHT_NORMAL, FC_WIDTH_NORMAL, 0);
+    XemoFont *font = xemofont_create(fontfamily, NULL,
+            FC_SLANT_ROMAN, FC_WEIGHT_NORMAL, FC_WIDTH_NORMAL, 0);
     if (!font) {
         ERR("font create failed");
         return 0;
     }
 
 	face = SkTypeface::MakeFromFile(xemofont_get_filepath(font), 0);
+    xemofont_destroy(font);
 
 	paint.setTypeface(face);
 	paint.setAntiAlias(true);
 	paint.setTextSize(fontsize);
 	paint.getFontMetrics(&metrics, 0);
-    ERR("[%lf] %lf %lf %lf %lf", fontsize, metrics.fAvgCharWidth,
-            metrics.fMaxCharWidth, metrics.fXMin, metrics.fXMax);
-    return 0;
-#if 0
+
 	SkPath path;
-	paint.getTextPath(text, textlength, x, y - metrics.fAscent - metrics.fDescent, &path);
+	paint.getTextPath(str, strlen(str), 0, -metrics.fAscent - metrics.fDescent, &path);
 
 	SkRect box;
 	box = path.getBounds();
 
-	SkMatrix matrix;
-	matrix.setIdentity();
-	matrix.postTranslate(-box.x(), -box.y());
-
-	path.transform(matrix);
-
-	if (one->sub == NEMOSHOW_PATHTWICE_ITEM) {
-		if (item->pathselect & NEMOSHOW_ITEM_STROKE_PATH)
-			NEMOSHOW_ITEM_CC(item, path)->addPath(path);
-		if (item->pathselect & NEMOSHOW_ITEM_FILL_PATH)
-			NEMOSHOW_ITEM_CC(item, fillpath)->addPath(path);
-	} else {
-		NEMOSHOW_ITEM_CC(item, path)->addPath(path);
-	}
-
-	nemoshow_one_dirty(one, NEMOSHOW_PATH_DIRTY);
-#endif
+    return box.width();
 }
