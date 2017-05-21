@@ -1,3 +1,9 @@
+nemoapps (0.3.1) unstable; urgency=medium
+
+  *  Arrange card submenus
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Sat, 20 May 2017 16:09:24 +0900
+
 nemoapps (0.3.0) unstable; urgency=medium
 
   * Fix infinite player state
