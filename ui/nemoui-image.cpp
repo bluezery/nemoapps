@@ -10,7 +10,7 @@
 #include "xemoutil.h"
 #include "nemoui-thread.h"
 #include "nemoui-image.h"
-#include "skiahelper.hpp"
+#include "helper_skia.hpp"
 
 struct _ImageBitmap {
     SkiaBitmap *bitmap;

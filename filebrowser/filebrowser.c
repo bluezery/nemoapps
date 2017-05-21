@@ -16,6 +16,7 @@
 #include "xemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
+#include "helper_skia.h"
 
 #define COLOR_BASE 0x00FFC2FF
 #define COLOR_ICON 0x53AED6FF
@@ -1023,6 +1024,9 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     char buf[PATH_MAX];
     Text *txt;
 
+    double ww = skia_calculate_text_width(font_family, font_style, font_size, file->name);
+    ERR("%lf %d", ww, it->w);
+
     int max_cnt = 10;
     int cnt = 0;
     int len = 0;
@@ -1039,6 +1043,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
         }
         cnt++;
     }
+
     // XXX: don't use snprintf because it's unicode, not simple string!
     memcpy(buf, file->name, len);
     buf[len] = '\0';

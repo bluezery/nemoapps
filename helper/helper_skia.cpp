@@ -11,8 +11,8 @@
 #include <SkTypeface.h>
 
 #include "xemoutil.h"
-#include "skiahelper.h"
-#include "skiahelper.hpp"
+#include "helper_skia.h"
+#include "helper_skia.hpp"
 
 struct _SkiaBitmap {
     SkBitmap *skbitmap;
@@ -65,14 +65,14 @@ SkiaBitmap *skia_bitmap_dup(SkiaBitmap *bitmap)
     return dst;
 }
 
-double skia_cacluate_text_width(const char *fontfamily, double fontsize, const char *str)
+double skia_calculate_text_width(const char *fontfamily, const char *fontstyle, double fontsize, const char *str)
 {
     RET_IF(!fontfamily, !str);
 	SkPaint paint;
 	sk_sp<SkTypeface> face;
 	SkPaint::FontMetrics metrics;
 
-    XemoFont *font = xemofont_create(fontfamily, NULL,
+    XemoFont *font = xemofont_create(fontfamily, fontstyle,
             FC_SLANT_ROMAN, FC_WEIGHT_NORMAL, FC_WIDTH_NORMAL, 0);
     if (!font) {
         ERR("font create failed");

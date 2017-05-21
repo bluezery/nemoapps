@@ -119,6 +119,7 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,defs -Wl,--as-neede
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -std=c++11")
 
 SET(NEMOAPPS_COMMON_LIBRARIES
+    z
     m
     rt
     magic
