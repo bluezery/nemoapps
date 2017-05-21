@@ -5,6 +5,7 @@ INCLUDE_DIRECTORIES(${NEMOUTIL_INCLUDE_DIRS})
 LINK_DIRECTORIES(${NEMOUTIL_LIBRARY_DIRS})
 
 ADD_LIBRARY(${LIBNAME} SHARED
+    xemoutil.c
     xemoutil.h
     xemoutil-common.c
     xemoutil-color.h

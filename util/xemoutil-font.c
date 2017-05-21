@@ -126,7 +126,6 @@ bool xemofont_init()
 
 void xemofont_shutdown()
 {
-    // FIXME: crash!!!!
     _font_config = NULL;
     if (_ft_lib) FT_Done_FreeType(_ft_lib);
     _ft_lib = NULL;

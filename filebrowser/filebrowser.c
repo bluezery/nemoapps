@@ -12,6 +12,7 @@
 #include <nemotimer.h>
 #include <nemoshow.h>
 
+#include "xemoapp.h"
 #include "xemoutil.h"
 #include "widgets.h"
 #include "nemoui.h"
@@ -1120,8 +1121,6 @@ static void view_destroy(FBView *view)
     text_destroy(view->title);
     text_destroy(view->title1);
 
-    nemoshow_one_destroy(view->clip);
-
     LIST_FREE(view->bgfileinfos, fileinfo) fileinfo_destroy(fileinfo);
     nemotimer_destroy(view->bg_change_timer);
     image_destroy(view->bg);
@@ -1161,7 +1160,6 @@ static void _fb_bg_change_timer(struct nemotimer *timer, void *userdata)
     if (!file_get_image_wh(img_path, &ww, &hh)) {
         ERR("image get wh failed: %s", img_path);
     } else {
-        if (view->clip) nemoshow_one_destroy(view->clip);
         struct showone *clip;
         view->clip = clip = _clip_create(view->bg_group, 0, 0, view->w, view->h - h);
         image_load(view->bg0, view->tool, img_path, ww, hh, NULL, NULL);
@@ -1751,6 +1749,7 @@ static void _config_unload(ConfigApp *app)
 
 int main(int argc, char *argv[])
 {
+    xemoapp_init();
     ConfigApp *app = _config_load(PROJECT_NAME, CONFXML, argc, argv);
     RET_IF(!app, -1);
     if (!app->rootpath) {
@@ -1775,6 +1774,7 @@ int main(int argc, char *argv[])
     TOOL_DESTROY(tool);
 
     _config_unload(app);
+    xemoapp_shutdown();
 
     return 0;
 }

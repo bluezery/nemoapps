@@ -346,6 +346,7 @@ void image_set_anchor(Image *img, double ax, double ay)
 
 void image_set_clip(Image *img, struct showone *clip)
 {
+    if (img->clip) nemoshow_one_destroy(img->clip);
     img->clip = clip;
     nemoshow_item_set_clip(img->one, clip);
 }

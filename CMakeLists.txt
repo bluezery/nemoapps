@@ -133,6 +133,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/thirds
     ${CMAKE_SOURCE_DIR}/helper
     ${CMAKE_SOURCE_DIR}/util
+    ${CMAKE_SOURCE_DIR}/app
     ${CMAKE_SOURCE_DIR}/widget/
     ${CMAKE_SOURCE_DIR}/ui/
     ${CMAKE_SOURCE_DIR}/graph/

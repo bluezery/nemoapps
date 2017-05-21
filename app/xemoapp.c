@@ -2,12 +2,13 @@
 #include "xemoapp.h"
 
 // XXX: should call once!
-bool xemoapps_init()
+bool xemoapp_init()
 {
     return xemoutil_init();
 }
 
-void xemoapps_shutdown()
+// XXX: should call once!
+void xemoapp_shutdown()
 {
     xemoutil_shutdown();
 }
