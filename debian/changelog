@@ -1,3 +1,9 @@
+nemoapps (0.3.4) unstable; urgency=medium
+
+  * Fix card with submenus's bug
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 22 May 2017 13:29:54 +0900
+
 nemoapps (0.3.3) unstable; urgency=medium
 
   * Cut the file name string withing the item width
