@@ -631,10 +631,11 @@ CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, Confi
             nemoshow_one_above(it->ro_group, subit->group);
             card_item_set_alpha(subit, 0, 0, 0, 1.0);
             card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
-            card_item_translate(subit, 0, 0, 0, subit->width/2 + diff, subit->height/2 + diff);
+            card_item_translate(subit, 0, 0, 0,
+                    subit->width/2 + diff, subit->height/2 + diff);
             card_item_below(subit, NULL);
             it->children = list_append(it->children, subit);
-            diff+=SUBITEM_DIFF;
+            diff += SUBITEM_DIFF;
         }
     }
 
@@ -735,7 +736,7 @@ CardItem *view_append_item(CardView *view, MenuItem *mi, ConfigApp *app)
 
 void card_item_show(CardItem *it, uint32_t easetype, int duration, int delay)
 {
-    nemoshow_one_above(it->group, NULL);
+    //nemoshow_one_above(it->group, NULL);
     if (it->icon_anim_type) nemotimer_set_timeout(it->icon_timer, 100 + delay);
 }
 
@@ -986,11 +987,14 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0, 0.0);
+            int diff = 0;
             int delay = 0;
             List *l;
             CardItem *subit;
-            LIST_FOR_EACH_REVERSE(it->children, l, subit) {
-                card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay, it->width/2, it->height/2);
+            LIST_FOR_EACH(it->children, l, subit) {
+                card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
+                        subit->width/2 + diff, subit->height/2 + diff);
+                diff += SUBITEM_DIFF;
                 delay += 150;
             }
             it->open = false;
