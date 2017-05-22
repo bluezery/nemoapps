@@ -349,6 +349,7 @@ struct _CardItem {
     struct showone *icon;
     struct showone *txt;
 
+    bool showing;
     struct nemotimer *icon_timer;
     char *type;
     char *bg_uri;
@@ -982,6 +983,7 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, view->iro);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0);
             card_item_scale(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 1.0, 1.0);
+            it->showing = true;
         } else if (i == view->cnt - 1) {
             card_item_rotate(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
             card_item_set_alpha(it, NEMOEASE_CUBIC_IN_TYPE, duration, 0, 0.0);
@@ -1002,6 +1004,9 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
                 nemowidget_grab_set_done(it->grab, true);
                 it->grab = NULL;
             }
+            it->showing = true;
+        } else {
+            it->showing = false;
         }
 
         double tx, ty;
@@ -1048,7 +1053,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                 nemowidget_grab_set_data(grab, "item", dup);
             }
         } else {
-            if (it->grab) return;
+            if (it->grab || it->showing) return;
             it->grab = grab;
             card_item_scale(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 0.75, 0.75);
         }
@@ -1116,8 +1121,7 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             } else {
                 card_item_execute(dup, ex, ey);
             }
-        } else {
-            if (!it->grab || it->grab != grab) return;
+        } else if (it->grab && it->grab == grab && !it->showing) {
             card_item_scale(it, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0, 1.0, 1.0);
             it->grab = NULL;
             int i = 0;
