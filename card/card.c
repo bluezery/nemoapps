@@ -572,14 +572,13 @@ CardItem *card_item_dup(CardItem *it)
         dup->icon_timer = TOOL_ADD_TIMER(view->tool, 0, _card_item_icon_timeout, dup);
 
     if (it->txt_uri) {
-        dup->txt = one = SVG_PATH_CREATE(group,
+        dup->txt = one = SVG_PATH_GROUP_CREATE(group,
                 nemoshow_item_get_width(it->txt), nemoshow_item_get_height(it->txt),
                 it->txt_uri);
         nemoshow_item_set_anchor(one,
                 nemoshow_item_get_anchor_x(it->txt), nemoshow_item_get_anchor_y(it->txt));
         nemoshow_item_translate(one,
                 nemoshow_item_get_translate_x(it->txt), nemoshow_item_get_translate_y(it->txt));
-        nemoshow_item_set_fill_color(one, RGBA(0xFFFFFFFF));
     }
 
     return dup;
