@@ -517,11 +517,27 @@ static struct showone *_clip_create(struct showone *parent, int x, int y, int w,
     return clip;
 }
 
+static char *_get_url_image_url(const char *path, const char *ext)
+{
+    if (!path) return NULL;
+    char *dir = file_get_dirname(path);
+    char *base = file_get_basename(path);
+    char *ret;
+    if (ext) {
+        ret = strdup_printf("%s/.%s.%s", dir, base, ext);
+    } else {
+        ret = strdup_printf("%s/.%s", dir, base);
+    }
+    free(dir);
+    free(base);
+    return ret;
+}
+
 static char *_get_thumb_url(const char *path, const char *ext)
 {
     if (!path) return NULL;
-    char *base = file_get_basename(path);
     char *dir = file_get_dirname(path);
+    char *base = file_get_basename(path);
     char *ret;
     if (ext)  {
         ret = strdup_printf("%s/%s/%s.%s", dir, THUMB_DIR, base, ext);
@@ -997,12 +1013,12 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
             image_set_clip(img, clip);
             image_scale(img, 0, 0, 0, 0.0, 1.0);
 
-            char *path = _get_thumb_url(file->path, "png");
+            char *path = _get_url_image_url(file->path, "png");
             if (file_is_exist(path) && !file_is_null(path)) {
                 image_load_full(img, view->tool, path,
                         it->w, it->h - it->name_h, NULL, NULL);
             } else {
-                ERR("No thumbnail: %s", path);
+                ERR("No thumbnail for url(%s): %s", file->path, path);
             }
             free(path);
         }

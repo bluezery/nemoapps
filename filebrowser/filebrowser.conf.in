@@ -52,10 +52,10 @@
     <filetype type="pdf" ext="pdf"/>
     <filetype type="pdf" magic="PDF document"/>
 
+    <filetype type="url" ext="url" magic="Internet shortcut text"/>
+
     <!--<filetype type="text"  magic="ASCII text"/>-->
     <!--<filetype type="text" magic="UTF-8 Unicode text"/>-->
-
-    <filetype type="url"  magic="Internet shortcut text"/>
 
     <!-- nemomesh -->
     <!--<filetype type="3d" ext="obj"/>-->
