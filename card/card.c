@@ -206,6 +206,7 @@ struct _CardView {
     struct nemotool *tool;
     const char *uuid;
 
+    double item_px, item_py;
 	int icon_history_cnt;
 	int icon_throw;
 	int icon_throw_duration;
@@ -1190,23 +1191,27 @@ static void _card_event(NemoWidget *widget, const char *id, void *info, void *us
 static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
 {
     CardView *view = userdata;
-    if (view->guide_idx == 0) {
-        card_guide_show(view->guide[0],
-                view->cx, view->cy,
-                view->cx, view->cy + view->ih/2);
+    if (view->guide_idx == 0) { // down
+        if (view->item_py <= 0.75) {
+            card_guide_show(view->guide[0],
+                    view->cx, view->cy,
+                    view->cx, view->cy + view->ih/2);
 
-        card_guide_hide(view->guide[1]);
-        card_guide_hide(view->guide[2]);
-        card_guide_hide(view->guide[3]);
-    } else if (view->guide_idx == 1) {
-        card_guide_show(view->guide[1],
-                view->cx, view->cy,
-                view->cx, view->cy - view->ih/2);
+            card_guide_hide(view->guide[1]);
+            card_guide_hide(view->guide[2]);
+            card_guide_hide(view->guide[3]);
+        }
+    } else if (view->guide_idx == 1) { // up
+        if (view->item_py > 0.25) {
+            card_guide_show(view->guide[1],
+                    view->cx, view->cy,
+                    view->cx, view->cy - view->ih/2);
 
-        card_guide_hide(view->guide[0]);
-        card_guide_hide(view->guide[2]);
-        card_guide_hide(view->guide[3]);
-    } else if (view->guide_idx == 2) {
+            card_guide_hide(view->guide[0]);
+            card_guide_hide(view->guide[2]);
+            card_guide_hide(view->guide[3]);
+        }
+    } else if (view->guide_idx == 2) { // left
         card_guide_show(view->guide[2],
                 view->cx - view->cw/2 + view->iw/2, view->cy,
                 view->cx - view->cw/2, view->cy);
@@ -1214,14 +1219,14 @@ static void _card_guide_timeout(struct nemotimer *timer, void *userdata)
         card_guide_hide(view->guide[0]);
         card_guide_hide(view->guide[1]);
         card_guide_hide(view->guide[3]);
-    } else if (view->guide_idx == 3) {
+    } else if (view->guide_idx == 3) { // right
         card_guide_show(view->guide[3],
                 view->cx + view->cw/2 - view->iw/2, view->cy,
                 view->cx + view->cw/2, view->cy);
 
         card_guide_hide(view->guide[0]);
         card_guide_hide(view->guide[1]);
-        card_guide_hide(view->guide[2]);
+
     }
     view->guide_idx++;
     if (view->guide_idx >= 4) view->guide_idx = 0;
@@ -1237,6 +1242,8 @@ CardView *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     view->uuid = nemowidget_get_uuid(parent);
     view->width = width;
     view->height = height;
+    view->item_px = app->item_px;
+    view->item_py = app->item_py;
     view->cnt = app->item_cnt;
     view->iw = app->item_width;
     view->ih = app->item_height;
@@ -1256,8 +1263,8 @@ CardView *card_create(NemoWidget *parent, int width, int height, ConfigApp *app)
     view->cw = view->iw * view->cnt + view->igap * view->cnt;
     view->ch = view->ih;
 
-    view->cx = view->width * app->item_px;
-    view->cy = view->height * app->item_py;
+    view->cx = view->width * view->item_px;
+    view->cy = view->height * view->item_py;
 
     view->ix = view->cx - view->cw/2.0;
     view->iy = view->cy - view->ch/2.0 + view->ih/2.0;
