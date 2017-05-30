@@ -9,7 +9,7 @@
     <item ltx="45" lty="115" gap="10" width="85" height="85" txt_height="35"/>
 
     <exec type="image" path="@NEMOIMAGE@;-f"/>
-    <exec type="video" icon="@APP_RES_DIR@/icon/video.svg" path="@NEMOPLAYER@;-f"/>
+    <exec type="video" icon="@APP_RES_DIR@/icon/video.svg" path="@NEMOPLAYER@;-a;off;-f"/>
     <exec type="pdf"   icon="@APP_RES_DIR@/icon/pdf.svg" bg="@APP_RES_DIR@/bg_pdf/" path="@NEMOPDF@;-f"/>
     <!--exec type="text" path="@NEMOTEXT@;-f"/>-->
     <exec type="url"   icon="@APP_RES_DIR@/icon/url.svg" xtype="xapp" path="/usr/bin/electron;/opt/pkgs/nemo.web-container/src/main.js"/>
