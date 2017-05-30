@@ -803,11 +803,20 @@ static void item_exec(FBItem *it)
             snprintf(_path, PATH_MAX, "%s", tok);
             tok = strtok(NULL, "");
             if (tok) {
-                snprintf(args, PATH_MAX, "%s;%s", tok, path);
+                if (it->type == ITEM_TYPE_URL) {
+                    snprintf(args, PATH_MAX, "%s;--url=%s", tok, path);
+                } else {
+                    snprintf(args, PATH_MAX, "%s;%s", tok, path);
+                }
             } else {
-                snprintf(args, PATH_MAX, "%s", path);
+                if (it->type == ITEM_TYPE_URL) {
+                    snprintf(args, PATH_MAX, "--url=%s", path);
+                } else {
+                    snprintf(args, PATH_MAX, "%s", path);
+                }
             }
             free(buf);
+            ERR("%s", args);
             nemo_execute(view->uuid, type, _path, args, NULL, x, y, 0, 1, 1);
         }
     }

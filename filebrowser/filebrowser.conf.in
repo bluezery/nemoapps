@@ -12,7 +12,7 @@
     <exec type="video" icon="@APP_RES_DIR@/icon/video.svg" path="@NEMOPLAYER@;-f"/>
     <exec type="pdf"   icon="@APP_RES_DIR@/icon/pdf.svg" bg="@APP_RES_DIR@/bg_pdf/" path="@NEMOPDF@;-f"/>
     <!--exec type="text" path="@NEMOTEXT@;-f"/>-->
-    <exec type="url"   icon="@APP_RES_DIR@/icon/url.svg" xtype="xapp" path="/usr/bin/electron"/>
+    <exec type="url"   icon="@APP_RES_DIR@/icon/url.svg" xtype="xapp" path="/usr/bin/electron;/opt/pkgs/nemo.web-container/src/main.js"/>
 
     <!-- Descending order priority -->
 
