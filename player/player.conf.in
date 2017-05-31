@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <window enable_fullscreen="true" width="512" height="512"/>
+    <play repeat="-1"/>
+    <fullscreen ratio="2.33" target="wide-3screens"/>
     <threads count="4"/>
     <frame no_drop="off"/>
 </config>

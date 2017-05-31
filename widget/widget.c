@@ -1881,6 +1881,14 @@ void nemowidget_win_enable_fullscreen(NemoWidget *win, bool enable)
     }
 }
 
+void nemowidget_win_set_fullscreen_target(NemoWidget *win, const char *target)
+{
+    NEMOWIDGET_CHECK_CLASS(win, &NEMOWIDGET_WIN);
+    struct nemoshow *show = nemowidget_get_show(win);
+
+    nemoshow_view_set_fullscreen_target(show, target);
+}
+
 void nemowidget_win_set_type(NemoWidget *win, const char *type)
 {
     NEMOWIDGET_CHECK_CLASS(win, &NEMOWIDGET_WIN);

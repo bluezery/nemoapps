@@ -1167,6 +1167,8 @@ struct _ConfigApp {
     char *path;
     bool enable_audio;
     int repeat;
+    double fullscreen_ratio;
+    char *fullscreen_target;
     int num_threads;
     bool no_drop;
 };
@@ -1200,6 +1202,17 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     if (temp && strlen(temp) > 0) {
         app->repeat = atoi(temp);
     }
+
+    snprintf(buf, PATH_MAX, "%s/fullscreen", root);
+    temp = xml_get_value(xml, buf, "ratio");
+    if (temp && strlen(temp) > 0) {
+        app->fullscreen_ratio = atof(temp);
+    }
+    temp = xml_get_value(xml, buf, "target");
+    if (temp && strlen(temp) > 0) {
+        app->fullscreen_target = strdup(temp);
+    }
+
     snprintf(buf, PATH_MAX, "%s/threads", root);
     temp = xml_get_value(xml, buf, "count");
     if (temp && strlen(temp) > 0) {
@@ -1274,6 +1287,11 @@ int main(int argc, char *argv[])
 
     struct nemotool *tool = TOOL_CREATE();
     NemoWidget *win = nemowidget_create_win_config(tool, APPNAME, app->config);
+    double ratio = (double)vw/vh;
+    if (app->fullscreen_target && (ratio >= app->fullscreen_ratio)) {
+        ERR("%s", app->fullscreen_target);
+        nemowidget_win_set_fullscreen_target(win, app->fullscreen_target);
+    }
 
     PlayerView *view = playerview_create(win,
             app->config->width, app->config->height, vw, vh,

@@ -401,6 +401,7 @@ void nemowidget_win_enable_move(NemoWidget *win, int tapcount);
 void nemowidget_win_enable_rotate(NemoWidget *win, int tapcount);
 void nemowidget_win_enable_scale(NemoWidget *win, int tapcount);
 void nemowidget_win_enable_fullscreen(NemoWidget *win, bool enable);
+void nemowidget_win_set_fullscreen_target(NemoWidget *win, const char *target);
 void nemowidget_win_enable_state(NemoWidget *win, const char *state, bool enable);
 void nemowidget_win_exit(NemoWidget *widget);
 void nemowidget_win_exit_if_no_trans(NemoWidget *win);
