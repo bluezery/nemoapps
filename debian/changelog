@@ -1,3 +1,15 @@
+nemoapps (0.3.6) unstable; urgency=medium
+
+  * Update for olympus
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 30 May 2017 18:05:27 +0900
+
+nemoapps (0.3.5) unstable; urgency=medium
+
+  *  support image url for thumbnail
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 30 May 2017 17:39:54 +0900
+
 nemoapps (0.3.4) unstable; urgency=medium
 
   * Fix card with submenus's bug
