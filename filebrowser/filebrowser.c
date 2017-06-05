@@ -972,7 +972,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     if (file->ft->bg) {
         it->bg_clip = clip = _clip_create(group, 0, 0, it->w, it->h);
 
-        List *fileinfos = fileinfo_readdir(file->ft->bg);
+        List *fileinfos = fileinfo_readdir_sorted(file->ft->bg);
         if (fileinfos) {
             int r = rand() % list_count(fileinfos);
             FileInfo *fileinfo = LIST_DATA(list_get_nth(fileinfos, r));
@@ -1468,7 +1468,7 @@ static void *_load_bg_dir(void *userdata)
                 view->curpath, view->bgpath_local);
         if (file_is_exist(localpath)) {
             if (file_is_dir(localpath)) {
-                bgfileinfos = fileinfo_readdir(localpath);
+                bgfileinfos = fileinfo_readdir_sorted(localpath);
             } else {
                 if (file_is_image(localpath)) {
                     FileInfo *file;
@@ -1482,7 +1482,7 @@ static void *_load_bg_dir(void *userdata)
 
     if (!bgfileinfos) {
         if (view->bgpath) {
-            bgfileinfos = fileinfo_readdir(view->bgpath);
+            bgfileinfos = fileinfo_readdir_sorted(view->bgpath);
             if (file_is_image(view->bgpath)) {
                 FileInfo *file;
                 file = fileinfo_create
@@ -1520,7 +1520,7 @@ static void *_fb_file_thread(void *userdata)
     FileThreadData *data = userdata;
     FBView *view = data->view;
 
-    data->fileinfos = fileinfo_readdir(view->curpath);
+    data->fileinfos = fileinfo_readdir_sorted(view->curpath);
     // Only show 1 page
     view->page_cnt = 1;
 
