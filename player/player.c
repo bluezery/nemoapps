@@ -764,7 +764,8 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     ch = view->frame->content_height;
 
     // Video
-    view->player = nemoui_player_create(parent, cw, ch, path, enable_audio, num_threads, no_drop);
+    // XXX: always create audio thread to enable/disable later at runtime to use nemosound_xxx()
+    view->player = nemoui_player_create(parent, cw, ch, path, true, num_threads, no_drop);
     if (!view->player) {
         ERR("nemoui_player_create() failed");
         free(view->path);
@@ -1017,10 +1018,6 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_set_userdata(btn, view);
     view->vol_mute = btn;
 
-    view->vol_cnt = 50;
-    nemosound_set_current_mute(view->tool, view->is_mute);
-    nemosound_set_current_volume(view->tool, view->vol_cnt);
-
     one = ARC_CREATE(bottom, www - 4, hhh - 4, -90, -90);
     nemoshow_item_set_stroke_color(one, RGBA(COLOR1));
     nemoshow_item_set_stroke_width(one, 4);
@@ -1034,6 +1031,18 @@ PlayerView *playerview_create(NemoWidget *parent, int width, int height, int vw,
     button_translate(btn, 0, 0, 0, bar_x + bar_w - ww/2 - ww * 3, pos_y);
     button_set_userdata(btn, view);
     view->vol_down = btn;
+
+    if (!enable_audio) {
+        view->is_mute = true;
+        button_change_svg(view->vol_mute, 0, 0, 0,
+                0, APP_ICON_DIR"/volume_mute.svg", -1, -1);
+        button_set_fill(view->vol_mute, 0, 0, 0, 0, GRAY);
+        nemoshow_item_set_stroke_color(view->vol, RGBA(GRAY));
+    }
+    nemosound_set_current_mute(view->tool, view->is_mute);
+
+    view->vol_cnt = 50;
+    nemosound_set_current_volume(view->tool, view->vol_cnt);
 
     r = 20;
     DrawingBox *dbox;
