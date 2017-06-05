@@ -26,6 +26,7 @@ struct _PlayerUI {
     bool need_stop;
     bool is_playing;
     bool no_drop;
+    bool enable_audio;
 
     struct playdecoder *decoder;
     struct playaudio *audio;
@@ -217,6 +218,7 @@ void nemoui_player_prepare(PlayerUI *ui)
         ERR("nemoplay load media failed: %s", ui->path);
         return;
     }
+    if (!ui->enable_audio) nemoplay_revoke_audio(ui->play);
     ui->prepared = true;
 }
 
@@ -229,6 +231,7 @@ void nemoui_player_play(PlayerUI *ui)
             ERR("nemoplay load media failed: %s", ui->path);
             return;
         }
+        if (!ui->enable_audio) nemoplay_revoke_audio(ui->play);
         ui->prepared = true;
     }
 
@@ -334,10 +337,10 @@ PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *p
     ui->sx = 1.0;
     ui->sy = 1.0;
     ui->no_drop = no_drop;
+    ui->enable_audio = enable_audio;
 
     struct nemoplay *play;
     ui->play = play = nemoplay_create();
-    if (!enable_audio) nemoplay_revoke_audio(play);
     if (num_threads > 0) {
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, "%d", num_threads);
