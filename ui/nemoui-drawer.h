@@ -22,7 +22,7 @@ struct _DrawingBox {
     Button *pencil_btn;
 
     Button *quit_btn;
-    Button *share_btn;
+    //Button *share_btn;
     Button *undo_btn;
     Button *undo_all_btn;
 

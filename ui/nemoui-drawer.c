@@ -45,10 +45,12 @@ DrawingBox *drawingbox_create(struct showone *parent, int r)
     button_add_svg_path(btn, RES_DIR"/quit.svg", wh, wh);
     button_set_fill(btn, 0, 0, 0, 0, DBOX_WHITE);
 
+#if 0
     btn = dbox->share_btn = button_create(group, "dbox", 12);
     button_enable_bg(btn, r, DBOX_WHITE);
     button_add_svg_path(btn, RES_DIR"/share.svg", wh, wh);
     button_set_fill(btn, 0, 0, 0, 0, DBOX_BLACK);
+#endif
 
     btn = dbox->undo_btn = button_create(group, "dbox", 13);
     button_enable_bg(btn, r, DBOX_WHITE);
@@ -82,7 +84,7 @@ void drawingbox_destroy(DrawingBox *dbox)
 {
     button_destroy(dbox->pencil_btn);
     button_destroy(dbox->quit_btn);
-    button_destroy(dbox->share_btn);
+    //button_destroy(dbox->share_btn);
     button_destroy(dbox->undo_btn);
     button_destroy(dbox->undo_all_btn);
     button_destroy(dbox->stroke_btn);
@@ -143,8 +145,10 @@ void drawingbox_show_pencil(DrawingBox *dbox)
     button_hide(dbox->quit_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
     button_translate(dbox->quit_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
 
+#if 0
     button_hide(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
     button_translate(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
+#endif
 
     button_hide(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
     button_translate(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, 0, 0, 0);
@@ -185,9 +189,11 @@ void drawingbox_show_menu(DrawingBox *dbox)
     _nemoshow_item_motion(color->one, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 2,
             "sx", 0.0, "sy", 0.0, "alpha", 0.0, NULL);
 
+#if 0
     button_show(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 3);
     button_translate(dbox->share_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 3,
            r * sin(2 * M_PI * 0.2), r *cos(2 * M_PI * 0.2));
+#endif
 
     button_show(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 4);
     button_translate(dbox->undo_btn, NEMOEASE_CUBIC_OUT_TYPE, 500, delay * 4,
