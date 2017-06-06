@@ -962,7 +962,8 @@ static void _item_name_scroll_update(NemoMotion *m, uint32_t time, double t, voi
 static void _item_name_scroll_timer(struct nemotimer *timer, void *userdata)
 {
     FBItem *it = userdata;
-    int duration = it->name_text_width * 50;
+    int duration = (it->name_text_width - it->name_width) * 50;
+    if (duration <= 0) duration = 1000;
 
     // FIXME: delay is weired if set clip is used.
     text_translate_with_callback(it->name, NEMOEASE_LINEAR_TYPE, duration, 0,
@@ -1129,7 +1130,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     double tw = skia_calculate_text_width(font_family, font_style, font_size, file->name);
     it->name_text_width = tw;
     it->name_width = it->w - 3 * gap;
-    if (tw > it->w - 2 * gap) {
+    if (it->name_text_width > it->name_width) {
 #if 0
         // Fit the string within it->w - 2 * gap
         int maxlen = strlen(file->name);
@@ -1190,7 +1191,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     } else if (it->type == ITEM_TYPE_URL) {
         snprintf(buf, PATH_MAX, "%s", "URL");
     }
-    it->name1 = txt = text_create(view->tool, group, font_family, font_style, font_size/2);
+    it->name1 = txt = text_create(view->tool, group, font_family, font_style, font_size/1.5);
     text_set_anchor(txt, 0.0, 0.0);
     text_update(txt, 0, 0, 0, buf);
     text_set_alpha(txt, 0, 0, 0, 1.0);
