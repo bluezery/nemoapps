@@ -319,6 +319,11 @@ List *fileinfo_readdir_img(const char *path)
     return files;
 }
 
+typedef struct _TypeFiles TypeFiles;
+struct _TypeFiles {
+    List *files;
+};
+
 typedef struct _Exec Exec;
 struct _Exec {
     char *type;
@@ -505,6 +510,7 @@ struct _ConfigApp {
     Config *config;
     char *bgpath_local;
     char *bgpath;
+    char *sort_style;
     char *titlepath;
     int title_ltx, title_lty;
     int item_ltx, item_lty;
@@ -661,14 +667,10 @@ struct _FBView {
     List *items;
 
     Thread *filethread;
-    List *fileinfos;
+    List *files;
 
     char *rootpath;
     char *curpath;
-
-    int cnt_inpage;
-    int page_idx;
-    int page_cnt;
 };
 
 static void item_show(FBItem *it, uint32_t easetype, int duration, int delay)
@@ -1169,8 +1171,8 @@ static void view_destroy(FBView *view)
     FBItem *it;
     LIST_FREE(view->items, it) view_item_destroy(it);
 
-    FileInfo *fileinfo;
-    LIST_FREE(view->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
+    FBFile *file;
+    LIST_FREE(view->files, file) fb_file_destroy(file);
 
     if (view->curpath) free(view->curpath);
 
@@ -1179,6 +1181,7 @@ static void view_destroy(FBView *view)
     text_destroy(view->title);
     text_destroy(view->title1);
 
+    FileInfo *fileinfo;
     LIST_FREE(view->bgfileinfos, fileinfo) fileinfo_destroy(fileinfo);
     nemotimer_destroy(view->bg_change_timer);
     image_destroy(view->bg);
@@ -1293,7 +1296,6 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
     view->w = width;
     view->h = height;
     view->rootpath = strdup(path);
-    view->cnt_inpage = 20;
     if (app->bgpath_local) view->bgpath_local = strdup(app->bgpath_local);
     if (app->bgpath) view->bgpath = strdup(app->bgpath);
 
@@ -1336,66 +1338,23 @@ static FBView *view_create(NemoWidget *parent, int width, int height, const char
     return view;
 }
 
-static void view_show_page(FBView *view, int page_idx)
+static void view_show(FBView *view)
 {
-    RET_IF(page_idx >= view->page_cnt);
-    RET_IF(page_idx < 0);
 
-    ERR("%d", page_idx);
-
-    view->page_idx = page_idx;
-
-    int idx = page_idx * view->cnt_inpage;
-
-    /*
-     * Only show page 1
-    if (page_idx > 0) {
-        fb_icon_show(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 250);
-    } else {
-        fb_icon_hide(view->prev, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-    }
-
-    if (idx + view->cnt_inpage < cnt) {
-        fb_icon_show(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 400);
-    } else {
-        fb_icon_hide(view->next, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0);
-    }
-    */
-
-    /*
-    FBItem *it;
-    while((it = LIST_DATA(LIST_FIRST(view->items)))) {
-        fb_remove_item(view, it);
-    }
-    */
-
-    List *l;
-    List *files = NULL;
-    FBFile *file;
-    FileInfo *fileinfo;
-    LIST_FOR_EACH(view->fileinfos, l, fileinfo) {
-        if (fileinfo_is_dir(fileinfo)) {
-            // XXXX
-        } else {
-            FileType *ft;
-            ft = _fileinfo_match_type(view->app->filetypes, fileinfo);
-            if (!ft) {
-                ERR("Not supported file type: %s", fileinfo->path);
-                continue;
-            }
-            file = fb_file_create(ft, fileinfo);
-            files = list_append(files, file);
-        }
-        idx++;
-        if (idx >= MAX_FILE_CNT) break;
-    }
-
-    List *ll;
     ConfigApp *app = view->app;
     Pos **pos = view->app->pos;
-    idx = 0;
-    int cnt = list_count(files) - 1;
-    LIST_FOR_EACH_SAFE(files, l, ll, file) {
+
+    int cnt = list_count(view->files);
+    if (cnt >= MAX_FILE_CNT) {
+        cnt = MAX_FILE_CNT - 1;
+    } else {
+        cnt = cnt - 1;
+    }
+
+    FBFile *file;
+    List *l;
+    int idx = 0;
+    LIST_FOR_EACH(view->files, l, file) {
         int x, y, w, h;
         x = pos[cnt][idx].x * (app->item_w + app->item_gap) + app->item_ltx;
         y = pos[cnt][idx].y * (app->item_h + app->item_gap) + app->item_lty;
@@ -1413,16 +1372,14 @@ static void view_show_page(FBView *view, int page_idx)
             h = app->item_h * 2 + app->item_gap;
         } else {
             ERR("Not supported position wh type: %d", pos[cnt][idx].wh);
-            abort();
+            break;
         }
         FBItem *it = view_item_create(view, file, x, y, w, h);
-        if (!it) {
-            files = list_remove(files, file);
-            fb_file_destroy(file);
-        } else {
+        if (it) {
             view->items = list_append(view->items, it);
+            idx++;
+            if (idx >= MAX_FILE_CNT) break;
         }
-        idx++;
     }
 
     int delay = 0;
@@ -1520,7 +1477,7 @@ static void *_load_bg_dir(void *userdata)
 typedef struct _FileThreadData FileThreadData;
 struct _FileThreadData {
     FBView *view;
-    List *fileinfos;
+    List *files;
 };
 
 static void *_fb_file_thread(void *userdata)
@@ -1528,9 +1485,47 @@ static void *_fb_file_thread(void *userdata)
     FileThreadData *data = userdata;
     FBView *view = data->view;
 
-    data->fileinfos = fileinfo_readdir_sorted(view->curpath);
-    // Only show 1 page
-    view->page_cnt = 1;
+    List *fileinfos = fileinfo_readdir_sorted(view->curpath);
+    List *l;
+    FileInfo *fileinfo;
+    LIST_FOR_EACH(fileinfos, l, fileinfo) {
+        if (fileinfo_is_dir(fileinfo)) {
+            // TODO:
+            continue;
+        } else {
+            FileType *ft;
+            ft = _fileinfo_match_type(view->app->filetypes, fileinfo);
+            if (!ft) {
+                ERR("Not supported file type: %s", fileinfo->path);
+                continue;
+            }
+            FBFile *file = fb_file_create(ft, fileinfo);
+            data->files = list_append(data->files, file);
+        }
+    }
+
+    if (view->app->sort_style) {
+        if (!strcmp(view->app->sort_style, "filetype")) {
+#if 0
+            FileInfo *file;
+            LIST_FREE(files, file) {
+                if (!data->fileinfos) {
+                    data->fileinfos = list_append(data->fileinfos, file);
+                } else {
+                    List *l;
+                    FileType *ft;
+                    LIST_FOR_EACH(view->app->filetypes, l, ft) {
+
+                        // Sorting: Directory, Pdf, Image, Video, Url
+                        FileInfo *_file;
+                        LIST_FOR_EACH(data->fileinfos, l, _file) {
+                        }
+                    }
+                }
+            }
+#endif
+        }
+    }
 
     return NULL;
 }
@@ -1542,13 +1537,14 @@ static void _fb_file_thread_done(bool cancel, void *userdata)
 
     view->filethread = NULL;
     if (cancel) {
-        FileInfo *fileinfo;
-        LIST_FREE(data->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
+        FBFile *file;
+        LIST_FREE(data->files, file) fb_file_destroy(file);
     } else {
-        FileInfo *fileinfo;
-        LIST_FREE(view->fileinfos, fileinfo) fileinfo_destroy(fileinfo);
-        view->fileinfos = data->fileinfos;
-        int cnt = list_count(view->fileinfos);
+        FBFile *file;
+        LIST_FREE(view->files, file) fb_file_destroy(file);
+
+        view->files = data->files;
+        int cnt = list_count(view->files);
         if (cnt >= 16) {
             view->w = 745;
             view->h = 530;
@@ -1568,7 +1564,7 @@ static void _fb_file_thread_done(bool cancel, void *userdata)
         bgdata->view = view;
         view->bgdir_thread = thread_create(view->tool,
                 _load_bg_dir, _load_bg_dir_done, bgdata);
-        view_show_page(view, 0);
+        view_show(view);
     }
     free(data);
 }
@@ -1706,6 +1702,12 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
         app->titlepath = strdup(temp);
     }
 
+    snprintf(buf, PATH_MAX, "%s/sort", prefix);
+    temp = xml_get_value(xml, buf, "style");
+    if (temp && strlen(temp) > 0) {
+        app->sort_style = strdup(temp);
+    }
+
     snprintf(buf, PATH_MAX, "%s/title", prefix);
     temp = xml_get_value(xml, buf, "ltx");
     if (temp && strlen(temp) > 0) {
@@ -1795,6 +1797,8 @@ static void _config_unload(ConfigApp *app)
     config_unload(app->config);
     if (app->bgpath_local) free(app->bgpath_local);
     if (app->bgpath) free(app->bgpath);
+    if (app->sort_style) free(app->sort_style);
+    if (app->titlepath) free(app->titlepath);
     free(app->rootpath);
     free(app);
 

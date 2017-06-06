@@ -4,6 +4,7 @@
     <font size="8"/>
     <background localpath=".@APPNAME@" path="@APP_RES_DIR@/bg" titlepath=".@APPNAME@/title"/>
 
+    <sort style="filename"/>
     <title ltx="45" lty="35"/>
     <!--left top x, y and minimum width/height/text height unit for item-->
     <item ltx="45" lty="115" gap="10" width="85" height="85" txt_height="35"/>
@@ -15,7 +16,6 @@
     <exec type="url"   icon="@APP_RES_DIR@/icon/url.svg" xtype="xapp" path="/usr/bin/electron;/opt/pkgs/nemo.web-container/src/main.js"/>
 
     <!-- Descending order priority -->
-
     <filetype type="exe" magic="ELF 64-bit LSB executable"/>
 
     <filetype type="image" ext="png"/>
