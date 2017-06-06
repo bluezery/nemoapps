@@ -1,3 +1,16 @@
+nemoapps (0.4.1) unstable; urgency=medium
+
+  [ bluezery ]
+  * player: Check fullscreen ratio for special target
+  * util: Fix duplicated append bug
+  * filebrowser: Add sorting by file name
+  * filebrowser: make font size smaller to fit 14 chars
+  * ui: fix revoking audio
+  * player: correct enble/disble audio
+  * ui: disable share button in drawingbox
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 05 Jun 2017 15:59:30 +0900
+
 nemoapps (0.4.0) unstable; urgency=medium
 
   * Release
