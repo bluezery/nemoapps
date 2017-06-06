@@ -306,6 +306,18 @@ static void pos_init(Pos *pos[])
     pos[19][19] = pos_new(6, 3, 0);
 }
 
+List *fileinfo_readdir_img(const char *path)
+{
+    List *l, *ll;
+    List *files = fileinfo_readdir(path);
+    FileInfo *file;
+    LIST_FOR_EACH_SAFE(files, l, ll, file) {
+        if (!fileinfo_is_image(file)) {
+            files = list_remove(files, file);
+        }
+    }
+    return files;
+}
 
 typedef struct _Exec Exec;
 struct _Exec {
@@ -972,10 +984,9 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     if (file->ft->bg) {
         it->bg_clip = clip = _clip_create(group, 0, 0, it->w, it->h);
 
-        List *fileinfos = fileinfo_readdir_sorted(file->ft->bg);
+        List *fileinfos = fileinfo_readdir_img(file->ft->bg);
         if (fileinfos) {
-            int r = rand() % list_count(fileinfos);
-            FileInfo *fileinfo = LIST_DATA(list_get_nth(fileinfos, r));
+            FileInfo *fileinfo = LIST_DATA(LIST_LAST(fileinfos));
 
             Image *img;
             it->bg_img = img = image_create(group);
@@ -1468,27 +1479,24 @@ static void *_load_bg_dir(void *userdata)
                 view->curpath, view->bgpath_local);
         if (file_is_exist(localpath)) {
             if (file_is_dir(localpath)) {
-                bgfileinfos = fileinfo_readdir_sorted(localpath);
-            } else {
-                if (file_is_image(localpath)) {
-                    FileInfo *file;
-                    file = fileinfo_create
-                        (false, realpath(localpath, NULL), basename(localpath));
-                    bgfileinfos = list_append(bgfileinfos, file);
-                }
+                bgfileinfos = fileinfo_readdir_img(localpath);
+            } else if (file_is_image(localpath)) {
+                FileInfo *file;
+                file = fileinfo_create
+                    (false, realpath(localpath, NULL), basename(localpath));
+                bgfileinfos = list_append(bgfileinfos, file);
             }
         }
     }
 
-    if (!bgfileinfos) {
-        if (view->bgpath) {
-            bgfileinfos = fileinfo_readdir_sorted(view->bgpath);
-            if (file_is_image(view->bgpath)) {
-                FileInfo *file;
-                file = fileinfo_create
-                    (false, realpath(view->bgpath, NULL), basename(view->bgpath));
-                bgfileinfos = list_append(bgfileinfos, file);
-            }
+    if (!bgfileinfos && view->bgpath) {
+        if (file_is_dir(view->bgpath)) {
+            bgfileinfos = fileinfo_readdir_img(view->bgpath);
+        } else if (file_is_image(view->bgpath)) {
+            FileInfo *file;
+            file = fileinfo_create
+                (false, realpath(view->bgpath, NULL), basename(view->bgpath));
+            bgfileinfos = list_append(bgfileinfos, file);
         }
     }
 
