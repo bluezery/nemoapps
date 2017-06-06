@@ -523,15 +523,20 @@ struct _ConfigApp {
     List *filetypes;
 };
 
-static struct showone *_clip_create(struct showone *parent, int x, int y, int w, int h)
+static void _clip_update(struct showone *clip, int x, int y, int w, int h)
 {
-    struct showone *clip;
-    clip = PATH_CREATE(parent);
     nemoshow_item_path_moveto(clip, x, y);
     nemoshow_item_path_lineto(clip, w, y);
     nemoshow_item_path_lineto(clip, w, h);
     nemoshow_item_path_lineto(clip, x, h);
     nemoshow_item_path_close(clip);
+}
+
+static struct showone *_clip_create(struct showone *parent, int x, int y, int w, int h)
+{
+    struct showone *clip;
+    clip = PATH_CREATE(parent);
+    _clip_update(clip, x, y, w, h);
     //nemoshow_item_set_fill_color(clip, RGBA(RED));
     return clip;
 }
@@ -639,7 +644,13 @@ struct _FBItem {
     struct showone *icon_shadow;
     struct showone *icon;
 
-    Text *name, *name1;
+    Text *name;
+    struct nemotimer *name_scrollback_timer, *name_scroll_timer;
+    double name_width, name_text_width;
+    int name_x, name_y;
+    struct showone *name_clip;
+    int name_clip_w, name_clip_h;
+    Text *name1;
 }
 ;
 struct _FBView {
@@ -707,6 +718,10 @@ static void item_show(FBItem *it, uint32_t easetype, int duration, int delay)
         image_scale(it->bg_img, easetype, duration, delay + 100,
                 1.0, 1.0);
     }
+
+    if (it->name_scrollback_timer) {
+        nemotimer_set_timeout(it->name_scrollback_timer, 2000);
+    }
     text_set_alpha(it->name, easetype, duration, delay + duration + 100, 1.0);
     text_set_alpha(it->name1, easetype, duration, delay + duration + 100, 1.0);
     text_set_scale(it->name, easetype, duration, delay + duration + 100, 1.0, 1.0);
@@ -740,6 +755,12 @@ static void item_hide(FBItem *it, uint32_t easetype, int duration, int delay)
     }
     if (it->bg_img) {
         image_scale(it->bg_img, easetype, duration, delay, 0.0, 0.0);
+    }
+    if (it->name_scroll_timer) {
+        nemotimer_set_timeout(it->name_scroll_timer, 0);
+    }
+    if (it->name_scrollback_timer) {
+        nemotimer_set_timeout(it->name_scrollback_timer, 0);
     }
     text_set_alpha(it->name, easetype, duration, delay, 0.0);
     text_set_alpha(it->name1, easetype, duration, delay, 0.0);
@@ -908,6 +929,8 @@ static void view_item_destroy(FBItem *it)
     fb_file_destroy(it->file);
     if (it->name1) text_destroy(it->name1);
     if (it->name) text_destroy(it->name);
+    if (it->name_scrollback_timer) nemotimer_destroy(it->name_scrollback_timer);
+    if (it->name_scroll_timer) nemotimer_destroy(it->name_scroll_timer);
     if (it->icon_shadow) nemoshow_one_destroy(it->icon_shadow);
     if (it->icon) nemoshow_one_destroy(it->icon);
     if (it->bg_video_timer) nemotimer_destroy(it->bg_video_timer);
@@ -922,6 +945,45 @@ static void view_item_destroy(FBItem *it)
     nemoshow_one_destroy(it->blur);
 
     free(it);
+}
+
+static void _item_name_scroll_update(NemoMotion *m, uint32_t time, double t, void *userdata)
+{
+    FBItem *it = userdata;
+    nemoshow_item_path_clear(it->name_clip);
+
+    double tx, ty;
+    text_get_translate(it->name, &tx, &ty);
+    // XXX: clip is XXX!!!
+    _clip_update(it->name_clip, it->name_x - tx, 0,
+            it->name_clip_w + (it->name_x - tx), it->name_clip_h);
+}
+
+static void _item_name_scroll_timer(struct nemotimer *timer, void *userdata)
+{
+    FBItem *it = userdata;
+    int duration = it->name_text_width * 50;
+
+    // FIXME: delay is weired if set clip is used.
+    text_translate_with_callback(it->name, NEMOEASE_LINEAR_TYPE, duration, 0,
+             it->name_x - (it->name_text_width - it->name_width), it->name_y,
+             _item_name_scroll_update, it);
+
+    nemotimer_set_timeout(it->name_scrollback_timer, duration + 1000);
+    nemoshow_dispatch_frame(it->view->show);
+}
+
+static void _item_name_scrollback_timer(struct nemotimer *timer, void *userdata)
+{
+    FBItem *it = userdata;
+
+    // FIXME: delay is weired if set clip is used.
+    text_translate_with_callback(it->name, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            it->name_x, it->name_y,
+             _item_name_scroll_update, it);
+    nemotimer_set_timeout(it->name_scroll_timer, 1500);
+
+    nemoshow_dispatch_frame(it->view->show);
 }
 
 static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w, int h)
@@ -1059,13 +1121,16 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
             ERR("svg_get_wh() failed");
         }
     }
-    // FIXME: need to calculate exact width of text for fixed size
+
     char buf[PATH_MAX];
     Text *txt;
 
     int gap = view->app->item_gap;
     double tw = skia_calculate_text_width(font_family, font_style, font_size, file->name);
+    it->name_text_width = tw;
+    it->name_width = it->w - 3 * gap;
     if (tw > it->w - 2 * gap) {
+#if 0
         // Fit the string within it->w - 2 * gap
         int maxlen = strlen(file->name);
         int len = 0;
@@ -1097,18 +1162,24 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
                 break;
             }
         }
-    } else {
-        // XXX: don't use snprintf because it's unicode, not simple string!
-        memcpy(buf, file->name, strlen(file->name));
-        buf[strlen(file->name)] = '\0';
+#endif
+        it->name_scrollback_timer = TOOL_ADD_TIMER(view->tool, 0, _item_name_scrollback_timer, it);
+        it->name_scroll_timer = TOOL_ADD_TIMER(view->tool, 0, _item_name_scroll_timer, it);
     }
+    // XXX: don't use snprintf because it's unicode, not simple string!
+    memcpy(buf, file->name, strlen(file->name));
+    buf[strlen(file->name)] = '\0';
 
+    it->name_clip_w = it->w - 2 - gap * 2;
+    it->name_clip_h = font_size;
+    it->name_clip = clip = _clip_create(group, 0, 0, it->name_clip_w, it->name_clip_h);
 
     it->name = txt = text_create(view->tool, group, font_family, font_style, font_size);
     text_set_anchor(txt, 0.0, 0.0);
     text_update(txt, 0, 0, 0, buf);
     text_set_alpha(txt, 0, 0, 0, 1.0);
     text_set_scale(txt, 0, 0, 0, 0.0, 1.0);
+    text_set_clip(txt, clip);
 
     if (it->type == ITEM_TYPE_IMG || it->type == ITEM_TYPE_SVG) {
         snprintf(buf, PATH_MAX, "%s", "Image");
@@ -1130,7 +1201,9 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
         text_set_fill_color(it->name1, 0, 0, 0, WHITE);
 
         int gap = view->app->item_gap;
-        text_translate(it->name, 0, 0, 0, gap, gap);
+        it->name_x = gap;
+        it->name_y = gap;
+        text_translate(it->name, 0, 0, 0, it->name_x, it->name_y);
         double th;
         text_get_size(it->name, NULL, &th);
         text_translate(it->name1, 0, 0, 0, gap, gap + th + 2);
@@ -1149,7 +1222,10 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
 
         int gap_w = view->app->item_gap;
         int gap_h = view->app->item_gap/2;
-        text_translate(it->name, 0, 0, 0, gap_w, it->h - it->name_h + gap_h);
+        it->name_x = gap_w;
+        it->name_y = it->h - it->name_h + gap_h;
+        text_translate(it->name, 0, 0, 0, it->name_x, it->name_y);
+
         double th;
         text_get_size(it->name, NULL, &th);
         text_translate(it->name1, 0, 0, 0, gap_w, it->h - it->name_h + gap_h + th + 2);
@@ -1523,7 +1599,7 @@ static void *_fb_file_thread(void *userdata)
             FBFile *file;
             LIST_FREE(files, file) {
                 List *l;
-                TypeFile *typefile;
+                TypeFile *typefile = NULL;
                 LIST_FOR_EACH(typefiles, l, typefile) {
                     if (typefile->ft == file->ft) {
                        break;
@@ -1821,10 +1897,11 @@ static void _config_unload(ConfigApp *app)
     if (app->sort_style) free(app->sort_style);
     if (app->titlepath) free(app->titlepath);
     free(app->rootpath);
-    free(app);
 
     FileType *ft;
     LIST_FREE(app->filetypes, ft) filetype_destroy(ft);
+
+    free(app);
 }
 
 int main(int argc, char *argv[])

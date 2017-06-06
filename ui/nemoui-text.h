@@ -4,6 +4,7 @@
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
+#include <nemowrapper.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +27,7 @@ struct _Text {
     char *str;
     int idx;
     struct showone *one[2];
+    struct showone *clip;
 
     struct {
         struct showone *one;
@@ -50,9 +52,12 @@ void text_motion_blur(Text *text, uint32_t easetype, int duration, int delay);
 void text_set_fill_color(Text *text, uint32_t easetype, int duration, int delay, uint32_t color);
 void text_set_stroke_color(Text *text, uint32_t easetype, int duration, int delay, uint32_t color, int stroke_w);
 void text_translate(Text *text, uint32_t easetype, int duration, int delay, int x, int y);
+void text_translate_with_callback(Text *txt, uint32_t easetype, int duration, int delay, int x, int y, NemoMotion_FrameCallback callback, void *userdata);
+void text_get_translate(Text *txt, double *tx, double *ty);
 void text_update(Text *text, uint32_t easetype, int duration, int delay, const char *str);
 void text_set_alpha(Text *txt, uint32_t easetype, int duration, int delay, double alpha);
 void text_set_scale(Text *txt, uint32_t easetype, int duration, int delay, double sx, double sy);
+void text_set_clip(Text *txt, struct showone *clip);
 
 #ifdef __cplusplus
 }

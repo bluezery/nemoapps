@@ -106,6 +106,8 @@ void text_set_align(Text *txt, double ax, double ay)
 
 void text_destroy(Text *txt)
 {
+    if (txt->clip) nemoshow_one_destroy(txt->clip);
+
     free(txt->fontfamily);
     nemoshow_one_destroy(txt->one[0]);
     nemoshow_one_destroy(txt->one[1]);
@@ -212,11 +214,30 @@ void text_set_stroke_color(Text *txt, uint32_t easetype, int duration, int delay
     }
 }
 
+void text_get_translate(Text *txt, double *tx, double *ty)
+{
+    if (tx) *tx = nemoshow_item_get_translate_x(txt->group);
+    if (ty) *ty = nemoshow_item_get_translate_y(txt->group);
+}
 
 void text_translate(Text *txt, uint32_t easetype, int duration, int delay, int x, int y)
 {
     if (duration > 0) {
         _nemoshow_item_motion(txt->group, easetype, duration, delay,
+                "tx", (double)x, "ty", (double)y,
+                NULL);
+    } else {
+        nemoshow_item_translate(txt->group, x, y);
+    }
+}
+
+void text_translate_with_callback(Text *txt, uint32_t easetype, int duration, int delay, int x, int y,
+        NemoMotion_FrameCallback callback, void *userdata)
+{
+    if (duration > 0) {
+        _nemoshow_item_motion_with_callback(txt->group,
+                callback, userdata,
+                easetype, duration, delay,
                 "tx", (double)x, "ty", (double)y,
                 NULL);
     } else {
@@ -276,3 +297,10 @@ void text_update(Text *txt, uint32_t easetype, int duration, int delay, const ch
     text_set_align(txt, txt->ax, txt->ay);
 }
 
+void text_set_clip(Text *txt, struct showone *clip)
+{
+    if (txt->clip) nemoshow_one_destroy(txt->clip);
+    txt->clip = clip;
+    nemoshow_item_set_clip(txt->one[0], clip);
+    nemoshow_item_set_clip(txt->one[1], clip);
+}
