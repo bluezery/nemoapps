@@ -319,11 +319,6 @@ List *fileinfo_readdir_img(const char *path)
     return files;
 }
 
-typedef struct _TypeFiles TypeFiles;
-struct _TypeFiles {
-    List *files;
-};
-
 typedef struct _Exec Exec;
 struct _Exec {
     char *type;
@@ -504,6 +499,12 @@ static FileType *tag_parse_filetype(XmlTag *tag, List *execs)
 
     return ft;
 }
+
+typedef struct _TypeFile TypeFile;
+struct _TypeFile {
+    List *files;
+    FileType *ft;
+};
 
 typedef struct _ConfigApp ConfigApp;
 struct _ConfigApp {
@@ -1506,24 +1507,44 @@ static void *_fb_file_thread(void *userdata)
 
     if (view->app->sort_style) {
         if (!strcmp(view->app->sort_style, "filetype")) {
-#if 0
-            FileInfo *file;
-            LIST_FREE(files, file) {
-                if (!data->fileinfos) {
-                    data->fileinfos = list_append(data->fileinfos, file);
-                } else {
-                    List *l;
-                    FileType *ft;
-                    LIST_FOR_EACH(view->app->filetypes, l, ft) {
+            List *typefiles = NULL;
 
-                        // Sorting: Directory, Pdf, Image, Video, Url
-                        FileInfo *_file;
-                        LIST_FOR_EACH(data->fileinfos, l, _file) {
-                        }
+            List *l;
+            FileType *ft;
+            LIST_FOR_EACH(view->app->filetypes, l, ft) {
+                TypeFile *typefile = calloc(sizeof(TypeFile), 1);
+                typefile->ft = ft;
+                typefiles = list_append(typefiles, typefile);
+            }
+
+            List *files = data->files;
+            data->files = NULL;
+
+            FBFile *file;
+            LIST_FREE(files, file) {
+                List *l;
+                TypeFile *typefile;
+                LIST_FOR_EACH(typefiles, l, typefile) {
+                    if (typefile->ft == file->ft) {
+                       break;
                     }
                 }
+                if (typefile) {
+                    typefile->files = list_append(typefile->files, file);
+                } else {
+                    ERR("No matched type for file: %s", file->path);
+                    fb_file_destroy(file);
+                }
             }
-#endif
+
+            TypeFile *typefile;
+            LIST_FREE(typefiles, typefile) {
+                FBFile *file;
+                LIST_FREE(typefile->files, file) {
+                    data->files = list_append(data->files, file);
+                }
+                free(typefile);
+            }
         }
     }
 
