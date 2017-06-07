@@ -1,6 +1,17 @@
-nemoapps (0.4.1) unstable; urgency=medium
+nemoapps (0.5.0) unstable; urgency=medium
 
   [ bluezery ]
+  * filebrowser: code cleanup
+  * filebrowser: code cleanup
+  * filebrowser: Add file type sorting
+  * filebrowser: Add text scroll animation
+  * filebrowser: Correct text scroll animation timing
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Wed, 07 Jun 2017 17:22:43 +0900
+
+nemoapps (0.4.1) unstable; urgency=medium
+
+   [ bluezery ]
   * player: Check fullscreen ratio for special target
   * util: Fix duplicated append bug
   * filebrowser: Add sorting by file name
