@@ -541,12 +541,32 @@ static struct showone *_clip_create(struct showone *parent, int x, int y, int w,
     return clip;
 }
 
+char *remove_ext(const char *path)
+{
+    char dot='.';
+    RET_IF(!path, NULL);
+    char *ret = malloc(strlen(path) + 1);
+
+    strcpy(ret, path);
+    char *last = strrchr(ret, dot);
+
+    if (last) {
+        *last = '\0';
+    }
+
+    return ret;
+}
+
 static char *_get_url_image_url(const char *path, const char *ext)
 {
     if (!path) return NULL;
     char *dir = file_get_dirname(path);
-    char *base = file_get_basename(path);
+    char *filename = file_get_basename(path);
     char *ret;
+
+    char *base = remove_ext(filename);
+    free(filename);
+
     if (ext) {
         ret = strdup_printf("%s/.%s.%s", dir, base, ext);
     } else {
@@ -554,6 +574,7 @@ static char *_get_url_image_url(const char *path, const char *ext)
     }
     free(dir);
     free(base);
+
     return ret;
 }
 
@@ -563,6 +584,7 @@ static char *_get_thumb_url(const char *path, const char *ext)
     char *dir = file_get_dirname(path);
     char *base = file_get_basename(path);
     char *ret;
+
     if (ext)  {
         ret = strdup_printf("%s/%s/%s.%s", dir, THUMB_DIR, base, ext);
     } else {
