@@ -58,7 +58,7 @@ function make_thumb
 #        done
     done
 
-    for i in "$1"/*.jpg "$1"/*.png
+    for i in "$1"/*.jpg "$1"/*.png "$1"/*.tiff "$1"/*.tif "$1"/*.jpeg
     do
         if [ ! -e "$i" ]; then
             continue
