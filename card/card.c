@@ -28,6 +28,7 @@ struct _Mirror {
 
 typedef struct _MenuItem MenuItem;
 struct _MenuItem {
+    int w, h;
     char *type;
     char *bg;
     char *txt;
@@ -71,7 +72,7 @@ static Mirror *parse_tag_mirror(XmlTag *tag)
     return mirror;
 }
 
-static MenuItem *parse_tag_menu(XmlTag *tag)
+static MenuItem *parse_tag_menu(XmlTag *tag, double sxy)
 {
     List *l;
     XmlAttr *attr;
@@ -84,7 +85,7 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
     LIST_FOR_EACH(tag->children, ll, child) {
         if (!child->name) continue;
         if (!strcmp(child->name, "items")) {
-            MenuItem *submi = parse_tag_menu(child);
+            MenuItem *submi = parse_tag_menu(child, sxy);
             mi->items = list_append(mi->items, submi);
         }
     }
@@ -93,6 +94,14 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
         if (!strcmp(attr->key, "type")) {
             if (attr->val) {
                  mi->type = strdup(attr->val);
+            }
+        } else if (!strcmp(attr->key, "width")) {
+            if (attr->val) {
+                 mi->w = atoi(attr->val);
+            }
+        } else if (!strcmp(attr->key, "height")) {
+            if (attr->val) {
+                 mi->h = atoi(attr->val);
             }
         } else if (!strcmp(attr->key, "bg")) {
             if (attr->val) {
@@ -132,6 +141,8 @@ static MenuItem *parse_tag_menu(XmlTag *tag)
             }
         }
     }
+    mi->w *= sxy;
+    mi->h *= sxy;
     return mi;
 }
 
@@ -600,8 +611,10 @@ CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, Confi
     CardItem *it = calloc(sizeof(CardItem), 1);
     it->parent = parent;
     it->view = view;
-    it->width = view->iw;
-    it->height = view->ih;
+    if (mi->w > 0) it->width = mi->w;
+    else it->width = view->iw;
+    if (mi->h > 0) it->height = mi->h;
+    else it->height = view->ih;
     if (mi->type) it->type = strdup(mi->type);
     it->bg_uri = strdup(mi->bg);
     if (mi->icon) it->icon_uri = strdup(mi->icon);
@@ -631,9 +644,15 @@ CardItem *card_create_item(CardView *view, CardItem *parent, MenuItem *mi, Confi
         if (subit) {
             nemoshow_one_above(it->ro_group, subit->group);
             card_item_set_alpha(subit, 0, 0, 0, 1.0);
-            card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
+            if (EQUAL(subit->width, view->iw)) {
+                card_item_scale(subit, 0, 0, 0, 1.0, 1.0);
+            } else {
+                card_item_scale(subit, 0, 0, 0,
+                        (double)view->iw/subit->width,
+                        (double)view->ih/subit->height);
+            }
             card_item_translate(subit, 0, 0, 0,
-                    subit->width/2 + diff, subit->height/2 + diff);
+                view->iw/2 + diff, view->ih/2 + diff);
             card_item_below(subit, NULL);
             it->children = list_append(it->children, subit);
             diff += SUBITEM_DIFF;
@@ -994,8 +1013,11 @@ static void _card_timeout(struct nemotimer *timer, void *userdata)
             List *l;
             CardItem *subit;
             LIST_FOR_EACH(it->children, l, subit) {
-                card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
-                        subit->width/2 + diff, subit->height/2 + diff);
+                card_item_scale(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                        (double)view->iw/subit->width,
+                        (double)view->ih/subit->height);
+                card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 1000, delay,
+                        view->iw/2 + diff, view->ih/2 + diff);
                 diff += SUBITEM_DIFF;
                 delay += 150;
             }
@@ -1133,9 +1155,10 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                     List *l;
                     CardItem *subit;
                     LIST_FOR_EACH(it->children, l, subit) {
+                        card_item_scale(subit, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0, 1.0, 1.0);
                         card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
-                                it->width/2 + it->width * i + diff,
-                                it->height + it->height/2 + diff);
+                                it->width/2 + subit->width * i + diff,
+                                it->height + subit->height/2 + diff);
                         i++;
                         diff+=SUBITEM_DIFF;
                         delay += 150;
@@ -1147,8 +1170,11 @@ static void _card_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                     List *l;
                     CardItem *subit;
                     LIST_FOR_EACH(it->children, l, subit) {
-                        card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, delay,
-                                subit->width/2 + diff, subit->height/2 + diff);
+                        card_item_scale(subit, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                                (double)view->iw/subit->width,
+                                (double)view->ih/subit->height);
+                        card_item_translate(subit, NEMOEASE_CUBIC_INOUT_TYPE, 1000, delay,
+                                view->iw/2 + diff, view->ih/2 + diff);
                         diff+=SUBITEM_DIFF;
                         delay += 150;
                     }
@@ -1333,7 +1359,7 @@ static ConfigApp *_config_load(const char *domain, const char *filename, int arg
     List *l;
     XmlTag *tag;
     LIST_FOR_EACH(tags, l, tag) {
-        MenuItem *mi = parse_tag_menu(tag);
+        MenuItem *mi = parse_tag_menu(tag, app->config->sxy);
         if (!mi) continue;
         app->menu_items = list_append(app->menu_items, mi);
     }
