@@ -1,3 +1,9 @@
+nemoapps (0.5.2) unstable; urgency=medium
+
+  * card: change size of submenu items
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Wed, 14 Jun 2017 19:48:31 +0900
+
 nemoapps (0.5.1) unstable; urgency=medium
 
   * explorer: Add more image files for thumbnail
