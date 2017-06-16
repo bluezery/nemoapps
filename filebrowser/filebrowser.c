@@ -604,6 +604,7 @@ typedef enum {
 
 typedef struct _FBFile FBFile;
 struct _FBFile {
+    Inlist __inlist;
     const FileType *ft;
     char *name;
     char *path;
@@ -701,7 +702,8 @@ struct _FBView {
     List *items;
 
     Thread *filethread;
-    List *files;
+
+    Inlist *files;
 
     char *rootpath;
     char *curpath;
@@ -1149,15 +1151,15 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
     Text *txt;
 
     int gap = view->app->item_gap;
+    // FIXME: Use harfbuzz or freetype to reduce performance issue!!!
     double tw = skia_calculate_text_width(font_family, font_style, font_size, file->name);
     it->name_text_width = tw;
     it->name_width = it->w - 3 * gap;
     if (it->name_text_width > it->name_width) {
 #if 0
-        // Fit the string within it->w - 2 * gap
+        // Recalculate string size to fit the string within it->w - 2 * gap
         int maxlen = strlen(file->name);
         int len = 0;
-        // FIXME: Use harfbuzz or freetype to reduce performance issue!!!
         while (file->name[len] && len <= maxlen) {
             int diff = 0;
             if ((file->name[len] & 0xF0) == 0xF0)  { // 4 bytes
@@ -1173,6 +1175,7 @@ static FBItem *view_item_create(FBView *view, FBFile *file, int x, int y, int w,
             // XXX: don't use snprintf because it's unicode, not simple string!
             memcpy(buf, file->name, len);
             buf[len] = '\0';
+            // FIXME: Use harfbuzz or freetype to reduce performance issue!!!
             tw = skia_calculate_text_width(font_family, font_style, font_size, buf);
 
             if (tw > (it->w - 2 * gap)) {
@@ -1272,7 +1275,7 @@ static void view_destroy(FBView *view)
     LIST_FREE(view->items, it) view_item_destroy(it);
 
     FBFile *file;
-    LIST_FREE(view->files, file) fb_file_destroy(file);
+    INLIST_FREE(view->files, file) fb_file_destroy(file);
 
     if (view->curpath) free(view->curpath);
 
@@ -1444,42 +1447,44 @@ static void view_show(FBView *view)
     ConfigApp *app = view->app;
     Pos **pos = view->app->pos;
 
-    int cnt = list_count(view->files);
+    int cnt = inlist_count(view->files);
     if (cnt >= MAX_FILE_CNT) {
         cnt = MAX_FILE_CNT - 1;
     } else {
         cnt = cnt - 1;
     }
 
-    FBFile *file;
+    FBFile *file = INLIST_DATA(INLIST_FIRST(view->files), FBFile);
     List *l;
-    int idx = 0;
-    LIST_FOR_EACH(view->files, l, file) {
+    int i;
+    for (i = 0 ; i < MAX_FILE_CNT ; i++) {
         int x, y, w, h;
-        x = pos[cnt][idx].x * (app->item_w + app->item_gap) + app->item_ltx;
-        y = pos[cnt][idx].y * (app->item_h + app->item_gap) + app->item_lty;
-        if (pos[cnt][idx].wh == 0) {
+        x = pos[cnt][i].x * (app->item_w + app->item_gap) + app->item_ltx;
+        y = pos[cnt][i].y * (app->item_h + app->item_gap) + app->item_lty;
+        if (pos[cnt][i].wh == 0) {
             w = app->item_w;
             h = app->item_h;
-        } else if (pos[cnt][idx].wh == 1) {
+        } else if (pos[cnt][i].wh == 1) {
             w = app->item_w * 2 + app->item_gap;
             h = app->item_h;
-        } else if (pos[cnt][idx].wh == 2) {
+        } else if (pos[cnt][i].wh == 2) {
             w = app->item_w;
             h = app->item_h * 2 + app->item_gap;
-        } else if (pos[cnt][idx].wh == 3) {
+        } else if (pos[cnt][i].wh == 3) {
             w = app->item_w * 2 + app->item_gap;
             h = app->item_h * 2 + app->item_gap;
         } else {
-            ERR("Not supported position wh type: %d", pos[cnt][idx].wh);
+            ERR("Not supported position wh type: %d", pos[cnt][i].wh);
             break;
         }
         FBItem *it = view_item_create(view, file, x, y, w, h);
-        if (it) {
+        if (!it) {
+            ERR("view_item_create() failed: %s", file->path);
+        } else {
             view->items = list_append(view->items, it);
-            idx++;
-            if (idx >= MAX_FILE_CNT) break;
         }
+        file = INLIST_DATA(INLIST(file)->next, FBFile);
+        if (!file) break;
     }
 
     int delay = 0;
@@ -1637,7 +1642,7 @@ static void *_fb_file_thread(void *userdata)
             }
 
             TypeFile *typefile;
-            LIST_FREE(typefiles, typefile) {
+                LIST_FREE(typefiles, typefile) {
                 FBFile *file;
                 LIST_FREE(typefile->files, file) {
                     data->files = list_append(data->files, file);
@@ -1661,10 +1666,13 @@ static void _fb_file_thread_done(bool cancel, void *userdata)
         LIST_FREE(data->files, file) fb_file_destroy(file);
     } else {
         FBFile *file;
-        LIST_FREE(view->files, file) fb_file_destroy(file);
+        INLIST_FREE(view->files, file) fb_file_destroy(file);
 
-        view->files = data->files;
-        int cnt = list_count(view->files);
+        LIST_FREE(data->files, file) {
+            view->files = inlist_append(view->files, INLIST(file));
+        }
+
+        int cnt = inlist_count(view->files);
         if (cnt >= 16) {
             view->w = 745;
             view->h = 530;
