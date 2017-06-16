@@ -29,7 +29,7 @@ Package: nemoapps-dbg
 Priority: extra
 Section: debug
 Architecture: any
-Depends: nemoapps (= ${binary:Version}), nemoapps-bin (= ${binary:Version})
+Depends: nemoapps (= ${binary:Version}),
     ${shlibs:Depends}, ${misc:Depends}
 Description: NEMOUX's core platform debugging symbols
  <insert long description, indented with spaces>
