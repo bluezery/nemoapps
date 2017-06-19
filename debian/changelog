@@ -1,3 +1,11 @@
+nemoapps (0.7.1) unstable; urgency=medium
+
+  * debian: Fix incorrect dependency
+  * filebrowser: Use inlist for files
+  * filebrowser: change default background
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 19 Jun 2017 17:35:16 +0900
+
 nemoapps (0.7.0) unstable; urgency=medium
 
   * Rebuild by nemocore
