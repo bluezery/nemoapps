@@ -27,6 +27,7 @@ struct _PlayerUI {
     bool is_playing;
     bool no_drop;
     bool enable_audio;
+    bool enable_blend;
 
     struct playdecoder *decoder;
     struct playaudio *audio;
@@ -259,6 +260,14 @@ void nemoui_player_play(PlayerUI *ui)
         nemoplay_video_set_done(video, _video_done);
         nemoplay_video_set_data(video, ui);
     }
+
+    struct playshader *shader = nemoplay_video_get_shader(ui->video);
+    if (ui->enable_blend) {
+        nemoplay_shader_set_blend(shader, NEMOPLAY_SHADER_SRC_ALPHA_BLEND);
+    } else {
+        nemoplay_shader_set_blend(shader, NEMOPLAY_SHADER_NONE_BLEND);
+    }
+
     if (!ui->audio) {
         ui->audio = nemoplay_audio_create_by_ao(play);
         nemoplay_audio_stop(ui->audio);
@@ -321,6 +330,11 @@ void nemoui_player_append_callback(PlayerUI *ui, const char *id, NemoWidget_Func
 void nemoui_player_set_repeat(PlayerUI *ui, int repeat)
 {
     ui->repeat = repeat;
+}
+
+void nemoui_player_enable_blend(PlayerUI *ui, bool enable)
+{
+    ui->enable_blend = enable;
 }
 
 PlayerUI *nemoui_player_create(NemoWidget *parent, int cw, int ch, const char *path, bool enable_audio, int num_threads, bool no_drop)

@@ -1,0 +1,10 @@
+{
+ "pkgname": "nemo.window",
+ "name": "nemowindow",
+ "maintainer": "Kim Taehwan<taehwan.kim@nemoux.net>",
+ "description": "inhouse window application",
+ "version": "0.1.0",
+ "type": "theme",
+ "config": {
+ }
+}
