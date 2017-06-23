@@ -92,7 +92,6 @@ struct _ViewerView {
     NemoWidget *widget;
 
     struct showone *group;
-    struct showone *bg;
 
     NemoWidgetGrab *grab;
     ViewerMode mode;
@@ -455,9 +454,6 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     struct showone *group;
     struct showone *one;
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-
-    view->bg = one = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
     int cnt = 4;
     int i;
@@ -834,7 +830,6 @@ struct _YearView {
     int bg_cnt_x;
     int bg_idx;
     struct nemotimer *bg_timer;
-    struct showone *bg;
     List *bgs;
 
     NemoWidget *widget;
@@ -1453,9 +1448,6 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     view->bg_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
 
-    view->bg = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(view->bg, RGBA(WHITE));
-
     int w, h;
     const char *uri = APP_IMG_DIR"/year/year-background.png";
     file_get_image_wh(uri, &w, &h);
@@ -1612,13 +1604,13 @@ Coord REGION_ICON_COORDS[] = {
     {879, 300},
     {829, 324},
     {848, 333},
-    {6, 160},
-    {6, 179},
+    {966, 160},
+    {966, 179},
     {922, 254},
     {956, 243},
     {943, 261},
     {950, 279},
-    {8, 286},
+    {968, 286},
     {986, 289},
     {993, 307},
     {974, 307},
@@ -1632,7 +1624,7 @@ Coord REGION_ICON_COORDS[] = {
     {1161, 445},
     {1303, 180},
     {1365, 306},
-    {12, 423},
+    {1296, 423},
     {1546, 351},
     {1610, 371},
     {1544, 428},
@@ -1683,7 +1675,7 @@ Coord REGION_TXT_COORDS[] = {
     {1531, 392},
     {1648, 381},
     {1582, 438},
-    {15, 504},
+    {1596, 504},
     {1390, 559},
     {1392, 631},
     {1565, 775}
@@ -1698,7 +1690,6 @@ struct _RegionView {
 
     NemoWidgetGrab *icon_grab;
     struct showone *group;
-    struct showone *bg;
     List *logos;
     List *maps;
     List *points;
@@ -1749,7 +1740,6 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
     map->group = group = GROUP_CREATE(parent);
     nemoshow_item_set_alpha(group, 0.0);
 
-    double alpha = 1.00;
     char buf[PATH_MAX];
 
     int i;
@@ -1757,17 +1747,12 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, "%s%d.svg", uri, i);
         one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
-        //nemoshow_item_set_fill_color(one, RGBA(0x0));
         nemoshow_item_set_alpha(one, 0.0);
-        nemoshow_item_scale(one, alpha, alpha);
-        nemoshow_item_translate(one, view->w * (1.0 - alpha)/2.0, view->h * (1.0 - alpha)/2.0);
         map->ones = list_append(map->ones, one);
     }
 
     snprintf(buf, PATH_MAX, "%s%d.svg", uri, 1);
     map->one = one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
-    nemoshow_item_scale(one, alpha, alpha);
-    nemoshow_item_translate(one, view->w * (1.0 - alpha)/2.0, view->h * (1.0 - alpha)/2.0);
 
     map->timer = TOOL_ADD_TIMER(map->tool, 0, _region_map_timeout, map);
 
@@ -1903,8 +1888,6 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     view->bg = img = image_create(group);
     image_load_full(img, view->tool, uri, w, h, NULL, NULL);
 #endif
-    view->bg = one = RECT_CREATE(group, view->w, view->h);
-    nemoshow_item_set_fill_color(one, RGBA(0xF8F6F3FF));
 
     int i;
     for (i = 1 ; i <= 25 ; i++) {
@@ -2306,11 +2289,11 @@ Coord WORK_TXT_COORDS[13] = {
 	{276, 273},
 	{1623, 323},
 	{1244, 400},
-	{1765, 4},
+	{1765, 496},
 	{263, 690},
 	{950, 554},
 	{1560, 678},
-	{364, 8},
+	{364, 896},
 	{1065, 815},
 	{1659, 874}
 };
@@ -2346,7 +2329,6 @@ struct _WorkView {
 
     NemoWidgetGrab *icon_grab;
     struct showone *group;
-    struct showone *bg;
     List *waves;
     List *icons;
 };
@@ -2407,6 +2389,8 @@ static WorkIcon *work_view_create_icon(WorkView *view, const char *id,
 
     double ww, hh;
     svg_get_wh(txt_uri, &ww, &hh);
+    ww = ww * (view->w/1920.0);
+    hh = hh * (view->h/1080.0);
     icon->txt = one = SVG_PATH_GROUP_CREATE(group, ww, hh, txt_uri);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, txt_tx + ww/2, txt_ty + hh/2);
@@ -2739,11 +2723,7 @@ WorkView *work_view_create(Karim *karim, NemoWidget *parent, int width, int heig
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     struct showone *group;
-    struct showone *one;
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-
-    view->bg = one = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(one, RGBA(0xF8F6F3FF));
 
     // Designed for 1920x1080
     double sx= view->w/1920.0;
@@ -3157,7 +3137,6 @@ struct _IntroView {
     List *paths;
 
     struct showone *group;
-    struct showone *bg;
     struct showone *logo;
     NemoWidgetGrab *logo_grab;
     List *grabs;
@@ -3470,9 +3449,6 @@ static IntroView *intro_view_create(Karim *karim, NemoWidget *parent, int width,
     struct showone *group;
     struct showone *one;
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
-
-    view->bg = one = RECT_CREATE(group, width, height);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
     double w, h;
 
@@ -4003,9 +3979,8 @@ static Karim *karim_create(NemoWidget *parent, int width, int height)
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     struct showone *one;
-    karim->bg = one = RECT_CREATE(nemowidget_get_canvas(widget), width, height);
-    nemoshow_item_set_fill_color(one, RGBA(WHITE));
-    nemoshow_item_set_alpha(one, 1.0);
+    const char *uri = APP_ICON_DIR"/intro/intro-bg.svg";
+    karim->bg = one = SVG_PATH_GROUP_CREATE(nemowidget_get_canvas(widget), width, height, uri);
 
     karim->intro = intro_view_create(karim, parent, width, height);
     karim->region = region_view_create(karim, parent, width, height);
