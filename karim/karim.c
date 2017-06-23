@@ -890,8 +890,8 @@ YearSub YEAR_SUB2[] = {
      849.73, 111.17, APP_ICON_DIR"/year/2006.svg"},
     {923.88, 197.66, APP_ICON_DIR"/year/year-subcircle.svg",
      943.74, 121.4, APP_ICON_DIR"/year/2007.svg"},
-    {981.14, 235.98, APP_ICON_DIR"/year/year-subcircle.svg",
-     1019.54, 165.19, APP_ICON_DIR"/year/2008.svg"},
+    {985, 229.9, APP_ICON_DIR"/year/year-subcircle.svg",
+     1023.4, 159.1, APP_ICON_DIR"/year/2008.svg"},
 };
 
 YearSub YEAR_SUB3[] = {
@@ -1062,7 +1062,7 @@ struct _YearMain {
 };
 
 YearMain YEAR_MAIN[] = {
-    {479, 259.56,
+    {477.8, 296.4,
         APP_ICON_DIR"/year/year-button-1994_1998.svg", APP_ICON_DIR"/year/year-button-1994_1998-selected.svg",
         416., 241.14, APP_ICON_DIR"/year/year-subline-1994_1998.svg", YEAR_SUB0, 5},
     {663.01, 507.33,
@@ -1070,8 +1070,8 @@ YearMain YEAR_MAIN[] = {
         605.17, 617.26, APP_ICON_DIR"/year/year-subline-1999_2003.svg", YEAR_SUB1, 5},
     {819.38, 273.21,
         APP_ICON_DIR"/year/year-button-2004_2008.svg", APP_ICON_DIR"/year/year-button-2004_2008-selected.svg",
-        777.87, 216.99, APP_ICON_DIR"/year/year-subline-2004_2008.svg", YEAR_SUB2, 5},
-    {967.57, 589.16,
+        778.5, 207.4, APP_ICON_DIR"/year/year-subline-2004_2008.svg", YEAR_SUB2, 5},
+    {1016.4, 592.0,
         APP_ICON_DIR"/year/year-button-2009_2013.svg", APP_ICON_DIR"/year/year-button-2009_2013-selected.svg",
         1165.19, 682.88, APP_ICON_DIR"/year/year-subline-2009_2013.svg", YEAR_SUB3, 5},
     {1220.51, 281.8,
