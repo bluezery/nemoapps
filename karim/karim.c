@@ -3979,7 +3979,7 @@ static Karim *karim_create(NemoWidget *parent, int width, int height)
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     struct showone *one;
-    const char *uri = APP_ICON_DIR"/intro/intro-bg.svg";
+    const char *uri = APP_ICON_DIR"/bg.svg";
     karim->bg = one = SVG_PATH_GROUP_CREATE(nemowidget_get_canvas(widget), width, height, uri);
 
     karim->intro = intro_view_create(karim, parent, width, height);
