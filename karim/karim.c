@@ -951,7 +951,7 @@ struct _YearView {
     List *bgs;
 
     NemoWidget *widget;
-    NemoWidgetGrab *btn_grab;
+    NemoWidgetGrab *grab;
     struct nemotimer *btn_timer;
 
     struct showone *btn_group;
@@ -1041,7 +1041,7 @@ struct _YearSubItem {
 };
 
 
-YearSubItem *year_sub_item_create(YearView *view, const char *bg_path, double bg_x, double bg_y, const char *txt_path, double txt_x, double txt_y, double sx, double sy)
+YearSubItem *year_view_create_sub_item(YearView *view, const char *bg_path, double bg_x, double bg_y, const char *txt_path, double txt_x, double txt_y, double sx, double sy)
 {
     double x, y, ww, hh;
     struct showone *group;
@@ -1167,7 +1167,7 @@ struct _YearMainItem {
     List *items;
 };
 
-YearMainItem *year_main_item_create(YearView *view, const char *btn_path, const char *btn_sel_path, double btn_x, double btn_y, const char *arch, double arch_x, double arch_y, YearSub *sub, int cnt, double sx, double sy)
+YearMainItem *year_view_create_main_item(YearView *view, const char *btn_path, const char *btn_sel_path, double btn_x, double btn_y, const char *arch, double arch_x, double arch_y, YearSub *sub, int cnt, double sx, double sy)
 {
     double x, y, ww, hh;
     struct showone *group;
@@ -1222,7 +1222,7 @@ YearMainItem *year_main_item_create(YearView *view, const char *btn_path, const 
     int i;
     for (i = 0 ; i < cnt ; i++) {
         YearSubItem *sub_it;
-        sub_it = year_sub_item_create(it->view, sub[i].bg, sub[i].bg_x, sub[i].bg_y,
+        sub_it = year_view_create_sub_item(it->view, sub[i].bg, sub[i].bg_x, sub[i].bg_y,
                 sub[i].txt, sub[i].txt_x, sub[i].txt_y, sx, sy);
         it->items = list_append(it->items, sub_it);
     }
@@ -1436,7 +1436,7 @@ static void _year_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         if (!strcmp(id, "year_main")) {
             YearMainItem *it = nemoshow_one_get_userdata(one);
             YearView *view = it->view;
-            view->btn_grab = NULL;
+            view->grab = NULL;
             if (nemoshow_event_is_single_click(show, event)) {
                 year_main_item_click(it);
 
@@ -1453,7 +1453,7 @@ static void _year_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         } else if (!strcmp(id, "year_sub")) {
             YearSubItem *it = nemoshow_one_get_userdata(one);
             YearView *view = it->view;
-            view->btn_grab = NULL;
+            view->grab = NULL;
             year_sub_item_up(it);
 
             if (nemoshow_event_is_single_click(show, event)) {
@@ -1476,51 +1476,9 @@ static void _year_view_event(NemoWidget *widget, const char *id, void *info, voi
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        if (one && !view->btn_grab) {
-            view->btn_grab = nemowidget_create_grab(widget, event,
+        if (one && !view->grab) {
+            view->grab = nemowidget_create_grab(widget, event,
                     _year_view_grab_event, one);
-        } else {
-            /*
-            IntroEffect *fx = malloc(sizeof(IntroEffect));
-            fx->time = time(NULL);
-            view->touch_effects = list_append(view->touch_effects, fx);
-            fx->ones = NULL;
-
-            one = path_draw(view->path0, view->group);
-            nemoshow_item_set_anchor(one, 0.5, 0.5);
-            nemoshow_item_translate(one, ex, ey);
-            nemoshow_item_scale(one, 0.0, 0.0);
-            nemoshow_item_set_alpha(one, 1.0);
-            fx->ones = list_append(fx->ones, one);
-
-            List *l;
-            Path *path;
-            LIST_FOR_EACH(view->paths, l, path) {
-                one = path_draw(path, view->group);
-                nemoshow_item_set_anchor(one, 0.5, 0.5);
-                nemoshow_item_translate(one, ex, ey);
-                nemoshow_item_scale(one, 0.0, 0.0);
-                nemoshow_item_set_alpha(one, 1.0);
-                fx->ones = list_append(fx->ones, one);
-            }
-
-            one = path_draw(view->path1, view->group);
-            nemoshow_item_set_anchor(one, 0.5, 0.5);
-            nemoshow_item_translate(one, ex, ey);
-            nemoshow_item_scale(one, 0.0, 0.0);
-            nemoshow_item_set_alpha(one, 1.0);
-            fx->ones = list_append(fx->ones, one);
-
-            int delay = 0;
-            LIST_FOR_EACH_REVERSE(fx->ones, l, one) {
-                _nemoshow_item_motion(one, NEMOEASE_CUBIC_OUT_TYPE, 5000, delay,
-                        "sx", 1.0, "sy", 1.0,
-                        "alpha", 0.0,
-                        "ro", 120.0,
-                        NULL);
-                delay += 20;
-            }
-            */
         }
     }
 }
@@ -1586,7 +1544,7 @@ static YearView *year_view_create(Karim *karim, NemoWidget *parent, int width, i
 
     for (i = 0 ; i < sizeof(YEAR_MAIN)/sizeof(YEAR_MAIN[0]) ; i++) {
         YearMainItem *it;
-        it = year_main_item_create(view, YEAR_MAIN[i].btn, YEAR_MAIN[i].btn_sel,
+        it = year_view_create_main_item(view, YEAR_MAIN[i].btn, YEAR_MAIN[i].btn_sel,
                 YEAR_MAIN[i].x, YEAR_MAIN[i].y,
                 YEAR_MAIN[i].arch, YEAR_MAIN[i].arch_x, YEAR_MAIN[i].arch_y,
                 YEAR_MAIN[i].sub, YEAR_MAIN[i].sub_cnt,
@@ -1760,7 +1718,7 @@ struct _RegionView {
     struct nemoshow *show;
     NemoWidget *widget;
 
-    NemoWidgetGrab *icon_grab;
+    NemoWidgetGrab *grab;
     struct showone *group;
     List *maps;
     List *items;
@@ -1857,12 +1815,13 @@ static void region_map_hide(RegionMap *map, uint32_t easetype, int duration, int
 typedef struct _RegionItem RegionItem;
 struct _RegionItem {
     RegionView *view;
+    char *country;
     struct showone *group;
     struct showone *icon;
     struct showone *txt;
 };
 
-static RegionItem *region_item_create(RegionView *view, int idx, double sx, double sy)
+static RegionItem *region_view_create_item(RegionView *view, int idx, double sx, double sy)
 {
     struct showone *one;
     struct showone *group;
@@ -1870,6 +1829,7 @@ static RegionItem *region_item_create(RegionView *view, int idx, double sx, doub
     RegionItem *it = calloc(sizeof(RegionItem), 1);
     it->view = view;
     it->group = group = GROUP_CREATE(view->group);
+    it->country = strdup(REGION_DATAS[idx-1].country);
 
     double w, h;
     char buf[PATH_MAX];
@@ -1947,7 +1907,7 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
         region_item_down(it);
     } else if (nemoshow_event_is_up(show, event)) {
         region_item_up(it);
-        view->icon_grab = NULL;
+        view->grab = NULL;
     }
     if (nemoshow_event_is_single_click(show, event)) {
         Karim *karim = view->karim;
@@ -1972,8 +1932,8 @@ static void _region_view_event(NemoWidget *widget, const char *id, void *info, v
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        if (one && !view->icon_grab) {
-            view->icon_grab = nemowidget_create_grab(widget, event,
+        if (one && !view->grab) {
+            view->grab = nemowidget_create_grab(widget, event,
                     _region_view_grab_event, one);
         }
     }
@@ -2044,7 +2004,7 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     sx = view->w/1920.0;
     sy = view->h/1080.0;
     for (i = 1 ; i <= sizeof(REGION_DATAS)/sizeof(REGION_DATAS[0]) ; i++) {
-        RegionItem *it = region_item_create(view, i, sx, sy);
+        RegionItem *it = region_view_create_item(view, i, sx, sy);
         view->items = list_append(view->items, it);
     }
 
@@ -2196,6 +2156,7 @@ struct _WorkWave {
 };
 
 struct _WorkItem {
+    char *category;
     WorkView *view;
     struct showone *group;
     Image *img, *img1;
@@ -2211,7 +2172,7 @@ struct _WorkView {
     struct nemoshow *show;
     NemoWidget *widget;
 
-    NemoWidgetGrab *icon_grab;
+    NemoWidgetGrab *grab;
     struct showone *group;
     List *waves;
     List *icons;
@@ -2233,12 +2194,11 @@ static void _work_icon_timeout(struct nemotimer *timer, void *userdata)
 static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay);
 static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int delay);
 
-static WorkItem *work_view_create_item(WorkView *view, const char *id,
-        const char *img_uri0, const char *img_uri1, int img_tx, int img_ty,
-        const char *txt_uri, int txt_tx, int txt_ty)
+static WorkItem *work_view_create_item(WorkView *view, int idx, double sx, double sy)
 {
     WorkItem *it = calloc(sizeof(WorkItem), 1);
     it->view = view;
+    it->category = strdup(WORK_DATAS[idx-1].category);
 
     struct showone *group;
     struct showone *one;
@@ -2247,35 +2207,46 @@ static WorkItem *work_view_create_item(WorkView *view, const char *id,
 
     int w, h;
     Image *img;
-    file_get_image_wh(img_uri0, &w, &h);
+
+    char buf[PATH_MAX];
+    snprintf(buf, PATH_MAX, APP_IMG_DIR"/work/icon-%02d.png", idx);
+    file_get_image_wh(buf, &w, &h);
     w = w * (view->w/3840.0);
     h = h * (view->h/2160.0);
     it->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
     nemoshow_one_set_state(image_get_one(img), NEMOSHOW_PICK_STATE);
-    if (id) nemoshow_one_set_id(image_get_one(img), id);
+
+    double img_tx, img_ty;
+    img_tx = WORK_DATAS[idx-1].x * sx;
+    img_ty = WORK_DATAS[idx-1].y * sy;
+    //if (id) nemoshow_one_set_id(image_get_one(img), it);
     nemoshow_one_set_userdata(image_get_one(img), it);
     image_translate(img, 0, 0, 0, img_tx, img_ty);
     image_scale(img, 0, 0, 0, 0, 0);
     image_set_alpha(img, 0, 0, 0, 0.0);
-    image_load_full(img, view->tool, img_uri0, w, h, NULL, NULL);
-    if (img_uri1) {
-        file_get_image_wh(img_uri1, &w, &h);
-        w = w * (view->w/3840.0);
-        h = h * (view->h/2160.0);
-        it->img1 = img = image_create(group);
-        image_set_anchor(img, 0.5, 0.5);
-        image_translate(img, 0, 0, 0, img_tx, img_ty);
-        image_scale(img, 0, 0, 0, 0, 0);
-        image_set_alpha(img, 0, 0, 0, 0.0);
-        image_load_full(img, view->tool, img_uri1, w, h, NULL, NULL);
-    }
+    image_load_full(img, view->tool, buf, w, h, NULL, NULL);
 
+    snprintf(buf, PATH_MAX, APP_IMG_DIR"/work/icon-%02d-1.png", idx);
+    file_get_image_wh(buf, &w, &h);
+    w = w * (view->w/3840.0);
+    h = h * (view->h/2160.0);
+    it->img1 = img = image_create(group);
+    image_set_anchor(img, 0.5, 0.5);
+    image_translate(img, 0, 0, 0, img_tx, img_ty);
+    image_scale(img, 0, 0, 0, 0, 0);
+    image_set_alpha(img, 0, 0, 0, 0.0);
+    image_load_full(img, view->tool, buf, w, h, NULL, NULL);
+
+    snprintf(buf, PATH_MAX, APP_ICON_DIR"/work/text/work-text%02d.svg", idx);
+    double txt_tx, txt_ty;
+    txt_tx = WORK_DATAS[idx-1].txt_x * sx;
+    txt_ty = WORK_DATAS[idx-1].txt_y * sy;
     double ww, hh;
-    svg_get_wh(txt_uri, &ww, &hh);
+    svg_get_wh(buf, &ww, &hh);
     ww = ww * (view->w/1920.0);
     hh = hh * (view->h/1080.0);
-    it->txt = one = SVG_PATH_GROUP_CREATE(group, ww, hh, txt_uri);
+    it->txt = one = SVG_PATH_GROUP_CREATE(group, ww, hh, buf);
     nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, txt_tx + ww/2, txt_ty + hh/2);
     nemoshow_item_scale(one, 0.0, 1.0);
@@ -2556,7 +2527,7 @@ static void _work_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         nemoshow_dispatch_frame(view->show);
     } else if (nemoshow_event_is_up(show, event)) {
         work_icon_up(icon, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
-        view->icon_grab = NULL;
+        view->grab = NULL;
         if (nemoshow_event_is_single_click(show, event)) {
             if (!strcmp(id, "tabletop")) {
                 Karim *karim = view->karim;
@@ -2585,8 +2556,8 @@ static void _work_view_event(NemoWidget *widget, const char *id, void *info, voi
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        if (one && !view->icon_grab) {
-            view->icon_grab = nemowidget_create_grab(widget, event,
+        if (one && !view->grab) {
+            view->grab = nemowidget_create_grab(widget, event,
                     _work_view_grab_event, one);
         }
     }
@@ -2637,28 +2608,8 @@ WorkView *work_view_create(Karim *karim, NemoWidget *parent, int width, int heig
     }
 
     for (i = 1 ; i <= 13 ; i++) {
-        char buf0[PATH_MAX], buf1[PATH_MAX], buf2[PATH_MAX];
-        snprintf(buf0, PATH_MAX, APP_IMG_DIR"/work/icon-%02d.png", i);
-        snprintf(buf1, PATH_MAX, APP_IMG_DIR"/work/icon-%02d-1.png", i);
-        snprintf(buf2, PATH_MAX, APP_ICON_DIR"/work/text/work-text%02d.svg", i);
         WorkItem *icon;
-        if (i == 1) {
-            icon = work_view_create_item(view, "tabletop",
-                    buf0, buf1,
-                    WORK_DATAS[i-1].x * sx,
-                    WORK_DATAS[i-1].y * sy,
-                    buf2,
-                    WORK_DATAS[i-1].txt_x * sx,
-                    WORK_DATAS[i-1].txt_y * sy);
-        } else {
-            icon = work_view_create_item(view, NULL,
-                    buf0, buf1,
-                    WORK_DATAS[i-1].x * sx,
-                    WORK_DATAS[i-1].y * sy,
-                    buf2,
-                    WORK_DATAS[i-1].txt_x * sx,
-                    WORK_DATAS[i-1].txt_y * sy);
-        }
+        icon = work_view_create_item(view, i, sx, sy);
         view->icons = list_append(view->icons, icon);
     }
 
@@ -2672,7 +2623,7 @@ struct _MenuView {
     struct nemoshow *show;
     NemoWidget *widget;
 
-    NemoWidgetGrab *btn_grab;
+    NemoWidgetGrab *grab;
     struct showone *group;
 
     struct nemotimer *timer;
@@ -2734,7 +2685,7 @@ static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
         }
         nemoshow_dispatch_frame(view->show);
     } else if (nemoshow_event_is_up(show, event)) {
-        view->btn_grab = NULL;
+        view->grab = NULL;
         if (nemoshow_event_is_single_click(show, event)) {
             double sx, sy;
             sx = view->w/1920.0;
@@ -2843,8 +2794,8 @@ static void _menu_view_event(NemoWidget *widget, const char *id, void *info, voi
     if (nemoshow_event_is_down(show, event)) {
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        if (one && !view->btn_grab) {
-            view->btn_grab = nemowidget_create_grab(widget, event,
+        if (one && !view->grab) {
+            view->grab = nemowidget_create_grab(widget, event,
                     _menu_view_grab_event, one);
         }
     }
