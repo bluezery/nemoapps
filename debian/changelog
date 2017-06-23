@@ -1,3 +1,10 @@
+nemoapps (0.8.0) unstable; urgency=medium
+
+  * karim: Update GUI
+  * karim: Update incorrect svg & coordinates
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Fri, 23 Jun 2017 11:38:38 +0900
+
 nemoapps (0.7.2) unstable; urgency=medium
 
   * window: init window shell
