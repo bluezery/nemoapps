@@ -11,6 +11,7 @@
 #include <nemotool.h>
 #include <nemotimer.h>
 #include <nemoshow.h>
+#include <nemojson.h>
 
 #include "xemoapp.h"
 #include "xemoutil.h"
@@ -155,6 +156,7 @@ typedef struct _Karim Karim;
 
 struct _Karim
 {
+    struct nemobus *bus;
     List *datas;
     List *countries;
     List *categories;
@@ -3799,6 +3801,74 @@ static void _karim_saver_timeout(struct nemotimer *timer, void *userdata)
 }
 #endif
 
+static void _dispatch_bus(void *userdata, const char *events)
+{
+    Karim *karim = userdata;
+
+	struct nemojson *json;
+	struct nemoitem *msg;
+	struct itemone *one;
+	char buffer[4096];
+	int length;
+	int i;
+
+	length = nemobus_recv(karim->bus, buffer, sizeof(buffer));
+	if (length <= 0) {
+        ERR("length is 0");
+		return;
+    }
+
+	json = nemojson_create_string(buffer, length);
+	nemojson_update(json);
+
+	for (i = 0; i < nemojson_get_count(json); i++) {
+		msg = nemoitem_create();
+		nemojson_object_load_item(nemojson_get_object(json, i), msg, "/nemokarim");
+
+		nemoitem_for_each(one, msg) {
+			if (nemoitem_one_has_path_suffix(one, "/in") != 0) {
+                ERR("karim in!!");
+                if (karim->type == KARIM_TYPE_INTRO) {
+                    ERR("Hide INTRO!!");
+                    _nemoshow_item_motion_bounce(karim->intro->logo, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                            "sx", 1.25, 1.0, "sy", 1.25, 1.0,
+                            NULL);
+                    karim->intro->logo_grab = NULL;
+
+                    karim->type = KARIM_TYPE_MENU;
+                    intro_view_hide(karim->intro, NEMOEASE_CUBIC_IN_TYPE, 2000, 0);
+                    menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 1000);
+                }
+            } else if (nemoitem_one_has_path_suffix(one, "/out") != 0) {
+                ERR("karim out!!");
+                if (karim->type != KARIM_TYPE_INTRO) {
+                    ERR("Show INTRO!!");
+                    karim->type = KARIM_TYPE_INTRO;
+                    intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+                    menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    if (karim->type == KARIM_TYPE_REGION) {
+                        region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    } else if (karim->type == KARIM_TYPE_WORK) {
+                        work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    } else if (karim->type == KARIM_TYPE_YEAR) {
+                        year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    } else if (karim->type == KARIM_TYPE_HONEY) {
+                        honey_view_hide(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    } else if (karim->type == KARIM_TYPE_VIEWER) {
+                        viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+                    }
+                }
+                break;
+            }
+		}
+
+		nemoitem_destroy(msg);
+	}
+
+	nemojson_destroy(json);
+}
+
+
 static Karim *karim_create(NemoWidget *parent, int width, int height)
 {
     Karim *karim = calloc(sizeof(Karim), 1);
@@ -3808,6 +3878,19 @@ static Karim *karim_create(NemoWidget *parent, int width, int height)
     karim->tool = nemowidget_get_tool(parent);
     karim->show = nemowidget_get_show(parent);
     karim->uuid = nemowidget_get_uuid(parent);
+
+    struct nemobus *bus;
+    const char *busid = "/nemokarim";
+    karim->bus = bus = nemobus_create();
+
+    nemobus_connect(bus, NULL);
+    nemobus_advertise(bus, "set", busid);
+
+    nemotool_watch_source(karim->tool,
+            nemobus_get_socket(bus),
+            "reh",
+            _dispatch_bus,
+           karim);
 
     karim->datas = karim_data_load("/opt/contents/karim/",
             &(karim->countries), &(karim->categories), &(karim->years));
@@ -3880,6 +3963,7 @@ static Karim *karim_create(NemoWidget *parent, int width, int height)
 static void karim_destroy(Karim *karim)
 {
     intro_view_destroy(karim->intro);
+    nemobus_destroy(karim->bus);
     free(karim);
 }
 
@@ -3891,7 +3975,7 @@ static void karim_show(Karim *karim, uint32_t easetype, int duration, int delay)
     nemowidget_show(karim->event_widget, 0, 0, 0);
     intro_view_show(karim->intro, easetype, duration, delay);
     //saver_view_show(karim->saver, easetype, duration, delay);
-    karim->type = KARIM_TYPE_NONE;
+    karim->type = KARIM_TYPE_INTRO;
 }
 
 static void karim_hide(Karim *karim, uint32_t easetype, int duration, int delay)
