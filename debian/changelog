@@ -1,4 +1,4 @@
-nemoapps (0.9.1) unstable; urgency=medium
+nemoapps (0.9.2) unstable; urgency=medium
 
   * karim: Fix GUI
   * karim: Add a missing file
@@ -12,8 +12,9 @@ nemoapps (0.9.1) unstable; urgency=medium
   * karim: code clean-up for honey view
   * karim: Remove romania
   * karim: change selected <--> unselected of year main buttons
+  * karim: fix region maps
 
- -- Taehwan Kim <taehwan@nemoux.net>  Sun, 25 Jun 2017 16:41:20 +0900
+ -- Taehwan Kim <taehwan@nemoux.net>  Sun, 25 Jun 2017 17:22:41 +0900
 
 nemoapps (0.8.0) unstable; urgency=medium
 
