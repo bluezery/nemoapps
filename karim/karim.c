@@ -1020,17 +1020,17 @@ static void _honey_view_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget
             double scale = 1.0;
             double sx, sy;
             double ix, iy, iw, ih;
+
             sx = view->w/3840.0;
             sy = view->h/2160.0;
+
             ix = it->x * scale;
             iy = it->y * scale;
             iw = it->w * scale;
             ih = it->h * scale;
 
-            /*
             nemowidget_translate(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
                     -(ix - (view->w - iw)/2.0), -(iy - (view->h - ih)/2.0));
-                    */
             /*
             nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
                     scale, scale);
@@ -2063,7 +2063,22 @@ struct _RegionMap {
     List *ones;
 
     struct nemotimer *timer;
+    struct nemotimer *timer2;
 };
+
+static void _region_map_timeout2(struct nemotimer *timer, void *userdata)
+{
+    RegionMap *map = userdata;
+    List *l;
+    struct showone *one;
+    LIST_FOR_EACH(map->ones, l, one) {
+        _nemoshow_item_motion(one, NEMOEASE_LINEAR_TYPE, 1000, 0,
+                "alpha", 0.0,
+                NULL);
+    }
+    nemotimer_set_timeout(map->timer, 1000 + 250);
+    nemoshow_dispatch_frame(map->show);
+}
 
 static void _region_map_timeout(struct nemotimer *timer, void *userdata)
 {
@@ -2071,13 +2086,13 @@ static void _region_map_timeout(struct nemotimer *timer, void *userdata)
     int delay = 0;
     List *l;
     struct showone *one;
-    LIST_FOR_EACH(map->ones, l, one) {
-        _nemoshow_item_motion_bounce(one, NEMOEASE_LINEAR_TYPE, 2000, delay,
-                "alpha", 1.0, 0.0,
+    LIST_FOR_EACH_REVERSE(map->ones, l, one) {
+        _nemoshow_item_motion(one, NEMOEASE_LINEAR_TYPE, 2000, delay,
+                "alpha", 1.0,
                 NULL);
         delay += 250;
     }
-    nemotimer_set_timeout(timer, 2000 + delay + 250);
+    nemotimer_set_timeout(map->timer2, 2000 + delay);
     nemoshow_dispatch_frame(map->show);
 }
 
@@ -2097,7 +2112,7 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
     char buf[PATH_MAX];
 
     int i;
-    for (i = 2 ; i <= 5 ; i++) {
+    for (i = 5 ; i >= 2 ; i--) {
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, "%s%d.svg", uri, i);
         one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
@@ -2109,6 +2124,7 @@ static RegionMap *region_map_create(RegionView *view, struct showone *parent, co
     map->one = one = SVG_PATH_GROUP_CREATE(group, width, height, buf);
 
     map->timer = TOOL_ADD_TIMER(map->tool, 0, _region_map_timeout, map);
+    map->timer2 = TOOL_ADD_TIMER(map->tool, 0, _region_map_timeout2, map);
 
     return map;
 }
@@ -2138,6 +2154,7 @@ static void region_map_hide(RegionMap *map, uint32_t easetype, int duration, int
     _nemoshow_item_motion(map->group, easetype, duration, delay,
             "alpha", 0.0, NULL);
     nemotimer_set_timeout(map->timer, 0);
+    nemotimer_set_timeout(map->timer2, 0);
 }
 
 typedef struct _RegionItem RegionItem;
