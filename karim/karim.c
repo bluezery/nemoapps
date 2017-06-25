@@ -19,6 +19,11 @@
 #include "nemoui.h"
 
 #define SAVER_TIMEOUT 600000
+#define HONEY_CX 2750.0
+#define HONEY_CY 1546.875
+
+
+#define CONTENT "/opt/contents/karim"
 
 typedef struct _KarimData KarimData;
 struct _KarimData {
@@ -130,6 +135,19 @@ static List *karim_data_load(const char *root, List **countries, List **categori
     }
 
     return datas;
+}
+
+KarimGroup *karim_data_search_group(List *grps, const char *name)
+{
+    List *l;
+    KarimGroup *grp;
+    LIST_FOR_EACH(grps, l, grp) {
+        if (!strcmp(grp->name, name)) {
+            return grp;
+        }
+    }
+    ERR("No countries: %s", name);
+    return NULL;
 }
 
 typedef enum
@@ -847,6 +865,16 @@ static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, 
     nemoshow_dispatch_frame(view->show);
 }
 
+typedef struct _HoneyItem HoneyItem;
+struct _HoneyItem {
+    HoneyView *view;
+    int x, y, w, h;
+    char *path;
+    struct showone *group;
+    Image *img;
+    struct showone *one_sel;
+};
+
 struct _HoneyView {
     Karim *karim;
     int w, h;
@@ -859,16 +887,93 @@ struct _HoneyView {
 
     int widget_w, widget_h;
     double widget_x, widget_y;
-    NemoWidgetGrab *icon_grab;
-    NemoWidgetGrab *grab;
+    NemoWidgetGrab *item_grab;
+    NemoWidgetGrab *scroll_grab;
     int bg_ix, bg_iy;
     Image *bg;
+    struct showone *title;
 
-    struct showone *icon;
+    List *items;
 };
+
+static void honey_item_down(HoneyItem *it)
+{
+    image_set_alpha(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 0.0);
+    _nemoshow_item_motion(it->one_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 1.0,
+            NULL);
+}
+
+static void honey_item_up(HoneyItem *it)
+{
+    image_set_alpha(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 1.0);
+    _nemoshow_item_motion(it->one_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 0.0,
+            NULL);
+}
+
+static List *fileinfo_readdir_img(const char *path)
+{
+    List *l, *ll;
+    List *files = fileinfo_readdir(path);
+    FileInfo *file;
+    LIST_FOR_EACH_SAFE(files, l, ll, file) {
+        if (!fileinfo_is_image(file)) {
+            // FIXME: fail to get magic string for some images (e.g. TIFF, name user count (xx) exceeded)
+            if (!fileinfo_is_image_ext(file)) {
+                files = list_remove(files, file);
+            }
+        }
+    }
+    return files;
+}
+
+static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, double x, double y, double w, double h, double sx, double sy)
+{
+    List *files = fileinfo_readdir_img(path);
+    RET_IF(!files, NULL);
+    FileInfo *file = LIST_DATA(LIST_FIRST(files));
+
+    struct showone *group;
+    struct showone *one;
+
+    struct showone *canvas;
+    canvas = nemowidget_get_canvas(view->widget);
+
+    HoneyItem *it = calloc(sizeof(HoneyItem), 1);
+    it->view = view;
+    it->group = group = GROUP_CREATE(canvas);
+    it->x = x * sx;
+    it->y = y * sy;
+    nemoshow_item_translate(it->group, it->x, it->y);
+
+
+    char uri[PATH_MAX];
+    snprintf(uri, PATH_MAX, "%s", file->path);
+    it->w = w * sx;
+    it->h = h * sy;
+    Image *img;
+    it->img = img = image_create(group);
+    image_set_anchor(img, 0.5, 0.5);
+    image_load_fit(img, view->tool, uri, it->w, it->h, NULL, NULL);
+
+    double ww, hh;
+    snprintf(uri, PATH_MAX, "%s", APP_ICON_DIR"/honey/icon-selected.svg");
+    svg_get_wh(uri, &ww, &hh);
+    ww = ww * sx;
+    hh = hh * sy;
+    it->one_sel = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_userdata(one, it);
+    nemoshow_item_set_alpha(one, 0.0);
+
+    return it;
+}
 
 static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
+    RET_IF(!view);
     nemowidget_show(view->bg_widget, 0, 0, 0);
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->bg_widget, easetype, duration + 1000, delay + 1000, 1.0);
@@ -879,6 +984,7 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
 
 static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
+    RET_IF(!view);
     nemowidget_hide(view->bg_widget, 0, 0, 0);
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->bg_widget, easetype, duration, delay, 0.0);
@@ -887,7 +993,7 @@ static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, in
     nemoshow_dispatch_frame(view->show);
 }
 
-static void _honey_view_icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+static void _honey_view_item_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
     double ex, ey;
@@ -896,40 +1002,41 @@ static void _honey_view_icon_grab_event(NemoWidgetGrab *grab, NemoWidget *widget
             nemoshow_event_get_y(event), &ex, &ey);
 
     struct showone *one = userdata;
-    const char *id = nemoshow_one_get_id(one);
-    HoneyView *view = nemoshow_one_get_userdata(one);
-    RET_IF(!id);
+    HoneyItem *it = nemoshow_one_get_userdata(one);
+    RET_IF(!it);
+    HoneyView *view = it->view;
 
     if (nemoshow_event_is_down(show, event)) {
-        _nemoshow_item_motion(view->icon, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                "alpha", 1.0, NULL);
+        honey_item_down(it);
         nemoshow_dispatch_frame(view->show);
     } else if (nemoshow_event_is_up(show, event)) {
-        view->icon_grab = NULL;
+        honey_item_up(it);
+        view->item_grab = NULL;
+
         if (nemoshow_event_is_single_click(show, event)) {
-            karim_change_view(view->karim, KARIM_TYPE_VIEWER);
+            //karim_change_view(view->karim, KARIM_TYPE_VIEWER);
 
             // Zooming effect
-            double scale = 2.0;
+            double scale = 1.0;
             double sx, sy;
             double ix, iy, iw, ih;
             sx = view->w/3840.0;
             sy = view->h/2160.0;
-            ix = 2870.0 * sx * scale;
-            iy = 1582.0 * sy * scale;
-            iw = 486.0 * sx * scale;
-            ih = 420.0 * sy * scale;
+            ix = it->x * scale;
+            iy = it->y * scale;
+            iw = it->w * scale;
+            ih = it->h * scale;
 
+            /*
             nemowidget_translate(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
                     -(ix - (view->w - iw)/2.0), -(iy - (view->h - ih)/2.0));
+                    */
+            /*
             nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
                     scale, scale);
-            nemoshow_dispatch_frame(view->show);
-        } else {
-            _nemoshow_item_motion(view->icon, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                    "alpha", 0.0, NULL);
-            nemoshow_dispatch_frame(view->show);
+                    */
         }
+        nemoshow_dispatch_frame(view->show);
     }
 }
 
@@ -938,7 +1045,10 @@ static void _honey_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, str
     struct nemoshow *show = nemowidget_get_show(widget);
     HoneyView *view = userdata;
 
-    if (nemoshow_event_is_motion(show, event)) {
+    if (nemoshow_event_is_down(show, event)) {
+        double widget_x, widget_y;
+        nemowidget_get_geometry(view->widget, &view->widget_x, &view->widget_y, NULL, NULL);
+    } else if (nemoshow_event_is_motion(show, event)) {
         double ex, ey;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_x(event),
@@ -948,11 +1058,9 @@ static void _honey_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, str
                 nemoshow_event_get_grab_x(event),
                 nemoshow_event_get_grab_y(event), &gx, &gy);
         double tx, ty;
-
+        double tw, th;
         tx = view->widget_x + ex - gx;
         ty = view->widget_y + ey - gy;
-
-        double tw, th;
         tw = view->widget_w - view->w;
         th = view->widget_h - view->h;
         if (tx > 0) {
@@ -966,31 +1074,44 @@ static void _honey_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, str
             ty = -th;
         }
         nemowidget_translate(view->widget, 0, 0, 0, tx, ty);
-        nemoshow_dispatch_frame(view->show);
+        nemoshow_dispatch_frame(show);
     } else if (nemoshow_event_is_up(show, event)) {
-        view->grab = NULL;
-        nemowidget_get_geometry(view->widget, &view->widget_x, &view->widget_y, NULL, NULL);
+        double widget_x, widget_y;
+        nemowidget_get_geometry(view->widget, &widget_x, &widget_y, NULL, NULL);
+
+        view->scroll_grab = NULL;
+
+        double gap_x, gap_y;
+        gap_x = 100;
+        gap_y = 100;
+
+        double ex, ey;
+        nemowidget_transform_from_global(widget,
+                nemoshow_event_get_x(event),
+                nemoshow_event_get_y(event), &ex, &ey);
+        double gx, gy;
+        nemowidget_transform_from_global(widget,
+                nemoshow_event_get_grab_x(event),
+                nemoshow_event_get_grab_y(event), &gx, &gy);
         double tx, ty;
-        tx = view->widget_x;
-        ty = view->widget_y;
-        double tw, th, gap_x, gap_y;
-        gap_x = 350;
-        gap_y = 350;
-        tw = view->widget_w - view->w - gap_x;
-        th = view->widget_h - view->h - gap_y;
+        double tw, th;
+        tx = widget_x + ex - gx;
+        ty = widget_y + ey - gy;
+        tw = view->widget_w - view->w;
+        th = view->widget_h - view->h;
         if (tx > -gap_x) {
             tx = -gap_x;
-        } else if (tx < -tw) {
-            tx = -tw;
+        } else if (tx < -tw + gap_x) {
+            tx = -tw + gap_x;
         }
         if (ty > -gap_y) {
             ty = -gap_y;
-        } else if (ty < -th) {
-            ty = -th;
+        } else if (ty < -th + gap_y) {
+            ty = -th + gap_y;
         }
-        nemowidget_translate(view->widget, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, tx, ty);
-        view->widget_x = tx;
-        view->widget_y = ty;
+
+        nemowidget_translate(view->widget, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0, tx, ty);
+        nemoshow_dispatch_frame(show);
     }
 }
 
@@ -1008,17 +1129,18 @@ static void _honey_view_event(NemoWidget *widget, const char *id, void *info, vo
 
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        if (one && !view->icon_grab) {
-            view->icon_grab = nemowidget_create_grab(widget, event,
-                    _honey_view_icon_grab_event, one);
-        } else {
-            view->grab = nemowidget_create_grab(widget, event,
+        if (one && !view->item_grab) {
+            view->item_grab = nemowidget_create_grab(widget, event,
+                    _honey_view_item_grab_event, one);
+        }
+        if (!view->scroll_grab) {
+            view->scroll_grab = nemowidget_create_grab(widget, event,
                     _honey_view_grab_event, view);
         }
     }
 }
 
-static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width, int height, List *datas)
+static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width, int height, KarimGroup *grp)
 {
     HoneyView *view = calloc(sizeof(HoneyView), 1);
     view->karim = karim;
@@ -1068,18 +1190,76 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
 
     double x, y;
     double ww, hh;
-    uri = APP_ICON_DIR"/honey/icon-selected.svg";
-    svg_get_wh(uri, &ww, &hh);
+    char buf[PATH_MAX];
+    snprintf(buf, PATH_MAX, "%s/.karim/%s.svg", CONTENT, grp->name);
+    svg_get_wh(buf, &ww, &hh);
+    x = HONEY_CX * sx;
+    y = HONEY_CY * sy;
     ww = ww * sx;
     hh = hh * sy;
-    x = 2802 * sx;
-    y = 1613 * sy;
-    view->icon = one = SVG_PATH_GROUP_CREATE(canvas, ww, hh, uri);
+    /*
+    ww = 259.219 * sx;
+    hh = 224.176 * sy;
+    */
+    view->title = one = SVG_PATH_GROUP_CREATE(canvas, ww, hh, buf);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
     nemoshow_item_translate(one, x, y);
-    nemoshow_item_set_alpha(one, 0.0);
-    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-    nemoshow_one_set_id(one, "icon");
-    nemoshow_one_set_userdata(one, view);
+
+    double xx, yy;
+    xx = 0;
+    yy = 0;
+    double r;
+    r = 223.375;
+    int layer = 1;
+    int layer_cnt = 0;
+    int cnt = 0;
+
+    KarimData *data;
+    List *l;
+    LIST_FOR_EACH(grp->datas, l, data) {
+        if (layer_cnt == 0) {
+            if (cnt == 0) {
+                xx = HONEY_CX;
+                yy = layer * r + HONEY_CY;
+            }
+            xx = r * cos(-150.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(-150.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else if (layer_cnt == 1) {
+            xx = r * cos(-90.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(-90.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else if (layer_cnt == 2) {
+            xx = r * cos(-30.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(-30.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else if (layer_cnt == 3) {
+            xx = r * cos(30.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(30.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else if (layer_cnt == 4) {
+            xx = r * cos(90.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(90.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else if (layer_cnt == 5) {
+            xx = r * cos(150.0 * (M_PI/180.0)) + xx;
+            yy = r * sin(150.0 * (M_PI/180.0)) + yy;
+            cnt++;
+        } else {
+            ERR("something wrong!!: %d", layer_cnt);
+        }
+
+        HoneyItem *it = honey_view_create_item(view, data->path, xx, yy, 140, 140, sx, sy);
+        view->items = list_append(view->items, it);
+        if (cnt >= layer) {
+            cnt = 0;
+            layer_cnt++;
+        }
+        if (layer_cnt >= 6) {
+            layer_cnt= 0;
+            layer++;
+        }
+    }
 
     return view;
 }
@@ -2057,7 +2237,11 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
         view->grab = NULL;
     }
     if (nemoshow_event_is_single_click(show, event)) {
-        karim_change_view(view->karim, KARIM_TYPE_HONEY);
+        Karim *karim = view->karim;
+
+        KarimGroup *grp = karim_data_search_group(karim->countries, it->country);
+        karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+        karim_change_view(karim, KARIM_TYPE_HONEY);
     }
 }
 
@@ -3810,7 +3994,7 @@ static Karim *karim_create(NemoWidget *parent, int width, int height)
             _dispatch_bus,
            karim);
 
-    karim->datas = karim_data_load("/opt/contents/karim/",
+    karim->datas = karim_data_load(CONTENT,
             &(karim->countries), &(karim->categories), &(karim->years));
 #if 0
     List *l;
