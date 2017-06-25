@@ -1,3 +1,20 @@
+nemoapps (0.9.1) unstable; urgency=medium
+
+  * karim: Fix GUI
+  * karim: Add a missing file
+  * karim: Update GUI
+  * karim: code cleanup
+  * karim: Update GUI
+  * karim: Receive sensor data to show/hide intro
+  * karim: code clean-up
+  * filebrowser: check extension if it is an image.
+  * util: add to check image/video extension
+  * karim: code clean-up for honey view
+  * karim: Remove romania
+  * karim: change selected <--> unselected of year main buttons
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Sun, 25 Jun 2017 16:41:20 +0900
+
 nemoapps (0.8.0) unstable; urgency=medium
 
   * karim: Update GUI
