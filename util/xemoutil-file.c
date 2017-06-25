@@ -5,6 +5,14 @@
 /**********************************************************/
 /* file */
 /**********************************************************/
+const char *FILE_EXT_IMAGES[] = {
+    "png", "jpg", "jpeg", "tif", "tiff"
+};
+
+const char *FILE_EXT_VIDEOS[] = {
+    "avi", "mp4", "mkv", "wmv", "mov", "mpg", "flv", "swf", "webm", "ts", "tp"
+};
+
 const char *MAGIC_IMAGES[] =
 {
     "PNG image data",
@@ -90,7 +98,7 @@ char *file_get_dirname(const char *path)
 
 static bool _path_check_magic(const char *magic_str, const char **magics, int size)
 {
-    RET_IF(!magic_str, false);
+    if (!magic_str) return false;
     RET_IF(!magics || !magics[0], false);
 
     int i = 0;
@@ -583,6 +591,18 @@ List *fileinfo_readdir_sorted(const char *path)
     return files;
 }
 
+bool fileinfo_is_image_ext(FileInfo *fileinfo)
+{
+    int i;
+    if (!fileinfo->ext) return false;
+
+    for (i = 0 ; i < sizeof(FILE_EXT_IMAGES)/sizeof(FILE_EXT_IMAGES[0]) ; i++) {
+        if (!strcmp(fileinfo->ext, FILE_EXT_IMAGES[i]))
+            return true;
+    }
+    return false;
+}
+
 bool fileinfo_is_image(FileInfo *fileinfo)
 {
     return _path_check_magic(fileinfo->magic_str, MAGIC_IMAGES,
@@ -593,6 +613,17 @@ bool fileinfo_is_svg(FileInfo *fileinfo)
 {
     return _path_check_magic(fileinfo->magic_str, MAGIC_SVGS,
             sizeof(MAGIC_SVGS)/sizeof(MAGIC_SVGS[0]));
+}
+
+bool fileinfo_is_video_ext(FileInfo *fileinfo)
+{
+    int i;
+    for (i = 0 ; i < sizeof(FILE_EXT_VIDEOS)/sizeof(FILE_EXT_VIDEOS[0]) ; i++) {
+        if (!strcmp(fileinfo->ext, FILE_EXT_VIDEOS[i])) {
+                return true;
+        }
+    }
+    return false;
 }
 
 bool fileinfo_is_video(FileInfo *fileinfo)

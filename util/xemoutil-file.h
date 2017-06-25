@@ -42,6 +42,8 @@ void fileinfo_destroy(FileInfo *fileinfo);
 FileInfo *fileinfo_create(bool is_dir, const char *path, const char *name);
 List *fileinfo_readdir(const char *path);
 List *fileinfo_readdir_sorted(const char *path);
+bool fileinfo_is_image_ext(FileInfo *fileinfo);
+bool fileinfo_is_video_ext(FileInfo *fileinfo);
 bool fileinfo_is_image(FileInfo *fileinfo);
 bool fileinfo_is_svg(FileInfo *fileinfo);
 bool fileinfo_is_video(FileInfo *fileinfo);
