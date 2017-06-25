@@ -1967,11 +1967,11 @@ RegionData REGION_DATAS[] = {
     {"germany", 922, 254, 1006, 185},
     {"poland", 956, 243, 1006, 204},
     {"czech republic", 943, 261, 1006, 223},
-    {"slovenia", 950, 279, 1030, 247},
-    {"croatia", 968, 286, 1030, 266},
-    {"romania", 986, 289, 1030, 285},
-    {"serbia", 993, 307, 1030, 304},
-    {"bosnia", 974, 307, 1030, 323},
+    {"slovenia", 950, 279, 1030, 256},
+    {"croatia", 968, 286, 1030, 275},
+    {"romania", 968, 286, 1030, 275}, // removed !!!
+    {"serbia", 993, 307, 1030, 294},
+    {"bosnia", 974, 307, 1030, 313},
     {"turkey", 1040, 343, 1023, 363},
     {"greece", 986, 332, 944, 352},
     {"italy", 945, 309, 877, 333},
@@ -2331,6 +2331,8 @@ static RegionView *region_view_create(Karim *karim, NemoWidget *parent, int widt
     sx = view->w/1920.0;
     sy = view->h/1080.0;
     for (i = 1 ; i <= sizeof(REGION_DATAS)/sizeof(REGION_DATAS[0]) ; i++) {
+        // XXX: romania is removed from map
+        if (i == 24) continue;
         RegionItem *it = region_view_create_item(view, i, sx, sy);
         view->items = list_append(view->items, it);
     }
