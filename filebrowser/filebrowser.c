@@ -313,7 +313,10 @@ List *fileinfo_readdir_img(const char *path)
     FileInfo *file;
     LIST_FOR_EACH_SAFE(files, l, ll, file) {
         if (!fileinfo_is_image(file)) {
-            files = list_remove(files, file);
+            // FIXME: fail to get magic string for some images (e.g. TIFF, name user count (xx) exceeded)
+            if (!fileinfo_is_image_ext(file)) {
+                files = list_remove(files, file);
+            }
         }
     }
     return files;
