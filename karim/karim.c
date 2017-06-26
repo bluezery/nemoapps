@@ -704,6 +704,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     }
     int cnt = list_count(files);
     if (cnt > 4) cnt = 4;
+    else if (cnt < 2) cnt = 2;
 
     ViewerItem *it;
     LIST_FOR_EACH(view->items, l, it) {
@@ -1241,6 +1242,7 @@ struct _YearView {
 
 typedef struct _YearSub YearSub;
 struct _YearSub {
+    const char *year;
     double bg_x, bg_y;
     const char *bg;
     double txt_x, txt_y;
@@ -1248,71 +1250,96 @@ struct _YearSub {
 };
 
 YearSub YEAR_SUB0[] = {
-    {399.08, 345.81, APP_ICON_DIR"/year/year-subcircle.svg",
-     335.57, 309.96, APP_ICON_DIR"/year/1994.svg"},
-    {420.47, 280.59, APP_ICON_DIR"/year/year-subcircle.svg",
-     366.02, 230.02, APP_ICON_DIR"/year/1995.svg"},
-    {471.74, 234.57, APP_ICON_DIR"/year/year-subcircle.svg",
-     443.66, 166.76, APP_ICON_DIR"/year/1996.svg"},
-    {539.16, 220.36, APP_ICON_DIR"/year/year-subcircle.svg",
-     546.76, 152.51, APP_ICON_DIR"/year/1997.svg"},
-    {604.64, 241.76, APP_ICON_DIR"/year/year-subcircle.svg",
-     633.45, 166.19, APP_ICON_DIR"/year/1998.svg"},
+    {"1994",
+        399.08, 345.81, APP_ICON_DIR"/year/year-subcircle.svg",
+        335.57, 309.96, APP_ICON_DIR"/year/1994.svg"},
+    {"1995",
+        420.47, 280.59, APP_ICON_DIR"/year/year-subcircle.svg",
+        366.02, 230.02, APP_ICON_DIR"/year/1995.svg"},
+    {"1996",
+        471.74, 234.57, APP_ICON_DIR"/year/year-subcircle.svg",
+        443.66, 166.76, APP_ICON_DIR"/year/1996.svg"},
+    {"1997",
+        539.16, 220.36, APP_ICON_DIR"/year/year-subcircle.svg",
+        546.76, 152.51, APP_ICON_DIR"/year/1997.svg"},
+    {"1998",
+        604.64, 241.76, APP_ICON_DIR"/year/year-subcircle.svg",
+        633.45, 166.19, APP_ICON_DIR"/year/1998.svg"},
 };
 
 YearSub YEAR_SUB1[] = {
-    {586.6, 591.81, APP_ICON_DIR"/year/year-subcircle.svg",
-     504.06, 607.5, APP_ICON_DIR"/year/1999.svg"},
-    {595.33, 660.6, APP_ICON_DIR"/year/year-subcircle.svg",
-     523.82, 691.26, APP_ICON_DIR"/year/2000.svg"},
-    {637.07, 715.42, APP_ICON_DIR"/year/year-subcircle.svg",
-     591.65, 762.98, APP_ICON_DIR"/year/2001.svg"},
-    {700.61, 741.81, APP_ICON_DIR"/year/year-subcircle.svg",
-     686.69, 797.26, APP_ICON_DIR"/year/2002.svg"},
-    {768.95, 733.29, APP_ICON_DIR"/year/year-subcircle.svg",
-     782.62, 793.77, APP_ICON_DIR"/year/2003.svg"},
+    {"1999",
+        586.6, 591.81, APP_ICON_DIR"/year/year-subcircle.svg",
+        504.06, 607.5, APP_ICON_DIR"/year/1999.svg"},
+    {"2000",
+        595.33, 660.6, APP_ICON_DIR"/year/year-subcircle.svg",
+        523.82, 691.26, APP_ICON_DIR"/year/2000.svg"},
+    {"2001",
+        637.07, 715.42, APP_ICON_DIR"/year/year-subcircle.svg",
+        591.65, 762.98, APP_ICON_DIR"/year/2001.svg"},
+    {"2002",
+        700.61, 741.81, APP_ICON_DIR"/year/year-subcircle.svg",
+        686.69, 797.26, APP_ICON_DIR"/year/2002.svg"},
+    {"2003",
+        768.95, 733.29, APP_ICON_DIR"/year/year-subcircle.svg",
+        782.62, 793.77, APP_ICON_DIR"/year/2003.svg"},
 };
 
 YearSub YEAR_SUB2[] = {
-    {755.02, 280.8, APP_ICON_DIR"/year/year-subcircle.svg",
-     704.76, 221.16, APP_ICON_DIR"/year/2004.svg"},
-    {793.34, 223.55, APP_ICON_DIR"/year/year-subcircle.svg",
-     753.27, 151.45, APP_ICON_DIR"/year/2005.svg"},
-    {855.14, 193.11, APP_ICON_DIR"/year/year-subcircle.svg",
-     849.73, 111.17, APP_ICON_DIR"/year/2006.svg"},
-    {923.88, 197.66, APP_ICON_DIR"/year/year-subcircle.svg",
-     943.74, 121.4, APP_ICON_DIR"/year/2007.svg"},
-    {985, 229.9, APP_ICON_DIR"/year/year-subcircle.svg",
-     1023.4, 159.1, APP_ICON_DIR"/year/2008.svg"},
+    {"2004",
+        755.02, 280.8, APP_ICON_DIR"/year/year-subcircle.svg",
+        704.76, 221.16, APP_ICON_DIR"/year/2004.svg"},
+    {"2005",
+        793.34, 223.55, APP_ICON_DIR"/year/year-subcircle.svg",
+        753.27, 151.45, APP_ICON_DIR"/year/2005.svg"},
+    {"2006",
+        855.14, 193.11, APP_ICON_DIR"/year/year-subcircle.svg",
+        849.73, 111.17, APP_ICON_DIR"/year/2006.svg"},
+    {"2007",
+        923.88, 197.66, APP_ICON_DIR"/year/year-subcircle.svg",
+        943.74, 121.4, APP_ICON_DIR"/year/2007.svg"},
+    {"2008",
+        985, 229.9, APP_ICON_DIR"/year/year-subcircle.svg",
+        1023.4, 159.1, APP_ICON_DIR"/year/2008.svg"},
 };
 
 YearSub YEAR_SUB3[] = {
-    {1273.33,  655.73, APP_ICON_DIR"/year/year-subcircle.svg",
-     1328.85, 675.29, APP_ICON_DIR"/year/2009.svg"},
-    {1284.7, 723.68, APP_ICON_DIR"/year/year-subcircle.svg",
-     1340.84, 750.79, APP_ICON_DIR"/year/2010.svg"},
-    {1260.58,  788.21, APP_ICON_DIR"/year/year-subcircle.svg",
-     1305.95, 824.71, APP_ICON_DIR"/year/2011.svg"},
-    {1207.42,  832.02, APP_ICON_DIR"/year/year-subcircle.svg",
-     1238.44, 877.22, APP_ICON_DIR"/year/2012.svg"},
-    {1139.47,  843.4, APP_ICON_DIR"/year/year-subcircle.svg",
-     1158.25, 905.47, APP_ICON_DIR"/year/2013.svg"},
+    {"2009",
+        1273.33,  655.73, APP_ICON_DIR"/year/year-subcircle.svg",
+        1328.85, 675.29, APP_ICON_DIR"/year/2009.svg"},
+    {"2010",
+        1284.7, 723.68, APP_ICON_DIR"/year/year-subcircle.svg",
+        1340.84, 750.79, APP_ICON_DIR"/year/2010.svg"},
+    {"2011",
+        1260.58,  788.21, APP_ICON_DIR"/year/year-subcircle.svg",
+        1305.95, 824.71, APP_ICON_DIR"/year/2011.svg"},
+    {"2012",
+        1207.42,  832.02, APP_ICON_DIR"/year/year-subcircle.svg",
+        1238.44, 877.22, APP_ICON_DIR"/year/2012.svg"},
+    {"2013",
+        1139.47,  843.4, APP_ICON_DIR"/year/year-subcircle.svg",
+        1158.25, 905.47, APP_ICON_DIR"/year/2013.svg"},
 };
 
 YearSub YEAR_SUB4[] = {
-    {1338.42, 214.77, APP_ICON_DIR"/year/year-subcircle.svg",
-     1374.39, 157.14, APP_ICON_DIR"/year/2014.svg"},
-    {1418.46, 249.49, APP_ICON_DIR"/year/year-subcircle.svg",
-     1463.69, 211.7, APP_ICON_DIR"/year/2015.svg"},
-    {1462.42, 330.68, APP_ICON_DIR"/year/year-subcircle.svg",
-     1515.54, 344.46, APP_ICON_DIR"/year/2016.svg"},
-    {1438.54, 422.41, APP_ICON_DIR"/year/year-subcircle.svg",
-     1495.22, 450.55, APP_ICON_DIR"/year/2017.svg"},
+    {"2014",
+        1338.42, 214.77, APP_ICON_DIR"/year/year-subcircle.svg",
+        1374.39, 157.14, APP_ICON_DIR"/year/2014.svg"},
+    {"2015",
+        1418.46, 249.49, APP_ICON_DIR"/year/year-subcircle.svg",
+        1463.69, 211.7, APP_ICON_DIR"/year/2015.svg"},
+    {"2016",
+        1462.42, 330.68, APP_ICON_DIR"/year/year-subcircle.svg",
+        1515.54, 344.46, APP_ICON_DIR"/year/2016.svg"},
+    {"2017",
+        1438.54, 422.41, APP_ICON_DIR"/year/year-subcircle.svg",
+        1495.22, 450.55, APP_ICON_DIR"/year/2017.svg"},
 };
 
 typedef struct _YearSubItem YearSubItem;
 
 struct _YearSubItem {
+    char *year;
     YearView *view;
     struct showone *group;
     struct showone *bg;
@@ -1320,7 +1347,9 @@ struct _YearSubItem {
 };
 
 
-YearSubItem *year_view_create_sub_item(YearView *view, const char *bg_path, double bg_x, double bg_y, const char *txt_path, double txt_x, double txt_y, double sx, double sy)
+YearSubItem *year_view_create_sub_item(YearView *view,
+        const char *year,
+        const char *bg_path, double bg_x, double bg_y, const char *txt_path, double txt_x, double txt_y, double sx, double sy)
 {
     double x, y, ww, hh;
     struct showone *group;
@@ -1329,6 +1358,7 @@ YearSubItem *year_view_create_sub_item(YearView *view, const char *bg_path, doub
     YearSubItem *it = calloc(sizeof(YearSubItem), 1);
     it->view = view;
     it->group = group = GROUP_CREATE(view->btn_group);
+    it->year = strdup(year);
 
     x = bg_x * sx;
     y = bg_y * sy;
@@ -1501,7 +1531,7 @@ YearMainItem *year_view_create_main_item(YearView *view, const char *btn_path, c
     int i;
     for (i = 0 ; i < cnt ; i++) {
         YearSubItem *sub_it;
-        sub_it = year_view_create_sub_item(it->view, sub[i].bg, sub[i].bg_x, sub[i].bg_y,
+        sub_it = year_view_create_sub_item(it->view, sub[i].year, sub[i].bg, sub[i].bg_x, sub[i].bg_y,
                 sub[i].txt, sub[i].txt_x, sub[i].txt_y, sx, sy);
         it->items = list_append(it->items, sub_it);
     }
@@ -1736,6 +1766,14 @@ static void _year_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             year_sub_item_up(it);
 
             if (nemoshow_event_is_single_click(show, event)) {
+                Karim *karim = view->karim;
+                KarimGroup *grp = karim_data_search_group(karim->years, it->year);
+                if (!grp) {
+                    ERR("No group for %s", it->year);
+                } else {
+                    karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                    karim_change_view(karim, KARIM_TYPE_HONEY);
+                }
             }
         }
     }
@@ -2204,13 +2242,17 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
     } else if (nemoshow_event_is_up(show, event)) {
         region_item_up(it);
         view->grab = NULL;
-    }
-    if (nemoshow_event_is_single_click(show, event)) {
-        Karim *karim = view->karim;
+        if (nemoshow_event_is_single_click(show, event)) {
+            Karim *karim = view->karim;
 
-        KarimGroup *grp = karim_data_search_group(karim->countries, it->country);
-        karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
-        karim_change_view(karim, KARIM_TYPE_HONEY);
+            KarimGroup *grp = karim_data_search_group(karim->countries, it->country);
+            if (!grp) {
+                ERR("No group for %s", it->country);
+            } else {
+                karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                karim_change_view(karim, KARIM_TYPE_HONEY);
+            }
+        }
     }
 }
 
@@ -2776,7 +2818,7 @@ void work_view_hide(WorkView *view, uint32_t easetype, int duration, int delay)
     }
 }
 
-static void work_icon_down(WorkItem *it, uint32_t easetype, int duration, int delay)
+static void work_item_down(WorkItem *it, uint32_t easetype, int duration, int delay)
 {
     _nemoshow_item_motion_bounce(image_get_group(it->img), easetype, duration, delay,
             "sx", 1.5, 1.4, "sy", 1.5, 1.4,
@@ -2790,7 +2832,7 @@ static void work_icon_down(WorkItem *it, uint32_t easetype, int duration, int de
     }
 }
 
-static void work_icon_up(WorkItem *it, uint32_t easetype, int duration, int delay)
+static void work_item_up(WorkItem *it, uint32_t easetype, int duration, int delay)
 {
     _nemoshow_item_motion_bounce(image_get_group(it->img), easetype, duration, delay,
             "sx", 0.8, 1.0, "sy", 0.8, 1.0,
@@ -2813,20 +2855,23 @@ static void _work_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
             nemoshow_event_get_y(event), &ex, &ey);
 
     struct showone *one = userdata;
-    const char *id = nemoshow_one_get_id(one);
-    WorkItem *icon = nemoshow_one_get_userdata(one);
-    WorkView *view = icon->view;
-    RET_IF(!id);
+    WorkItem *it = nemoshow_one_get_userdata(one);
+    WorkView *view = it->view;
 
     if (nemoshow_event_is_down(show, event)) {
-        work_icon_down(icon, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
+        work_item_down(it, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
         nemoshow_dispatch_frame(view->show);
     } else if (nemoshow_event_is_up(show, event)) {
-        work_icon_up(icon, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
+        work_item_up(it, NEMOEASE_CUBIC_INOUT_TYPE, 250, 0);
         view->grab = NULL;
         if (nemoshow_event_is_single_click(show, event)) {
-            if (!strcmp(id, "tabletop")) {
-                karim_change_view(view->karim, KARIM_TYPE_HONEY);
+            Karim *karim = view->karim;
+            KarimGroup *grp = karim_data_search_group(karim->categories, it->category);
+            if (!grp) {
+                ERR("No group for %s", it->category);
+            } else {
+                karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                karim_change_view(karim, KARIM_TYPE_HONEY);
             }
         }
         nemoshow_dispatch_frame(view->show);
