@@ -1181,8 +1181,30 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     nemoshow_item_translate(it->group, it->x, it->y);
 
     FileInfo *file = LIST_DATA(LIST_FIRST(files));
+
+    // Use thumbnail
+    char *base = file_get_basename(file->path);
+    char *temp = strdup(file->path);
+    char *prev0 = NULL;
+    char *prev1 = NULL;
+    char *tok = strtok(temp, "/");
+    while(tok = strtok(NULL, "/")) {
+        if (prev0) {
+            if (prev1) free(prev1);
+            prev1 = strdup(prev0);
+            free(prev0);
+        }
+        prev0 = strdup(tok);
+    }
+
     char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, "%s", file->path);
+    snprintf(buf, PATH_MAX, "/opt/contents/karim_thumb/%s/%s", prev1, base);
+    if (prev0) free(prev0);
+    if (prev1) free(prev1);
+    free(base);
+    free(temp);
+
+    //snprintf(buf, PATH_MAX, "%s", file->path);
     it->w = w;
     it->h = h;
     Image *img;
