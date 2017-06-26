@@ -536,14 +536,11 @@ static void button_view_hide_destroy(ButtonView *view, uint32_t easetype, int du
 
 static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
 {
-    double sx, sy;
-    sx = karim->w/1920.0;
-    sy = karim->h/1080.0;
     double w, h, x, y;
     w = 480;
     h = 216;
-    x = 720 * sx;
-    y = 750 * sy;
+    x = (karim->w - w)/2.0;
+    y = karim->h - h * 1.5;
 
     ButtonView *view = calloc(sizeof(ButtonView), 1);
     view->karim = karim;
@@ -744,9 +741,9 @@ static void _viewer_gallery_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
             }
         } else {
             int tx = ex - gx;
-            if (tx > view->w/4) {
+            if (tx > view->w/12.0) {
                 view->gallery_x += view->w;
-            } else if (tx < -view->w/4) {
+            } else if (tx < -view->w/12.0) {
                 view->gallery_x -= view->w;
             }
 
@@ -1191,7 +1188,6 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     it->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
     image_load_fit(img, view->tool, buf, it->w, it->h, NULL, NULL);
-
 
     it->event = one = PATH_CIRCLE_CREATE(group, 240);
     // FIXME: path pick does not work !!
