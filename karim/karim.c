@@ -203,6 +203,24 @@ struct _Karim
     NemoWidget *event_widget;
 };
 
+struct _MenuView {
+    Karim *karim;
+    int w, h;
+    struct nemotool *tool;
+    struct nemoshow *show;
+    NemoWidget *widget;
+
+    NemoWidgetGrab *grab;
+    struct showone *group;
+
+    struct nemotimer *timer;
+    struct showone *out;
+    List *outs;
+    struct showone *btn_region;
+    struct showone *btn_wave;
+    struct showone *btn_year;
+};
+
 static void menu_view_select(MenuView *view, const char *id);
 static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay);
 static void button_view_hide_destroy(ButtonView *view, uint32_t easetype, int duration, int delay);
@@ -399,7 +417,6 @@ static void karim_change_view(Karim *karim, KarimType type)
             karim->prev_type = karim->type;
             karim->type = type;
         } else if (type == KARIM_TYPE_HONEY) {
-            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             karim->prev_type = karim->type;
             karim->type = type;
@@ -936,6 +953,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     }
 
     view->title_widget = widget = nemowidget_create_vector(parent, width, height);
+    nemowidget_stack_above(karim->button->widget, widget);
     nemowidget_enable_event_repeat(widget, true);
 
     view->title_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
@@ -1042,6 +1060,7 @@ struct _HoneyItem {
     char *path;
     struct showone *group;
     Image *img;
+    struct showone *event;
     List *files;
 };
 
@@ -1101,10 +1120,25 @@ static List *fileinfo_readdir_img(const char *path)
 
 static void honey_item_destroy(HoneyItem *it)
 {
+    nemoshow_one_destroy(it->event);
     image_destroy(it->img);
     free(it->path);
     nemoshow_one_destroy(it->group);
     free(it);
+}
+
+static void path_create_diamond(struct showone *one, int w, int h)
+{
+    double r = 16;
+    nemoshow_item_path_moveto(one, w/2 + r, r);
+    nemoshow_item_path_cubicto(one, w/2, 0, w/2, 0, w/2 - r, r);
+    nemoshow_item_path_lineto(one, r, h/2 - r);
+    nemoshow_item_path_cubicto(one, 0, h/2, 0, h/2, r, h/2 + r);
+    nemoshow_item_path_lineto(one, w/2 - r, h - r);
+    nemoshow_item_path_cubicto(one, w/2, h, w/2, h, w/2 + r, h - r);
+    nemoshow_item_path_lineto(one, w - r, h/2 + r);
+    nemoshow_item_path_cubicto(one, w, h/2, w, h/2, w - r, h/2 - r);
+    nemoshow_item_path_close(one);
 }
 
 static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, double x, double y, double w, double h, double sx, double sy)
@@ -1112,6 +1146,7 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     List *files = fileinfo_readdir_img(path);
     RET_IF(!files, NULL);
 
+    struct showone *one;
     struct showone *group;
     struct showone *canvas;
     canvas = nemowidget_get_canvas(view->widget);
@@ -1126,16 +1161,28 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     nemoshow_item_translate(it->group, it->x, it->y);
 
     FileInfo *file = LIST_DATA(LIST_FIRST(files));
-    char uri[PATH_MAX];
-    snprintf(uri, PATH_MAX, "%s", file->path);
+    char buf[PATH_MAX];
+    snprintf(buf, PATH_MAX, "%s", file->path);
     it->w = w * sx;
     it->h = h * sy;
     Image *img;
     it->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_load_fit(img, view->tool, uri, it->w, it->h, NULL, NULL);
-    nemoshow_one_set_state(image_get_group(img), NEMOSHOW_PICK_STATE);
-    nemoshow_one_set_userdata(image_get_group(img), it);
+    image_load_fit(img, view->tool, buf, it->w, it->h, NULL, NULL);
+
+
+    it->event = one = PATH_CIRCLE_CREATE(group, 120);
+    // FIXME: path pick does not work !!
+    /*
+    double ww, hh;
+    const char *uri = APP_ICON_DIR"/honey/event.svg";
+    svg_get_wh(uri, &ww, &hh);
+    nemoshow_item_path_cmd(one, "M193.259,2l63.649,110l-63.649,110h-127.3L2.31,112L65.958,2h127.651 M194.413,0H64.805L0,112l64.805,112 h129.608l64.806-112L194.413,0L194.413,0z");
+    */
+    nemoshow_item_set_pick(one, NEMOSHOW_ITEM_PATH_PICK);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_item_set_alpha(one, 0.0);
+    nemoshow_one_set_userdata(one, it);
 
     return it;
 }
@@ -1329,6 +1376,7 @@ static void _honey_view_event(NemoWidget *widget, const char *id, void *info, vo
 
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
+        ERR("%p", one);
         if (one && !view->it_grab) {
             view->it_grab = nemowidget_create_grab(widget, event,
                     _honey_view_it_grab_event, one);
@@ -3213,24 +3261,6 @@ WorkView *work_view_create(Karim *karim, NemoWidget *parent, int width, int heig
 
     return view;
 }
-
-struct _MenuView {
-    Karim *karim;
-    int w, h;
-    struct nemotool *tool;
-    struct nemoshow *show;
-    NemoWidget *widget;
-
-    NemoWidgetGrab *grab;
-    struct showone *group;
-
-    struct nemotimer *timer;
-    struct showone *out;
-    List *outs;
-    struct showone *btn_region;
-    struct showone *btn_wave;
-    struct showone *btn_year;
-};
 
 static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
 {
