@@ -129,6 +129,7 @@ static List *karim_data_load(const char *root, List **countries, List **categori
 
             datas = list_append(datas, data);
         }
+        fileinfo_destroy(file);
     }
 
     return datas;
@@ -458,7 +459,6 @@ static void _button_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                 karim_change_view(karim, KARIM_TYPE_MENU);
             } else if (!strcmp(id, "back")) {
                 if (karim->type == KARIM_TYPE_HONEY) {
-                    ERR("prev: %d", karim->prev_type);
                     if (karim->prev_type == KARIM_TYPE_REGION) {
                         karim_change_view(karim, KARIM_TYPE_REGION);
                     } else if (karim->prev_type == KARIM_TYPE_WORK) {
@@ -1093,6 +1093,7 @@ struct _HoneyItem {
     int x, y, w, h;
     char *path;
     struct showone *group;
+    ImageBitmap *bitmap;
     Image *img;
     struct showone *event;
     List *files;
@@ -1116,6 +1117,8 @@ struct _HoneyView {
     Image *fg;
     struct showone *title;
 
+    int item_idx;
+    Thread *item_thread;
     List *items;
     Image *select;
 };
@@ -1154,6 +1157,8 @@ static List *fileinfo_readdir_img(const char *path)
 
 static void honey_item_destroy(HoneyItem *it)
 {
+    FileInfo *file;
+    LIST_FREE(it->files, file) fileinfo_destroy(file);
     nemoshow_one_destroy(it->event);
     image_destroy(it->img);
     free(it->path);
@@ -1180,37 +1185,11 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     it->y = y;
     nemoshow_item_translate(it->group, it->x, it->y);
 
-    FileInfo *file = LIST_DATA(LIST_FIRST(files));
-
-    // Use thumbnail
-    char *base = file_get_basename(file->path);
-    char *temp = strdup(file->path);
-    char *prev0 = NULL;
-    char *prev1 = NULL;
-    char *tok = strtok(temp, "/");
-    while(tok = strtok(NULL, "/")) {
-        if (prev0) {
-            if (prev1) free(prev1);
-            prev1 = strdup(prev0);
-            free(prev0);
-        }
-        prev0 = strdup(tok);
-    }
-
-    char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, "/opt/contents/karim_thumb/%s/%s", prev1, base);
-    if (prev0) free(prev0);
-    if (prev1) free(prev1);
-    free(base);
-    free(temp);
-
-    //snprintf(buf, PATH_MAX, "%s", file->path);
     it->w = w;
     it->h = h;
     Image *img;
     it->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
-    image_load_fit(img, view->tool, buf, it->w, it->h, NULL, NULL);
 
     it->event = one = PATH_CIRCLE_CREATE(group, 240);
     // FIXME: path pick does not work !!
@@ -1228,6 +1207,83 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     return it;
 }
 
+typedef struct _ItemThreadData ItemThreadData;
+struct _ItemThreadData {
+    HoneyView *view;
+    ImageBitmap *bitmap;
+};
+
+static void *_honey_item_thread(void *userdata)
+{
+    ItemThreadData *data = userdata;
+    HoneyView *view = data->view;
+
+    HoneyItem *it = LIST_DATA(list_get_nth(view->items, view->item_idx));
+    RET_IF(!it->files, NULL);
+    FileInfo *file = LIST_DATA(LIST_FIRST(it->files));
+
+    // Use thumbnail
+    char *base = file_get_basename(file->path);
+    char *temp = strdup(file->path);
+    char *prev0 = NULL;
+    char *prev1 = NULL;
+    char *tok = strtok(temp, "/");
+    while ((tok = strtok(NULL, "/"))) {
+        if (prev0) {
+            if (prev1) free(prev1);
+            prev1 = strdup(prev0);
+            free(prev0);
+        }
+        prev0 = strdup(tok);
+    }
+
+    char buf[PATH_MAX];
+    snprintf(buf, PATH_MAX, "/opt/contents/karim_thumb/%s/%s", prev1, base);
+    if (prev0) free(prev0);
+    if (prev1) free(prev1);
+    free(base);
+    free(temp);
+
+    data->bitmap = image_bitmap_create(buf);
+
+    return NULL;
+}
+
+static void _honey_item_thread_done(bool cancel, void *userdata)
+{
+    ItemThreadData *data = userdata;
+    HoneyView *view = data->view;
+
+    view->item_thread = NULL;
+
+    if (cancel) {
+        if (data->bitmap) image_bitmap_destroy(data->bitmap);
+        data->bitmap = NULL;
+    } else {
+        HoneyItem *it = LIST_DATA(list_get_nth(view->items, view->item_idx));
+
+        if (data->bitmap) {
+            image_set_bitmap(it->img, it->w, it->h, data->bitmap);
+            nemoshow_dispatch_frame(view->show);
+        } else {
+            ERR("No bitmap for %s", it->path);
+        }
+
+        view->item_idx++;
+        if (view->item_idx >= list_count(view->items)) {
+            ERR("honey thread Done");
+        } else {
+            ItemThreadData *data = calloc(sizeof(ItemThreadData), 1);
+            data->view = view;
+            view->item_thread = thread_create(view->tool,
+                    _honey_item_thread, _honey_item_thread_done, data);
+            ERR("Go next: %d", view->item_idx);
+        }
+    }
+    free(data);
+}
+
+
 static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
     RET_IF(!view);
@@ -1235,6 +1291,13 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->bg_widget, easetype, duration + 1000, delay + 1000, 1.0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
+
+    view->item_idx = 0;
+    ItemThreadData *data = calloc(sizeof(ItemThreadData), 1);
+    data->view = view;
+    if (view->item_thread) thread_destroy(view->item_thread);
+    view->item_thread = thread_create(view->tool,
+            _honey_item_thread, _honey_item_thread_done, data);
 
     nemoshow_dispatch_frame(view->show);
 }
@@ -1263,6 +1326,9 @@ static void _honey_view_destroy(struct nemotimer *timer, void *userdata)
 static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
     RET_IF(!view);
+    if (view->item_thread) thread_destroy(view->item_thread);
+    view->item_thread = NULL;
+
     nemowidget_hide(view->bg_widget, 0, 0, 0);
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->bg_widget, easetype, duration, delay, 0.0);
@@ -1555,6 +1621,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     }
 
     view->fg = img = image_create(canvas);
+    // XXX: This is heavy jobs, texture is too large.
     image_load(img, view->tool, uri, w, h, NULL, NULL);
 
     uri = APP_IMG_DIR"/honey/icon-selected.png";
