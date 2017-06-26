@@ -189,6 +189,7 @@ struct _Karim
     NemoWidget *widget;
     struct showone *bg;
 
+    KarimType prev_type;
     KarimType type;
     IntroView *intro;
     RegionView *region;
@@ -201,6 +202,212 @@ struct _Karim
 
     NemoWidget *event_widget;
 };
+
+static void menu_view_select(MenuView *view, const char *id);
+static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay);
+static void button_view_hide_destroy(ButtonView *view, uint32_t easetype, int duration, int delay);
+static void intro_view_hide(IntroView *view, uint32_t easetype, int duration, int delay);
+static void intro_view_show(IntroView *view, uint32_t easetype, int duration, int delay);
+static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay);
+static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int delay);
+static void menu_view_down(MenuView *view, uint32_t easetype, int duration, int delay);
+static void menu_view_center(MenuView *view, uint32_t easetype, int duration, int delay);
+static void region_view_show(RegionView *view, uint32_t easetype, int duration, int delay);
+static void region_view_hide(RegionView *view, uint32_t easetype, int duration, int delay);
+static void work_view_show(WorkView *view, uint32_t easetype, int duration, int delay);
+static void work_view_hide(WorkView *view, uint32_t easetype, int duration, int delay);
+static void year_view_show(YearView *view, uint32_t easetype, int duration, int delay);
+static void year_view_hide(YearView *view, uint32_t easetype, int duration, int delay);
+static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay);
+static void honey_view_hide_destroy(HoneyView *view, uint32_t easetype, int duration, int delay);
+static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, int delay);
+static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, int delay);
+
+static void karim_change_view(Karim *karim, KarimType type)
+{
+    if (type == karim->type) return;
+
+
+    if (karim->type == KARIM_TYPE_NONE) {
+        if (type == KARIM_TYPE_INTRO) {
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_INTRO) {
+        if (type == KARIM_TYPE_MENU) {
+            intro_view_hide(karim->intro, NEMOEASE_CUBIC_IN_TYPE, 2000, 0);
+            menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            menu_view_center(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_MENU) {
+        if (type == KARIM_TYPE_INTRO) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type ==  KARIM_TYPE_REGION) {
+            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_WORK) {
+            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_YEAR) {
+            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_REGION) {
+        if (type == KARIM_TYPE_INTRO) {
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_WORK) {
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_YEAR) {
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_HONEY) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_WORK) {
+        if (type == KARIM_TYPE_INTRO) {
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_REGION) {
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_YEAR) {
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_HONEY) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_YEAR) {
+        if (type == KARIM_TYPE_INTRO) {
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_REGION) {
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_WORK) {
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_HONEY) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_HONEY) {
+        if (type == KARIM_TYPE_INTRO) {
+            honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_MENU) {
+            honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            menu_view_center(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_REGION ||
+                type == KARIM_TYPE_WORK ||
+                type == KARIM_TYPE_YEAR) {
+            honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            menu_view_down(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            if (type == KARIM_TYPE_REGION) {
+                menu_view_select(karim->menu, "region");
+            } else if (type == KARIM_TYPE_WORK) {
+                menu_view_select(karim->menu, "work");
+            } else if (type == KARIM_TYPE_YEAR) {
+                menu_view_select(karim->menu, "year");
+            }
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_VIEWER) {
+            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    } else if (karim->type == KARIM_TYPE_VIEWER) {
+        if (type == KARIM_TYPE_INTRO) {
+            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else if (type == KARIM_TYPE_HONEY) {
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            karim->prev_type = karim->type;
+            karim->type = type;
+        } else {
+            ERR("not supported: %d -> %d", karim->type, type);
+        }
+    }
+}
 
 typedef struct _ButtonView ButtonView;
 struct _ButtonView {
@@ -234,6 +441,20 @@ static void _button_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                 "sx", 1.25, 1.0, "sy", 1.25, 1.0,
                 NULL);
         if (nemoshow_event_is_single_click(show, event)) {
+            Karim *karim = view->karim;
+            const char *id = nemoshow_one_get_id(one);
+            RET_IF(!id);
+            if (!strcmp(id, "home")) {
+                karim_change_view(karim, KARIM_TYPE_MENU);
+            } else if (!strcmp(id, "back")) {
+                if (karim->type == KARIM_TYPE_HONEY) {
+                    karim_change_view(karim, karim->prev_type);
+                } else if (karim->type == KARIM_TYPE_VIEWER) {
+                    karim_change_view(karim, KARIM_TYPE_HONEY);
+                } else {
+                    ERR("currnet type(%d) is not correct", karim->type);
+                }
+            }
         }
         nemoshow_dispatch_frame(show);
     }
@@ -261,6 +482,40 @@ static void _button_view_event(NemoWidget *widget, const char *id, void *info, v
                         _button_view_grab_event, one);
         }
     }
+}
+
+static void button_view_destroy(ButtonView *view)
+{
+    nemoshow_one_destroy(view->back);
+    nemoshow_one_destroy(view->home);
+    nemoshow_one_destroy(view->bg);
+    nemoshow_one_destroy(view->group);
+    nemowidget_destroy(view->widget);
+    free(view);
+}
+
+static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay)
+{
+    nemowidget_show(view->widget, 0, 0, 0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
+}
+
+static void button_view_hide(ButtonView *view, uint32_t easetype, int duration, int delay)
+{
+    nemowidget_hide(view->widget, 0, 0, 0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
+}
+
+static void _button_view_destroy(struct nemotimer *timer, void *userdata)
+{
+    ButtonView *view = userdata;
+    button_view_destroy(view);
+}
+
+static void button_view_hide_destroy(ButtonView *view, uint32_t easetype, int duration, int delay)
+{
+    button_view_hide(view, easetype, duration, delay);
+    TOOL_ADD_TIMER(view->tool, duration + delay + 100, _button_view_destroy, view);
 }
 
 static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
@@ -303,11 +558,8 @@ static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
     uri = APP_ICON_DIR"/home&back/home.svg";
     svg_get_wh(uri, &ww, &hh);
     view->home = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
-    /*
     nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, ww/2, hh/2);
-    */
-    nemoshow_item_translate(one, 72, 44);
+    nemoshow_item_translate(one, ww/2 + 72, hh/2 + 44);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_userdata(one, view);
     nemoshow_one_set_id(one, "home");
@@ -315,28 +567,13 @@ static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
     uri = APP_ICON_DIR"/home&back/back.svg";
     svg_get_wh(uri, &ww, &hh);
     view->back = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
-    /*
     nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_item_translate(one, ww/2, hh/2);
-    */
-    nemoshow_item_translate(one, 280, 44);
+    nemoshow_item_translate(one, ww/2 + 280, hh/2 + 44);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_userdata(one, view);
     nemoshow_one_set_id(one, "back");
 
     return view;
-}
-
-static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay)
-{
-    nemowidget_show(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
-}
-
-static void button_view_hide(ButtonView *view, uint32_t easetype, int duration, int delay)
-{
-    nemowidget_hide(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
 }
 
 typedef enum {
@@ -379,161 +616,6 @@ struct _ViewerView {
 
     struct nemotimer *title_timer;
 };
-
-static void intro_view_hide(IntroView *view, uint32_t easetype, int duration, int delay);
-static void intro_view_show(IntroView *view, uint32_t easetype, int duration, int delay);
-static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay);
-static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int delay);
-static void region_view_show(RegionView *view, uint32_t easetype, int duration, int delay);
-static void region_view_hide(RegionView *view, uint32_t easetype, int duration, int delay);
-static void work_view_show(WorkView *view, uint32_t easetype, int duration, int delay);
-static void work_view_hide(WorkView *view, uint32_t easetype, int duration, int delay);
-static void year_view_show(YearView *view, uint32_t easetype, int duration, int delay);
-static void year_view_hide(YearView *view, uint32_t easetype, int duration, int delay);
-static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay);
-static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, int delay);
-static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, int delay);
-static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, int delay);
-
-static void karim_change_view(Karim *karim, KarimType type)
-{
-    if (type == karim->type) return;
-
-    if (karim->type == KARIM_TYPE_NONE) {
-        if (type == KARIM_TYPE_INTRO) {
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_INTRO) {
-        if (type == KARIM_TYPE_MENU) {
-            intro_view_hide(karim->intro, NEMOEASE_CUBIC_IN_TYPE, 2000, 0);
-            menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_MENU) {
-        if (type == KARIM_TYPE_INTRO) {
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type ==  KARIM_TYPE_REGION) {
-            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_WORK) {
-            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_YEAR) {
-            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_REGION) {
-        if (type == KARIM_TYPE_INTRO) {
-            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_WORK) {
-            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_YEAR) {
-            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_HONEY) {
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_WORK) {
-        if (type == KARIM_TYPE_INTRO) {
-            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_REGION) {
-            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_YEAR) {
-            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_HONEY) {
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_YEAR) {
-        if (type == KARIM_TYPE_INTRO) {
-            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_REGION) {
-            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_WORK) {
-            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_HONEY) {
-            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_HONEY) {
-        if (type == KARIM_TYPE_INTRO) {
-            honey_view_hide(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            work_view_hide(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_REGION ||
-                type == KARIM_TYPE_WORK ||
-                type == KARIM_TYPE_YEAR) {
-            honey_view_hide(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_VIEWER) {
-            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 1000);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    } else if (karim->type == KARIM_TYPE_VIEWER) {
-        if (type == KARIM_TYPE_INTRO) {
-            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            honey_view_hide(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
-            karim->type = type;
-        } else if (type == KARIM_TYPE_HONEY) {
-            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
-            karim->type = type;
-        } else {
-            ERR("not supported: %d -> %d", karim->type, type);
-        }
-    }
-}
-
 void viewer_item_translate(ViewerItem *it, uint32_t easetype, int duration, int delay, double tx, double ty)
 {
     nemowidget_translate(it->intro_widget, easetype, duration, delay, tx, ty);
@@ -969,7 +1051,7 @@ struct _HoneyView {
     struct nemotool *tool;
     struct nemoshow *show;
     NemoWidget *bg_widget;
-    Image *bg0;
+    Image *bg;
 
     NemoWidget *widget;
 
@@ -977,8 +1059,8 @@ struct _HoneyView {
     double widget_x, widget_y;
     NemoWidgetGrab *it_grab;
     NemoWidgetGrab *scroll_grab;
-    int bg_ix, bg_iy;
-    Image *bg;
+    int fg_ix, fg_iy;
+    Image *fg;
     struct showone *title;
 
     List *items;
@@ -1015,6 +1097,14 @@ static List *fileinfo_readdir_img(const char *path)
         }
     }
     return files;
+}
+
+static void honey_item_destroy(HoneyItem *it)
+{
+    image_destroy(it->img);
+    free(it->path);
+    nemoshow_one_destroy(it->group);
+    free(it);
 }
 
 static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, double x, double y, double w, double h, double sx, double sy)
@@ -1061,6 +1151,27 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
     nemoshow_dispatch_frame(view->show);
 }
 
+static void honey_view_destroy(HoneyView *view)
+{
+    image_destroy(view->select);
+    image_destroy(view->fg);
+    HoneyItem *it;
+    LIST_FREE(view->items, it) {
+        honey_item_destroy(it);
+    }
+    nemoshow_one_destroy(view->title);
+    nemowidget_destroy(view->widget);
+    image_destroy(view->bg);
+    nemowidget_destroy(view->bg_widget);
+    free(view);
+}
+
+static void _honey_view_destroy(struct nemotimer *timer, void *userdata)
+{
+    HoneyView *view = userdata;
+    honey_view_destroy(view);
+}
+
 static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
     RET_IF(!view);
@@ -1070,6 +1181,12 @@ static void honey_view_hide(HoneyView *view, uint32_t easetype, int duration, in
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
 
     nemoshow_dispatch_frame(view->show);
+}
+
+static void honey_view_hide_destroy(HoneyView *view, uint32_t easetype, int duration, int delay)
+{
+    honey_view_hide(view, easetype, duration, delay);
+    TOOL_ADD_TIMER(view->tool, duration + delay + 100, _honey_view_destroy, view);
 }
 
 static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *event)
@@ -1243,7 +1360,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     uri = APP_IMG_DIR"/honey/background.png";
 
     Image *img;
-    view->bg0 = img = image_create(nemowidget_get_canvas(widget));
+    view->bg = img = image_create(nemowidget_get_canvas(widget));
     image_load(img, view->tool, uri, view->w, view->h, NULL, NULL);
 
     int w, h;
@@ -1253,15 +1370,15 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
 
     view->widget_w = w = w * sx;
     view->widget_h = h = h * sy;
-    view->bg_ix = (w - view->w)/2;
-    view->bg_iy = (h - view->h)/2;
+    view->fg_ix = (w - view->w)/2;
+    view->fg_iy = (h - view->h)/2;
 
     view->widget = widget = nemowidget_create_vector(parent, w, h);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
-    nemowidget_translate(widget, 0, 0, 0, -view->bg_ix, -view->bg_iy);
+    nemowidget_translate(widget, 0, 0, 0, -view->fg_ix, -view->fg_iy);
     nemowidget_append_callback(widget, "event", _honey_view_event, view);
-    view->widget_x = -view->bg_ix;
-    view->widget_y = -view->bg_iy;
+    view->widget_x = -view->fg_ix;
+    view->widget_y = -view->fg_iy;
 
     struct showone *canvas;
     struct showone *one;
@@ -1340,11 +1457,11 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
         }
     }
 
-    view->bg = img = image_create(canvas);
+    view->fg = img = image_create(canvas);
     w = w * sx;
     h = h * sy;
     image_load_full(img, view->tool, uri, w, h, NULL, NULL);
-    //image_translate(img, 0, 0, 0, -view->bg_ix, -view->bg_iy);a
+    //image_translate(img, 0, 0, 0, -view->fg_ix, -view->fg_iy);a
 
     uri = APP_IMG_DIR"/honey/icon-selected.png";
     image_get_wh(buf, &w, &h);
@@ -3137,6 +3254,81 @@ static void _menu_view_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(view->show);
 }
 
+static void menu_view_down(MenuView *view, uint32_t easetype, int duration, int delay)
+{
+    double sx, sy;
+    sx = view->w/1920.0;
+    sy = view->h/1080.0;
+    double gw = 440 * sx;
+    double gh = 140 * sy;
+    _nemoshow_item_motion(view->group, easetype, duration, delay,
+            "sx", 1.0, "sy", 1.0,
+            "tx", view->w/2.0 + gw/2, "ty", view->h * 0.9 + gh/2,
+            NULL);
+    nemoshow_dispatch_frame(view->show);
+}
+
+static void menu_view_center(MenuView *view, uint32_t easetype, int duration, int delay)
+{
+    double sx, sy;
+    sx = view->w/1920.0;
+    sy = view->h/1080.0;
+    double gw = 440 * sx;
+    double gh = 140 * sy;
+
+    _nemoshow_item_motion(view->group, easetype, duration, delay,
+            "sx", 1.5, "sy", 1.5,
+            "tx", view->w/2.0 + gw/2*1.5, "ty", view->h/2.0 + gh/2*1.5,
+            NULL);
+    nemoshow_dispatch_frame(view->show);
+}
+
+static void menu_view_select(MenuView *view, const char *id)
+{
+    uint32_t color0 = 0xF04E98FF;
+    uint32_t color1 = 0xF7ACB87F;
+    if (!strcmp(id, "region")) {
+        _nemoshow_item_motion_bounce(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+                NULL);
+        _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color0,
+                NULL);
+        _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+        _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+    } else if (!strcmp(id, "work")) {
+        _nemoshow_item_motion_bounce(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+                NULL);
+        _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+        _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color0,
+                NULL);
+        _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+    } else if (!strcmp(id, "year")) {
+        _nemoshow_item_motion_bounce(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+                NULL);
+        _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+        _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color1,
+                NULL);
+        _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "fill", color0,
+                NULL);
+    }
+}
+
 static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -3168,60 +3360,13 @@ static void _menu_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
     } else if (nemoshow_event_is_up(show, event)) {
         view->grab = NULL;
         if (nemoshow_event_is_single_click(show, event)) {
-            double sx, sy;
-            sx = view->w/1920.0;
-            sy = view->h/1080.0;
-            double gw = 440 * sx;
-            double gh = 140 * sy;
-            _nemoshow_item_motion(view->group, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
-                    "alpha", 1.0,
-                    "sx", 1.0, "sy", 1.0,
-                    "tx", view->w/2.0 + gw/2, "ty", view->h * 0.9 + gh/2,
-                    NULL);
-
-            uint32_t color0 = 0xF04E98FF;
-            uint32_t color1 = 0xF7ACB87F;
+            menu_view_down(view, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
+            menu_view_select(view, id);
             if (!strcmp(id, "region")) {
-                _nemoshow_item_motion_bounce(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "sx", 0.8, 1.0, "sy", 0.8, 1.0,
-                        NULL);
-                _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color0,
-                        NULL);
-                _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
-                _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
                 karim_change_view(view->karim, KARIM_TYPE_REGION);
             } else if (!strcmp(id, "work")) {
-                _nemoshow_item_motion_bounce(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "sx", 0.8, 1.0, "sy", 0.8, 1.0,
-                        NULL);
-                _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
-                _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color0,
-                        NULL);
-                _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
                 karim_change_view(view->karim, KARIM_TYPE_WORK);
             } else if (!strcmp(id, "year")) {
-                _nemoshow_item_motion_bounce(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "sx", 0.8, 1.0, "sy", 0.8, 1.0,
-                        NULL);
-                _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
-                _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color1,
-                        NULL);
-                _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-                        "fill", color0,
-                        NULL);
                 karim_change_view(view->karim, KARIM_TYPE_YEAR);
             }
         } else {
@@ -3278,6 +3423,7 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     view->widget = widget = nemowidget_create_vector(parent, width, height);
     nemowidget_enable_event_repeat(widget, true);
     nemowidget_append_callback(widget, "event", _menu_view_event, view);
+    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     double sx, sy;
     sx = view->w/1920.0;
@@ -3291,7 +3437,6 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
     nemoshow_item_set_width(group, gw);
     nemoshow_item_set_height(group, gh);
     nemoshow_item_set_anchor(group, 0.5, 0.5);
-    nemoshow_item_set_alpha(group, 0.0);
     nemoshow_item_translate(group, width/2 + gw/2, height * 0.9 + gh/2);
 
     double stroke_alpha = 0.88;
@@ -3368,19 +3513,8 @@ static MenuView *menu_view_create(Karim *karim, NemoWidget *parent, int width, i
 
 static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int delay)
 {
-    double sx, sy;
-    sx = view->w/1920.0;
-    sy = view->h/1080.0;
-    double gw = 440 * sx;
-    double gh = 140 * sy;
-
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
-    _nemoshow_item_motion(view->group, easetype, duration, delay,
-            "alpha", 1.0,
-            "sx", 1.5, "sy", 1.5,
-            "tx", view->w/2.0 + gw/2*1.5, "ty", view->h/2.0 + gh/2*1.5,
-            NULL);
     nemoshow_dispatch_frame(view->show);
     nemotimer_set_timeout(view->timer, duration + delay);
 }
@@ -3389,9 +3523,15 @@ static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int 
 {
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
-    _nemoshow_item_motion(view->group, easetype, duration, delay,
-            "alpha", 0.0,
-            NULL);
+
+    List *l;
+    struct showone *one;
+    LIST_FOR_EACH(view->outs, l, one) {
+        _nemoshow_item_motion(one, NEMOEASE_CUBIC_OUT_TYPE, duration, delay,
+                "alpha", 0.0, NULL);
+        _nemoshow_item_motion(one, NEMOEASE_CUBIC_OUT_TYPE, duration, delay,
+                "sx", 0.0, "sy", 0.0, NULL);
+    }
 
     uint32_t color1 = 0xF7ACB87F;
     _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
@@ -3972,6 +4112,7 @@ static void _saver_view_event(NemoWidget *widget, const char *id, void *info, vo
             viewer_view_show(karim->viewer, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
         } else {
             menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
+            menu_view_center(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             if (karim->type == KARIM_TYPE_REGION) {
                 //menu_view_right(karim->menu, NEMOEASE_LINEAR_TYPE, 1000, 0);
                 region_view_show(karim->region, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
@@ -4064,7 +4205,7 @@ static void _karim_saver_timeout(struct nemotimer *timer, void *userdata)
     } else if (karim->type == KARIM_TYPE_YEAR) {
         year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
     } else if (karim->type == KARIM_TYPE_HONEY) {
-        honey_view_hide(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+        honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
     } else if (karim->type == KARIM_TYPE_VIEWER) {
         viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
     }
