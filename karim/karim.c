@@ -393,6 +393,7 @@ static void karim_change_view(Karim *karim, KarimType type)
         if (type == KARIM_TYPE_INTRO) {
             viewer_view_hide_destroy(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 100, 0);
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 100, 0);
             region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 100, 0);
             work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 100, 0);
             year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 100, 0);
