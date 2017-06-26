@@ -3,7 +3,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
 	 y="0px" width="1920px" height="1080px" viewBox="0 0 1920 1080" enable-background="new 0 0 1920 1080" xml:space="preserve">
-<path fill="#F8E1EC" stroke="#F4F4F4" stroke-width="1.75" stroke-miterlimit="10" d="M397.524,448.334
-	c-2.499,9.541,23.197,14.841,32.017,18.195s4.585,16.763,11.938,15.804c2.555-0.331,46.913-19.007,39.437-23.595
-	C473.282,454.089,401.81,433.914,397.524,448.334z"/>
+<path fill="#F8E1EC" stroke="#EBEBEB" stroke-width="2" stroke-miterlimit="10" d="M397.524,448.334
+	c-2.499,9.541,23.197,14.841,32.017,18.194c8.82,3.354,4.585,16.764,11.938,15.804c2.556-0.33,46.913-19.007,39.438-23.595
+	C473.282,454.089,401.81,433.913,397.524,448.334z"/>
 </svg>

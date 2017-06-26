@@ -3,8 +3,8 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
 	 y="0px" width="1920px" height="1080px" viewBox="0 0 1920 1080" enable-background="new 0 0 1920 1080" xml:space="preserve">
-<path fill="#F1C2D9" stroke="#FBFBFB" stroke-width="1.25" stroke-miterlimit="10" d="M1532.574,673.236
-	c7.425-1.575,69.915-6.436,69.875-12.049c-0.033-5.616-71.561-7.093-78.348-7.817c-6.791-0.722-20.989-2.602-28.688-2.437
-	c-7.535,0.163-14.306-11.198-19.87-0.81c-5.563,10.393,26.122,13.114,33.535,15.951
+<path fill="#F1C2D9" stroke="#F8F8F8" stroke-width="2" stroke-miterlimit="10" d="M1532.574,673.236
+	c7.425-1.575,69.915-6.436,69.875-12.049c-0.033-5.616-71.562-7.093-78.349-7.817c-6.791-0.722-20.988-2.602-28.688-2.437
+	c-7.535,0.163-14.306-11.198-19.87-0.811c-5.563,10.394,26.122,13.114,33.535,15.951
 	C1510.1,666.463,1527.263,674.363,1532.574,673.236z"/>
 </svg>

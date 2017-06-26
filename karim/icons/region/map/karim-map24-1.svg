@@ -3,6 +3,6 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
 	 y="0px" width="1920px" height="1080px" viewBox="0 0 1920 1080" enable-background="new 0 0 1920 1080" xml:space="preserve">
-<path fill="#EEB3CF" stroke="#FFFFFF" stroke-miterlimit="10" d="M1635.449,865.413c-4.609,1.152-11.104,13.551-6.146,20.75
-	c4.957,7.201,21.492-7.624,22.063-12.186S1640.063,864.261,1635.449,865.413z"/>
+<path fill="#EEB3CF" stroke="#FFFFFF" stroke-width="2" stroke-miterlimit="10" d="M1635.449,865.412
+	c-4.609,1.152-11.104,13.552-6.146,20.75c4.957,7.201,21.492-7.624,22.063-12.186S1640.063,864.261,1635.449,865.412z"/>
 </svg>
