@@ -368,7 +368,7 @@ static void karim_change_view(Karim *karim, KarimType type)
             honey_view_hide(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             karim->type = type;
         } else if (type == KARIM_TYPE_VIEWER) {
-            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 500);
+            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 1000);
             karim->type = type;
         } else {
             ERR("not supported: %d -> %d", karim->type, type);
@@ -922,10 +922,10 @@ static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *
         nemowidget_get_geometry(view->widget, &view->widget_x, &view->widget_y, NULL, NULL);
     } else if (nemoshow_event_is_motion(show, event)) {
         double ex, ey;
+        double gx, gy;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_x(event),
                 nemoshow_event_get_y(event), &ex, &ey);
-        double gx, gy;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_grab_x(event),
                 nemoshow_event_get_grab_y(event), &gx, &gy);
@@ -948,29 +948,28 @@ static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *
         nemowidget_translate(view->widget, 0, 0, 0, tx, ty);
         nemoshow_dispatch_frame(show);
     } else if (nemoshow_event_is_up(show, event)) {
-        double widget_x, widget_y;
-        nemowidget_get_geometry(view->widget, &widget_x, &widget_y, NULL, NULL);
-
         view->scroll_grab = NULL;
 
         double gap_x, gap_y;
-        gap_x = 100;
-        gap_y = 100;
+        gap_x = 300;
+        gap_y = 300;
 
         double ex, ey;
+        double gx, gy;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_x(event),
                 nemoshow_event_get_y(event), &ex, &ey);
-        double gx, gy;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_grab_x(event),
                 nemoshow_event_get_grab_y(event), &gx, &gy);
         double tx, ty;
         double tw, th;
-        tx = widget_x + ex - gx;
-        ty = widget_y + ey - gy;
+        tx = view->widget_x + ex - gx;
+        ty = view->widget_y + ey - gy;
+
         tw = view->widget_w - view->w;
         th = view->widget_h - view->h;
+
         if (tx > -gap_x) {
             tx = -gap_x;
         } else if (tx < -tw + gap_x) {
@@ -1075,8 +1074,8 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     view->h = height;
 
     double sx, sy;
-    sx = view->w/3840.0;
-    sy = view->h/2160.0;
+    sx = 1.0;
+    sy = 1.0;
 
     NemoWidget *widget;
     view->bg_widget = widget = nemowidget_create_vector(parent, view->w, view->h);
