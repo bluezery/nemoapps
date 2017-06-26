@@ -213,8 +213,9 @@ struct _ViewerItem {
     ViewerView *view;
     NemoWidget *intro_widget;
     NemoWidget *gallery_widget;
+    int w, h;
     struct showone *clip;
-    Image *img0, *img1;
+    Image *intro_img, *gallery_img;
     struct showone *event;
 };
 
@@ -391,56 +392,56 @@ static void karim_change_view(Karim *karim, KarimType type)
     }
 }
 
-void viewer_item_translate(ViewerItem *item, uint32_t easetype, int duration, int delay, double tx, double ty)
+void viewer_item_translate(ViewerItem *it, uint32_t easetype, int duration, int delay, double tx, double ty)
 {
-    nemowidget_translate(item->intro_widget, easetype, duration, delay, tx, ty);
-    nemowidget_translate(item->gallery_widget, easetype, duration, delay, tx, ty);
+    nemowidget_translate(it->intro_widget, easetype, duration, delay, tx, ty);
+    nemowidget_translate(it->gallery_widget, easetype, duration, delay, tx, ty);
 }
 
-void viewer_item_down(ViewerItem *item, uint32_t easetype, int duration, int delay)
+void viewer_item_down(ViewerItem *it, uint32_t easetype, int duration, int delay)
 {
-    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 0.5);
+    nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 0.3);
 }
 
-void viewer_item_up(ViewerItem *item, uint32_t easetype, int duration, int delay)
+void viewer_item_up(ViewerItem *it, uint32_t easetype, int duration, int delay)
 {
-    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 1.0);
+    nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 1.0);
 }
 
-void viewer_item_show_gallery(ViewerItem *item, uint32_t easetype, int duration, int delay, ViewerMode mode)
+void viewer_item_show_gallery(ViewerItem *it, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
-    nemowidget_hide(item->intro_widget, 0, 0, 0);
-    nemowidget_show(item->gallery_widget, 0, 0, 0);
-    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 0.0);
-    nemowidget_set_alpha(item->gallery_widget, easetype, duration, delay, 1.0);
+    nemowidget_hide(it->intro_widget, 0, 0, 0);
+    nemowidget_show(it->gallery_widget, 0, 0, 0);
+    nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 0.0);
+    nemowidget_set_alpha(it->gallery_widget, easetype, duration, delay, 1.0);
 }
 
-void viewer_item_show_intro(ViewerItem *item, uint32_t easetype, int duration, int delay, ViewerMode mode)
+void viewer_item_show_intro(ViewerItem *it, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
-    nemowidget_hide(item->gallery_widget, 0, 0, 0);
-    nemowidget_show(item->intro_widget, 0, 0, 0);
-    nemowidget_set_alpha(item->gallery_widget, easetype, duration, delay, 0.0);
-    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 1.0);
+    nemowidget_hide(it->gallery_widget, 0, 0, 0);
+    nemowidget_show(it->intro_widget, 0, 0, 0);
+    nemowidget_set_alpha(it->gallery_widget, easetype, duration, delay, 0.0);
+    nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 1.0);
 }
 
 
 void viewer_view_mode(ViewerView *view, ViewerMode mode, ViewerItem *modeitem)
 {
-    if (view->mode == !!mode) return;
+    if (view->mode == mode) return;
 
     view->mode = mode;
     if (mode == VIEWER_MODE_INTRO) {
         nemowidget_hide(view->event_widget, 0, 0, 0);
-        int cnt = 4;
+        int cnt = list_count(view->items) > 4 ? 4 : list_count(view->items);
         double w = view->w/cnt;
         view->gallery_x = -(cnt - 1) * (w/2);
         int i = 0;
 
         List *l;
-        ViewerItem *item;
-        LIST_FOR_EACH(view->items, l, item) {
-            viewer_item_show_intro(item, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, mode);
-            viewer_item_translate(item, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        ViewerItem *it;
+        LIST_FOR_EACH(view->items, l, it) {
+            viewer_item_show_intro(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0, mode);
+            viewer_item_translate(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
                     view->gallery_x + w * i, 0);
             i++;
         }
@@ -451,10 +452,10 @@ void viewer_view_mode(ViewerView *view, ViewerMode mode, ViewerItem *modeitem)
 
         int i = 0;
         List *l;
-        ViewerItem *item;
-        LIST_FOR_EACH(view->items, l, item) {
-            viewer_item_show_gallery(item, NEMOEASE_CUBIC_OUT_TYPE, 1500, 0, mode);
-            viewer_item_translate(item, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
+        ViewerItem *it;
+        LIST_FOR_EACH(view->items, l, it) {
+            viewer_item_show_gallery(it, NEMOEASE_CUBIC_OUT_TYPE, 1500, 0, mode);
+            viewer_item_translate(it, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0,
                     view->gallery_x + view->w * i, 0);
             i++;
         }
@@ -479,9 +480,9 @@ static void _viewer_gallery_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
     if (nemoshow_event_is_motion(show, event)) {
         int i = 0;
         List *l;
-        ViewerItem *item;
-        LIST_FOR_EACH(view->items, l, item) {
-            viewer_item_translate(item, 0, 0, 0,
+        ViewerItem *it;
+        LIST_FOR_EACH(view->items, l, it) {
+            viewer_item_translate(it, 0, 0, 0,
                     view->gallery_x + view->w * i + ex - gx, 0);
             i++;
         }
@@ -508,9 +509,9 @@ static void _viewer_gallery_grab_event(NemoWidgetGrab *grab, NemoWidget *widget,
 
             int i = 0;
             List *l;
-            ViewerItem *item;
-            LIST_FOR_EACH(view->items, l, item) {
-                viewer_item_translate(item, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            ViewerItem *it;
+            LIST_FOR_EACH(view->items, l, it) {
+                viewer_item_translate(it, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
                         view->gallery_x + view->w * i, 0);
                 i++;
             }
@@ -525,7 +526,6 @@ static void _viewer_event(NemoWidget *widget, const char *id, void *info, void *
     struct nemoshow *show = nemowidget_get_show(widget);
     ViewerView *view = userdata;
 
-    ERR("%d", view->mode);
     if (view->mode != VIEWER_MODE_GALLERY) return;
 
     if (nemoshow_event_is_down(show, event)) {
@@ -544,17 +544,17 @@ static void _viewer_item_clip_grab_event(NemoWidgetGrab *grab, NemoWidget *widge
 {
     struct nemoshow *show = nemowidget_get_show(widget);
 
-    ViewerItem *item = userdata;
-    ViewerView *view = item->view;
+    ViewerItem *it = userdata;
+    ViewerView *view = it->view;
 
     if (nemoshow_event_is_down(show, event)) {
-        viewer_item_down(item, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+        viewer_item_down(it, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
         nemoshow_dispatch_frame(show);
     } else if (nemoshow_event_is_up(show, event)) {
         view->grab = NULL;
-        viewer_item_up(item, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
+        viewer_item_up(it, NEMOEASE_CUBIC_OUT_TYPE, 500, 0);
         if (nemoshow_event_is_single_click(show, event)) {
-            viewer_view_mode(view, VIEWER_MODE_GALLERY, item);
+            viewer_view_mode(view, VIEWER_MODE_GALLERY, it);
         }
         nemoshow_dispatch_frame(show);
     }
@@ -583,64 +583,76 @@ static void _viewer_item_clip_event(NemoWidget *widget, const char *id, void *in
     }
 }
 
-ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
-        const char *uri, double width)
+static void viewer_item_set_clip(ViewerItem *it, double width)
 {
-    ViewerItem *item = calloc(sizeof(ViewerItem), 1);
-    item->view = view;
+    ViewerView *view = it->view;
+    nemoshow_item_set_width(it->event, width);
+    nemoshow_item_set_height(it->event, view->h);
+
+    // XXX: design clip as center aligned
+    struct showone *clip;
+    it->clip = clip = PATH_CREATE(NULL);
+    nemoshow_item_path_moveto(clip, (it->w - width)/2, 0);
+    nemoshow_item_path_lineto(clip, (it->w - width)/2 + width, 0);
+    nemoshow_item_path_lineto(clip, (it->w - width)/2 + width, view->h);
+    nemoshow_item_path_lineto(clip, (it->w - width)/2, view->h);
+    nemoshow_item_path_lineto(clip, (it->w - width)/2, 0);
+    nemoshow_item_path_close(clip);
+
+    image_set_clip(it->intro_img, clip);
+}
+
+ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
+        const char *uri)
+{
+    ViewerItem *it = calloc(sizeof(ViewerItem), 1);
+    it->view = view;
 
     int w = 0, h = 0;
     image_get_wh(uri, &w, &h);
     if (w <= 0 || h <=0) {
         ERR("image_get_wh failed: %s", uri);
-        free(item);
+        free(it);
         return NULL;
     }
-    _rect_ratio_fit(w, h, view->w, view->h, &w, &h);
+    _rect_ratio_fit(w, h, view->w, view->h, &(it->w), &(it->h));
 
     NemoWidget *widget;
     struct showone *canvas;
-    item->intro_widget = widget = nemowidget_create_vector(parent, w, h);
-    nemowidget_append_callback(widget, "event", _viewer_item_clip_event, item);
+    it->intro_widget = widget = nemowidget_create_vector(parent, view->w, view->h);
+    nemowidget_append_callback(widget, "event", _viewer_item_clip_event, it);
     nemowidget_enable_event_repeat(widget, true);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     canvas = nemowidget_get_canvas(widget);
 
-    // XXX: design clip as center aligned
-    struct showone *clip;
-    item->clip = clip = PATH_CREATE(NULL);
-    nemoshow_item_path_moveto(clip, (w - width)/2, 0);
-    nemoshow_item_path_lineto(clip, (w - width)/2 + width, 0);
-    nemoshow_item_path_lineto(clip, (w - width)/2 + width, view->h);
-    nemoshow_item_path_lineto(clip, (w - width)/2, view->h);
-    nemoshow_item_path_lineto(clip, (w - width)/2, 0);
-    nemoshow_item_path_close(clip);
-
     struct showone *one;
-    item->event = one = RECT_CREATE(canvas, width, view->h);
+    it->event = one = nemoshow_item_create(NEMOSHOW_RECT_ITEM);
+    nemoshow_one_attach(canvas, one);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(it->event, view->w/2.0, view->h/2.0);
     nemoshow_item_set_alpha(one, 0.0);
-    nemoshow_item_translate(one, view->w/2 - width/2, 0);
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-    nemoshow_one_set_userdata(one, item);
+    nemoshow_one_set_userdata(one, it);
 
     Image *img;
-    item->img0 = img = image_create(canvas);
+    it->intro_img = img = image_create(canvas);
     image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
     image_translate(img, 0, 0, 0, view->w/2, view->h/2);
-    image_set_clip(img, clip);
 
-    item->gallery_widget = widget = nemowidget_create_vector(parent, w, h);
+    it->gallery_widget = widget = nemowidget_create_vector(parent, view->w, view->h);
     nemowidget_enable_event_repeat(widget, true);
     //nemowidget_append_callback(widget, "event", _viewer_item_gallery_event, item);
     nemowidget_enable_event_repeat(widget, true);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     canvas = nemowidget_get_canvas(widget);
 
-    item->img1 = img = image_create(canvas);
+    it->gallery_img = img = image_create(canvas);
     image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
+    image_set_anchor(img, 0.5, 0.5);
+    image_translate(img, 0, 0, 0, view->w/2, view->h/2);
 
-    return item;
+    return it;
 }
 
 static void _viewer_view_title_timeout(struct nemotimer *timer, void *userdata)
@@ -682,8 +694,20 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     List *l;
     FileInfo *file;
     LIST_FOR_EACH(files, l, file) {
-        ViewerItem *it = viewer_view_create_item(view, parent, file->path, (double)view->w/4);
-        if (it) view->items = list_append(view->items, it);
+        ViewerItem *it = viewer_view_create_item(view, parent, file->path);
+        if (!it) {
+            ERR("viewer_view_create_item failed: %s", file->path);
+        } else {
+            ERR("[%s]", file->path);
+            view->items = list_append(view->items, it);
+        }
+    }
+    int cnt = list_count(files);
+    if (cnt > 4) cnt = 4;
+
+    ViewerItem *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        viewer_item_set_clip(it, (double)view->w/cnt);
     }
 
     view->title_widget = widget = nemowidget_create_vector(parent, width, height);
@@ -746,9 +770,8 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
             "sx", 1.0, "sy", 1.0, NULL);
 
     viewer_view_mode(view, VIEWER_MODE_INTRO, NULL);
-    /*
 
-    int cnt = 4;
+    int cnt = list_count(view->items) > 4 ? 4 : list_count(view->items);
     double w = view->w/cnt ;
     double start = -(cnt - 1) * (w/2);
     int i = 0;
@@ -762,7 +785,6 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
         viewer_item_translate(item, easetype, duration, delay, start + w * i, 0);
         i++;
     }
-    */
 
     nemoshow_dispatch_frame(view->show);
 }
