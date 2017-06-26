@@ -1,3 +1,14 @@
+nemoapps (0.9.7) unstable; urgency=medium
+
+  * karim: Minor fix
+  * karim: Fix
+  * karim: Fix minors
+  * karim: Use thumbnail
+  * karim: Use one thread for image decoding
+  * karim: Read files in the thread
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 03:38:17 +0900
+
 nemoapps (0.9.6) unstable; urgency=medium
 
   * karim: Fix crash issues and .etc
