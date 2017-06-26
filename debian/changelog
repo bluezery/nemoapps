@@ -1,3 +1,12 @@
+nemoapps (0.9.5) unstable; urgency=medium
+
+  * karim: Update region map files
+  * karim: fix home & back animation for honey view
+  * karim: fix honey view event handling
+  * karim: Update GUI
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 26 Jun 2017 21:29:44 +0900
+
 nemoapps (0.9.4) unstable; urgency=medium
 
   * karim: Add missing files
