@@ -19,9 +19,8 @@
 #include "nemoui.h"
 
 #define SAVER_TIMEOUT 600000
-#define HONEY_CX 2750.0
-#define HONEY_CY 1546.875
-
+#define HONEY_CX 2000.0
+#define HONEY_CY 2000.0
 
 #define CONTENT "/opt/contents/karim"
 
@@ -797,7 +796,6 @@ struct _HoneyItem {
     struct showone *group;
     Image *img;
     List *files;
-    struct showone *one_sel;
 };
 
 struct _HoneyView {
@@ -819,22 +817,23 @@ struct _HoneyView {
     struct showone *title;
 
     List *items;
+    Image *select;
 };
 
 static void honey_item_down(HoneyItem *it)
 {
-    image_set_alpha(it->img, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 0.0);
-    _nemoshow_item_motion(it->one_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0,
-            NULL);
+    HoneyView *view = it->view;
+    double tx, ty;
+    tx = nemoshow_item_get_translate_x(it->group);
+    ty = nemoshow_item_get_translate_y(it->group);
+    image_translate(view->select, 0, 0, 0, tx, ty);
+    image_set_alpha(view->select, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0, 1.0);
 }
 
 static void honey_item_up(HoneyItem *it)
 {
-    image_set_alpha(it->img, NEMOEASE_CUBIC_OUT_TYPE, 250, 0, 1.0);
-    _nemoshow_item_motion(it->one_sel, NEMOEASE_CUBIC_OUT_TYPE, 250, 0,
-            "alpha", 0.0,
-            NULL);
+    HoneyView *view = it->view;
+    image_set_alpha(view->select, NEMOEASE_CUBIC_OUT_TYPE, 250, 0, 0.0);
 }
 
 static List *fileinfo_readdir_img(const char *path)
@@ -859,8 +858,6 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     RET_IF(!files, NULL);
 
     struct showone *group;
-    struct showone *one;
-
     struct showone *canvas;
     canvas = nemowidget_get_canvas(view->widget);
 
@@ -882,17 +879,8 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     it->img = img = image_create(group);
     image_set_anchor(img, 0.5, 0.5);
     image_load_fit(img, view->tool, uri, it->w, it->h, NULL, NULL);
-
-    double ww, hh;
-    snprintf(uri, PATH_MAX, "%s", APP_ICON_DIR"/honey/icon-selected.svg");
-    svg_get_wh(uri, &ww, &hh);
-    ww = ww * sx;
-    hh = hh * sy;
-    it->one_sel = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
-    nemoshow_item_set_anchor(one, 0.5, 0.5);
-    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
-    nemoshow_one_set_userdata(one, it);
-    nemoshow_item_set_alpha(one, 0.0);
+    nemoshow_one_set_state(image_get_group(img), NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_userdata(image_get_group(img), it);
 
     return it;
 }
@@ -1094,7 +1082,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     image_load_full(img, view->tool, uri, view->w, view->h, NULL, NULL);
 
     int w, h;
-    uri = APP_IMG_DIR"/honey/background.png";
+    uri = APP_IMG_DIR"/honey/foreground.png";
     w = h = 0;
     file_get_image_wh(uri, &w, &h);
 
@@ -1113,10 +1101,6 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     struct showone *canvas;
     struct showone *one;
     canvas = nemowidget_get_canvas(widget);
-
-    view->bg = img = image_create(canvas);
-    image_load_full(img, view->tool, uri, w, h, NULL, NULL);
-    //image_translate(img, 0, 0, 0, -view->bg_ix, -view->bg_iy);
 
     double x, y;
     double ww, hh;
@@ -1190,6 +1174,21 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
             layer++;
         }
     }
+
+    view->bg = img = image_create(canvas);
+    w = w * sx;
+    h = h * sy;
+    image_load_full(img, view->tool, uri, w, h, NULL, NULL);
+    //image_translate(img, 0, 0, 0, -view->bg_ix, -view->bg_iy);a
+
+    uri = APP_IMG_DIR"/honey/icon-selected.png";
+    image_get_wh(buf, &w, &h);
+    w = w * sx;
+    h = h * sy;
+    view->select = img = image_create(canvas);
+    image_load_full(img, view->tool, uri, w, h, NULL, NULL);
+    image_set_anchor(img, 0.5, 0.5);
+    image_set_alpha(img, 0, 0, 0, 0.0);
 
     return view;
 }
