@@ -1,3 +1,17 @@
+nemoapps (0.9.4) unstable; urgency=medium
+
+  * karim: Add missing files
+  * karim: change honey view's sizs & fix minor bug
+  * karim: Code clean-up
+  * karim: update honey GUI
+  * karim: Add missing
+  * karim: reset color when menu hides
+  * karim: Fix viewer's gallery GUI
+  * karim: show viewer from work & year views
+  * karim: Add home&back button
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Mon, 26 Jun 2017 17:23:37 +0900
+
 nemoapps (0.9.3) unstable; urgency=medium
 
   * karim: Update viewer GUI
