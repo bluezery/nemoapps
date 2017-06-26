@@ -601,6 +601,7 @@ struct _ViewerItem {
     ViewerView *view;
     NemoWidget *intro_widget;
     NemoWidget *gallery_widget;
+    char *path;
     int w, h;
     struct showone *clip;
     Image *intro_img, *gallery_img;
@@ -621,6 +622,9 @@ struct _ViewerView {
     NemoWidget *event_widget;
     NemoWidgetGrab *grab;
     double gallery_x;
+
+    int item_idx;
+    Thread *item_thread;
     List *items;
 
     NemoWidget *title_widget;
@@ -835,14 +839,22 @@ static void viewer_item_set_clip(ViewerItem *it, double width)
     nemoshow_item_set_width(it->event, width);
     nemoshow_item_set_height(it->event, view->h);
 
-    // XXX: design clip as center aligned
+    int w = 0, h = 0;
+    image_get_wh(it->path, &w, &h);
+    if (w <= 0 || h <=0) {
+        ERR("image_get_wh failed: %s", it->path);
+        free(it);
+        return;
+    }
+    _rect_ratio_fit(w, h, view->w, view->h, &w, &h);
+
     struct showone *clip;
     it->clip = clip = PATH_CREATE(NULL);
-    nemoshow_item_path_moveto(clip, (it->w - width)/2, 0);
-    nemoshow_item_path_lineto(clip, (it->w - width)/2 + width, 0);
-    nemoshow_item_path_lineto(clip, (it->w - width)/2 + width, view->h);
-    nemoshow_item_path_lineto(clip, (it->w - width)/2, view->h);
-    nemoshow_item_path_lineto(clip, (it->w - width)/2, 0);
+    nemoshow_item_path_moveto(clip, (w - width)/2, 0);
+    nemoshow_item_path_lineto(clip, (w - width)/2 + width, 0);
+    nemoshow_item_path_lineto(clip, (w - width)/2 + width, view->h);
+    nemoshow_item_path_lineto(clip, (w - width)/2, view->h);
+    nemoshow_item_path_lineto(clip, (w - width)/2, 0);
     nemoshow_item_path_close(clip);
 
     image_set_clip(it->intro_img, clip);
@@ -855,6 +867,7 @@ static void viewer_item_destroy(ViewerItem *it)
     image_destroy(it->intro_img);
     nemoshow_one_destroy(it->event);
     nemowidget_destroy(it->intro_widget);
+    free(it->path);
     free(it);
 }
 
@@ -863,15 +876,7 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
 {
     ViewerItem *it = calloc(sizeof(ViewerItem), 1);
     it->view = view;
-
-    int w = 0, h = 0;
-    image_get_wh(uri, &w, &h);
-    if (w <= 0 || h <=0) {
-        ERR("image_get_wh failed: %s", uri);
-        free(it);
-        return NULL;
-    }
-    _rect_ratio_fit(w, h, view->w, view->h, &(it->w), &(it->h));
+    it->path = strdup(uri);
 
     NemoWidget *widget;
     struct showone *canvas;
@@ -1168,9 +1173,6 @@ static void honey_item_destroy(HoneyItem *it)
 
 static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, double x, double y, double w, double h)
 {
-    List *files = fileinfo_readdir_img(path);
-    RET_IF(!files, NULL);
-
     struct showone *one;
     struct showone *group;
     struct showone *canvas;
@@ -1178,7 +1180,7 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
 
     HoneyItem *it = calloc(sizeof(HoneyItem), 1);
     it->view = view;
-    it->files = files;
+    it->files = NULL;
     it->group = group = GROUP_CREATE(canvas);
     it->path = strdup(path);
     it->x = x;
@@ -1219,6 +1221,7 @@ static void *_honey_item_thread(void *userdata)
     HoneyView *view = data->view;
 
     HoneyItem *it = LIST_DATA(list_get_nth(view->items, view->item_idx));
+    it->files = fileinfo_readdir_img(it->path);
     RET_IF(!it->files, NULL);
     FileInfo *file = LIST_DATA(LIST_FIRST(it->files));
 
@@ -1464,13 +1467,17 @@ static void _honey_view_it_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
         view->it_grab = NULL;
 
         if (nemoshow_event_is_single_click(show, event)) {
-            honey_view_zoom_it(view, it);
+            if (!it->files) {
+                ERR("file directory is not loaded yet.");
+            } else {
+                honey_view_zoom_it(view, it);
 
-            Karim *karim = view->karim;
-            char uri[PATH_MAX];
-            snprintf(uri, PATH_MAX, "%s/info.svg", it->path);
-            karim->viewer = viewer_view_create(karim, karim->parent, karim->w, karim->h, uri, it->files);
-            karim_change_view(karim, KARIM_TYPE_VIEWER);
+                Karim *karim = view->karim;
+                char uri[PATH_MAX];
+                snprintf(uri, PATH_MAX, "%s/info.svg", it->path);
+                karim->viewer = viewer_view_create(karim, karim->parent, karim->w, karim->h, uri, it->files);
+                karim_change_view(karim, KARIM_TYPE_VIEWER);
+            }
         }
         nemoshow_dispatch_frame(show);
     }
@@ -1629,7 +1636,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     w = w * 2.0;
     h = h * 2.0;
     view->select = img = image_create(canvas);
-    //image_load_full(img, view->tool, uri, w, h, NULL, NULL);
+    image_load_full(img, view->tool, uri, w, h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
