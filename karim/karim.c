@@ -212,7 +212,8 @@ typedef enum {
 typedef struct _ViewerItem ViewerItem;
 struct _ViewerItem {
     ViewerView *view;
-    NemoWidget *widget0, *widget;
+    NemoWidget *intro_widget;
+    NemoWidget *gallery_widget;
     struct showone *clip;
     Image *img0, *img1;
     struct showone *event;
@@ -393,34 +394,34 @@ static void karim_change_view(Karim *karim, KarimType type)
 
 void viewer_item_translate(ViewerItem *item, uint32_t easetype, int duration, int delay, double tx, double ty)
 {
-    nemowidget_translate(item->widget0, easetype, duration, delay, tx, ty);
-    nemowidget_translate(item->widget, easetype, duration, delay, tx, ty);
+    nemowidget_translate(item->intro_widget, easetype, duration, delay, tx, ty);
+    nemowidget_translate(item->gallery_widget, easetype, duration, delay, tx, ty);
 }
 
 void viewer_item_down(ViewerItem *item, uint32_t easetype, int duration, int delay)
 {
-    nemowidget_set_alpha(item->widget0, easetype, duration, delay, 0.5);
+    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 0.5);
 }
 
 void viewer_item_up(ViewerItem *item, uint32_t easetype, int duration, int delay)
 {
-    nemowidget_set_alpha(item->widget0, easetype, duration, delay, 1.0);
+    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 1.0);
 }
 
 void viewer_item_show_gallery(ViewerItem *item, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
-    nemowidget_hide(item->widget0, 0, 0, 0);
-    nemowidget_show(item->widget, 0, 0, 0);
-    nemowidget_set_alpha(item->widget0, easetype, duration, delay, 0.0);
-    nemowidget_set_alpha(item->widget, easetype, duration, delay, 1.0);
+    nemowidget_hide(item->intro_widget, 0, 0, 0);
+    nemowidget_show(item->gallery_widget, 0, 0, 0);
+    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 0.0);
+    nemowidget_set_alpha(item->gallery_widget, easetype, duration, delay, 1.0);
 }
 
 void viewer_item_show_intro(ViewerItem *item, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
-    nemowidget_hide(item->widget0, 0, 0, 0);
-    nemowidget_show(item->widget, 0, 0, 0);
-    nemowidget_set_alpha(item->widget0, easetype, duration, delay, 0.0);
-    nemowidget_set_alpha(item->widget, easetype, duration, delay, 1.0);
+    nemowidget_hide(item->gallery_widget, 0, 0, 0);
+    nemowidget_show(item->intro_widget, 0, 0, 0);
+    nemowidget_set_alpha(item->gallery_widget, easetype, duration, delay, 0.0);
+    nemowidget_set_alpha(item->intro_widget, easetype, duration, delay, 1.0);
 }
 
 
@@ -567,7 +568,6 @@ static void _viewer_item_clip_event(NemoWidget *widget, const char *id, void *in
     ViewerView *view = item->view;
     struct nemoshow *show = nemowidget_get_show(widget);
 
-    ERR("%d", view->mode);
     if (view->mode != VIEWER_MODE_INTRO) return;
 
     if (nemoshow_event_is_down(show, event)) {
@@ -601,9 +601,9 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
 
     NemoWidget *widget;
     struct showone *canvas;
-    item->widget0 = widget = nemowidget_create_vector(parent, w, h);
+    item->intro_widget = widget = nemowidget_create_vector(parent, w, h);
     nemowidget_append_callback(widget, "event", _viewer_item_clip_event, item);
-    //nemowidget_enable_event_repeat(widget, true);
+    nemowidget_enable_event_repeat(widget, true);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     canvas = nemowidget_get_canvas(widget);
 
@@ -631,7 +631,7 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
     image_translate(img, 0, 0, 0, view->w/2, view->h/2);
     image_set_clip(img, clip);
 
-    item->widget = widget = nemowidget_create_vector(parent, w, h);
+    item->gallery_widget = widget = nemowidget_create_vector(parent, w, h);
     nemowidget_enable_event_repeat(widget, true);
     //nemowidget_append_callback(widget, "event", _viewer_item_gallery_event, item);
     nemowidget_enable_event_repeat(widget, true);
@@ -678,7 +678,6 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
     view->event_widget = widget = nemowidget_create_vector(parent, width, height);
-    nemowidget_enable_event_repeat(widget, true);
     nemowidget_append_callback(widget, "event", _viewer_event, view);
 
     List *l;
@@ -689,6 +688,8 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     }
 
     view->title_widget = widget = nemowidget_create_vector(parent, width, height);
+    nemowidget_enable_event_repeat(widget, true);
+
     view->title_group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     nemoshow_item_set_alpha(group, 0.0);
 
@@ -733,6 +734,10 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
 {
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, 0, 0, 0, 1.0);
+    nemowidget_show(view->event_widget, 0, 0, 0);
+    nemowidget_set_alpha(view->event_widget, 0, 0, 0, 1.0);
+
+    nemowidget_show(view->title_widget, 0, 0, 0);
 
     nemotimer_set_timeout(view->title_timer, 5000);
     _nemoshow_item_motion(view->title_group, easetype, duration, delay + 500,
