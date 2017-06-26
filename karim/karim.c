@@ -238,13 +238,13 @@ static void year_view_show(YearView *view, uint32_t easetype, int duration, int 
 static void year_view_hide(YearView *view, uint32_t easetype, int duration, int delay);
 static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay);
 static void honey_view_hide_destroy(HoneyView *view, uint32_t easetype, int duration, int delay);
+static void honey_view_zoom_out(HoneyView *view);
 static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, int delay);
-static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, int delay);
+static void viewer_view_hide_destroy(ViewerView *view, uint32_t easetype, int duration, int delay);
 
 static void karim_change_view(Karim *karim, KarimType type)
 {
     if (type == karim->type) return;
-
 
     if (karim->type == KARIM_TYPE_NONE) {
         if (type == KARIM_TYPE_INTRO) {
@@ -400,7 +400,7 @@ static void karim_change_view(Karim *karim, KarimType type)
             karim->prev_type = karim->type;
             karim->type = type;
         } else if (type == KARIM_TYPE_VIEWER) {
-            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 1000);
+            viewer_view_show(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 500);
             karim->prev_type = karim->type;
             karim->type = type;
         } else {
@@ -408,7 +408,7 @@ static void karim_change_view(Karim *karim, KarimType type)
         }
     } else if (karim->type == KARIM_TYPE_VIEWER) {
         if (type == KARIM_TYPE_INTRO) {
-            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            viewer_view_hide_destroy(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
@@ -416,8 +416,20 @@ static void karim_change_view(Karim *karim, KarimType type)
             intro_view_show(karim->intro, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
             karim->prev_type = karim->type;
             karim->type = type;
+        } else if (type == KARIM_TYPE_MENU) {
+            viewer_view_hide_destroy(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_hide_destroy(karim->honey, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_hide_destroy(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            region_view_hide(karim->region, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            work_view_hide(karim->work, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            year_view_hide(karim->year, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            menu_view_show(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            menu_view_center(karim->menu, NEMOEASE_CUBIC_OUT_TYPE, 2000, 1000);
+            karim->prev_type = karim->type;
+            karim->type = type;
         } else if (type == KARIM_TYPE_HONEY) {
-            viewer_view_hide(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            viewer_view_hide_destroy(karim->viewer, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            honey_view_zoom_out(karim->honey);
             karim->prev_type = karim->type;
             karim->type = type;
         } else {
@@ -649,6 +661,14 @@ void viewer_item_up(ViewerItem *it, uint32_t easetype, int duration, int delay)
     nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 1.0);
 }
 
+static void viewer_item_hide(ViewerItem *it, uint32_t easetype, int duration, int delay)
+{
+    nemowidget_hide(it->intro_widget, 0, 0, 0);
+    nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 0.0);
+    nemowidget_hide(it->gallery_widget, 0, 0, 0);
+    nemowidget_set_alpha(it->gallery_widget, easetype, duration, delay, 0.0);
+}
+
 void viewer_item_show_gallery(ViewerItem *it, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
     nemowidget_hide(it->intro_widget, 0, 0, 0);
@@ -843,6 +863,16 @@ static void viewer_item_set_clip(ViewerItem *it, double width)
     image_set_clip(it->intro_img, clip);
 }
 
+static void viewer_item_destroy(ViewerItem *it)
+{
+    image_destroy(it->gallery_img);
+    nemowidget_destroy(it->gallery_widget);
+    image_destroy(it->intro_img);
+    nemoshow_one_destroy(it->event);
+    nemowidget_destroy(it->intro_widget);
+    free(it);
+}
+
 ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
         const char *uri)
 {
@@ -999,49 +1029,62 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
 static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, int delay)
 {
     nemowidget_show(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->widget, 0, 0, 0, 1.0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
+
     nemowidget_show(view->event_widget, 0, 0, 0);
-    nemowidget_set_alpha(view->event_widget, 0, 0, 0, 1.0);
 
     nemowidget_show(view->title_widget, 0, 0, 0);
+    nemowidget_set_alpha(view->title_widget, easetype, duration, delay, 1.0);
 
     nemotimer_set_timeout(view->title_timer, 5000);
     _nemoshow_item_motion(view->title_group, easetype, duration, delay + 500,
             "tx", 50.0, "ty", 50.0,
             "alpha", 1.0, NULL);
     _nemoshow_item_motion(view->title, easetype, duration, delay + 500,
-            "sx", 1.0, "sy", 1.0, NULL);
+            "sx", 1.0, "sy", 1.0,
+            NULL);
 
     viewer_view_mode(view, VIEWER_MODE_INTRO, NULL);
-
-    int cnt = list_count(view->items) > 4 ? 4 : list_count(view->items);
-    double w = view->w/cnt ;
-    double start = -(cnt - 1) * (w/2);
-    int i = 0;
-
-    view->mode = VIEWER_MODE_INTRO;
-
-    List *l;
-    ViewerItem *item;
-    LIST_FOR_EACH(view->items, l, item) {
-        viewer_item_show_intro(item, easetype, duration, delay, VIEWER_MODE_INTRO);
-        viewer_item_translate(item, easetype, duration, delay, start + w * i, 0);
-        i++;
-    }
-
     nemoshow_dispatch_frame(view->show);
+}
+
+static void viewer_view_destroy(ViewerView *view)
+{
+    nemotimer_destroy(view->title_timer);
+    nemoshow_one_destroy(view->title);
+    nemoshow_one_destroy(view->title_group);
+    nemowidget_destroy(view->title_widget);
+    ViewerItem *it;
+    LIST_FREE(view->items, it) {
+        viewer_item_destroy(it);
+    }
+    nemowidget_destroy(view->event_widget);
+    nemoshow_one_destroy(view->bg);
+    nemoshow_one_destroy(view->group);
+    nemowidget_destroy(view->widget);
+    free(view);
+}
+
+static void _viewer_view_destroy(struct nemotimer *timer, void *userdata)
+{
+    ViewerView *view = userdata;
+    viewer_view_destroy(view);
 }
 
 static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, int delay)
 {
     nemowidget_hide(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->widget, 0, 0, 0, 0.0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
+
+    nemowidget_hide(view->event_widget, 0, 0, 0);
+
+    nemowidget_hide(view->title_widget, 0, 0, 0);
+    nemowidget_set_alpha(view->title_widget, easetype, duration, delay, 0.0);
 
     List *l;
-    ViewerItem *item;
-    LIST_FOR_EACH(view->items, l, item) {
-        viewer_item_show_intro(item, easetype, duration, delay, VIEWER_MODE_INTRO);
-        viewer_item_translate(item, easetype, duration, delay, 0, 0);
+    ViewerItem *it;
+    LIST_FOR_EACH(view->items, l, it) {
+        viewer_item_hide(it, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
     }
 
     nemotimer_set_timeout(view->title_timer, 0);
@@ -1051,6 +1094,12 @@ static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, 
     _nemoshow_item_motion(view->title, easetype, duration, delay + 500,
             "sx", 0.0, "sy", 0.8, NULL);
     nemoshow_dispatch_frame(view->show);
+}
+
+static void viewer_view_hide_destroy(ViewerView *view, uint32_t easetype, int duration, int delay)
+{
+    viewer_view_hide(view, easetype, duration, delay);
+    TOOL_ADD_TIMER(view->tool, duration + delay + 100, _viewer_view_destroy, view);
 }
 
 typedef struct _HoneyItem HoneyItem;
@@ -1125,20 +1174,6 @@ static void honey_item_destroy(HoneyItem *it)
     free(it->path);
     nemoshow_one_destroy(it->group);
     free(it);
-}
-
-static void path_create_diamond(struct showone *one, int w, int h)
-{
-    double r = 16;
-    nemoshow_item_path_moveto(one, w/2 + r, r);
-    nemoshow_item_path_cubicto(one, w/2, 0, w/2, 0, w/2 - r, r);
-    nemoshow_item_path_lineto(one, r, h/2 - r);
-    nemoshow_item_path_cubicto(one, 0, h/2, 0, h/2, r, h/2 + r);
-    nemoshow_item_path_lineto(one, w/2 - r, h - r);
-    nemoshow_item_path_cubicto(one, w/2, h, w/2, h, w/2 + r, h - r);
-    nemoshow_item_path_lineto(one, w - r, h/2 + r);
-    nemoshow_item_path_cubicto(one, w, h/2, w, h/2, w - r, h/2 - r);
-    nemoshow_item_path_close(one);
 }
 
 static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, double x, double y, double w, double h, double sx, double sy)
@@ -1307,6 +1342,32 @@ static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *
     }
 }
 
+static void honey_view_zoom_it(HoneyView *view, HoneyItem *it)
+{
+    // Zooming effect
+    double scale = 3.0;
+    double ix, iy, iw, ih;
+
+    ix = it->x * scale;
+    iy = it->y * scale;
+    iw = it->w * scale;
+    ih = it->h * scale;
+
+    nemowidget_translate(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
+            -(ix - (view->w - iw)/2.0), -(iy - (view->h - ih)/2.0));
+    nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
+            scale, scale);
+}
+
+static void honey_view_zoom_out(HoneyView *view)
+{
+    double scale = 1.0;
+
+    nemowidget_translate(view->widget, 0, 0, 0, -view->fg_ix, -view->fg_iy);
+    nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
+            scale, scale);
+}
+
 static void _honey_view_it_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
 {
     struct nemoshow *show = nemowidget_get_show(widget);
@@ -1331,20 +1392,7 @@ static void _honey_view_it_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
         view->it_grab = NULL;
 
         if (nemoshow_event_is_single_click(show, event)) {
-            // Zooming effect
-            double scale = 3.0;
-            double ix, iy, iw, ih;
-
-            ix = it->x * scale;
-            iy = it->y * scale;
-            iw = it->w * scale;
-            ih = it->h * scale;
-
-            nemoshow_dispatch_frame(show);
-            nemowidget_translate(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
-                    -(ix - (view->w - iw)/2.0), -(iy - (view->h - ih)/2.0));
-            nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
-                    scale, scale);
+            honey_view_zoom_it(view, it);
 
             Karim *karim = view->karim;
             char uri[PATH_MAX];
@@ -1352,6 +1400,7 @@ static void _honey_view_it_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, 
             karim->viewer = viewer_view_create(karim, karim->parent, karim->w, karim->h, uri, it->files);
             karim_change_view(karim, KARIM_TYPE_VIEWER);
         }
+        nemoshow_dispatch_frame(show);
     }
 }
 
@@ -1376,7 +1425,6 @@ static void _honey_view_event(NemoWidget *widget, const char *id, void *info, vo
 
         struct showone *one;
         one = nemowidget_pick_one(view->widget, ex, ey);
-        ERR("%p", one);
         if (one && !view->it_grab) {
             view->it_grab = nemowidget_create_grab(widget, event,
                     _honey_view_it_grab_event, one);
