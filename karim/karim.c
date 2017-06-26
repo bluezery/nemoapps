@@ -161,6 +161,7 @@ typedef enum
     KARIM_TYPE_VIEWER,
 } KarimType;
 
+typedef struct _ButtonView ButtonView;
 typedef struct _IntroView IntroView;
 typedef struct _RegionView RegionView;
 typedef struct _WorkView WorkView;
@@ -196,11 +197,147 @@ struct _Karim
     MenuView *menu;
     HoneyView *honey;
     ViewerView *viewer;
-    //SaverView *saver;
+    ButtonView *button;
 
-    //struct nemotimer *saver_timer;
     NemoWidget *event_widget;
 };
+
+typedef struct _ButtonView ButtonView;
+struct _ButtonView {
+    Karim *karim;
+    struct nemotool *tool;
+    struct nemoshow *show;
+    int w, h;
+    NemoWidgetGrab *grab;
+    NemoWidget *widget;
+    struct showone *group;
+    struct showone *bg;
+    struct showone *home;
+    struct showone *back;
+};
+
+static void _button_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
+{
+    struct nemoshow *show = nemowidget_get_show(widget);
+    struct showone *one = userdata;
+    ButtonView *view = nemoshow_one_get_userdata(one);
+
+    if (nemoshow_event_is_down(show, event)) {
+        _nemoshow_item_motion_bounce(one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "sx", 0.5, 0.75, "sy", 0.5, 0.75,
+                NULL);
+        nemoshow_dispatch_frame(show);
+
+    } else if (nemoshow_event_is_up(show, event)) {
+        view->grab = NULL;
+        _nemoshow_item_motion_bounce(one, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+                "sx", 1.25, 1.0, "sy", 1.25, 1.0,
+                NULL);
+        if (nemoshow_event_is_single_click(show, event)) {
+        }
+        nemoshow_dispatch_frame(show);
+    }
+}
+
+static void _button_view_event(NemoWidget *widget, const char *id, void *info, void *userdata)
+{
+    struct showevent *event = info;
+    struct nemoshow *show = nemowidget_get_show(widget);
+    ButtonView *view = userdata;
+
+    if (nemoshow_event_is_down(show, event)) {
+        double ex, ey;
+        nemowidget_transform_from_global(widget,
+                nemoshow_event_get_x(event),
+                nemoshow_event_get_y(event), &ex, &ey);
+        if (!view->grab) {
+            double ex, ey;
+            nemowidget_transform_from_global(widget,
+                    nemoshow_event_get_x(event),
+                    nemoshow_event_get_y(event), &ex, &ey);
+            struct showone *one;
+            one = nemowidget_pick_one(widget, ex, ey);
+            view->grab = nemowidget_create_grab(widget, event,
+                        _button_view_grab_event, one);
+        }
+    }
+}
+
+static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
+{
+    double sx, sy;
+    sx = karim->w/1920.0;
+    sy = karim->h/1080.0;
+    double w, h, x, y;
+    w = 480;
+    h = 216;
+    x = 720 * sx;
+    y = 750 * sy;
+
+    ButtonView *view = calloc(sizeof(ButtonView), 1);
+    view->karim = karim;
+    view->tool = nemowidget_get_tool(parent);
+    view->show = nemowidget_get_show(parent);
+    view->w = w;
+    view->h = h;
+
+    NemoWidget *widget;
+    view->widget = widget = nemowidget_create_vector(parent, w, h);
+    nemowidget_append_callback(widget, "event", _button_view_event, view);
+    nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
+
+    nemowidget_translate(widget, 0, 0, 0, x, y);
+
+    double ww, hh;
+    const char *uri;
+    struct showone *group;
+    struct showone *one;
+    view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
+
+    uri = APP_ICON_DIR"/home&back/bg.svg";
+    svg_get_wh(uri, &ww, &hh);
+    view->bg = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, ww/2, hh/2);
+
+    uri = APP_ICON_DIR"/home&back/home.svg";
+    svg_get_wh(uri, &ww, &hh);
+    view->home = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
+    /*
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, ww/2, hh/2);
+    */
+    nemoshow_item_translate(one, 72, 44);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_userdata(one, view);
+    nemoshow_one_set_id(one, "home");
+
+    uri = APP_ICON_DIR"/home&back/back.svg";
+    svg_get_wh(uri, &ww, &hh);
+    view->back = one = SVG_PATH_GROUP_CREATE(group, ww, hh, uri);
+    /*
+    nemoshow_item_set_anchor(one, 0.5, 0.5);
+    nemoshow_item_translate(one, ww/2, hh/2);
+    */
+    nemoshow_item_translate(one, 280, 44);
+    nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
+    nemoshow_one_set_userdata(one, view);
+    nemoshow_one_set_id(one, "back");
+
+    return view;
+}
+
+static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay)
+{
+    nemowidget_show(view->widget, 0, 0, 0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
+}
+
+static void button_view_hide(ButtonView *view, uint32_t easetype, int duration, int delay)
+{
+    nemowidget_hide(view->widget, 0, 0, 0);
+    nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
+}
 
 typedef enum {
     VIEWER_MODE_NONE = 0,
@@ -310,6 +447,7 @@ static void karim_change_view(Karim *karim, KarimType type)
             karim->type = type;
         } else if (type == KARIM_TYPE_HONEY) {
             menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             karim->type = type;
         } else {
@@ -330,6 +468,8 @@ static void karim_change_view(Karim *karim, KarimType type)
             year_view_show(karim->year, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             karim->type = type;
         } else if (type == KARIM_TYPE_HONEY) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             karim->type = type;
         } else {
@@ -350,6 +490,8 @@ static void karim_change_view(Karim *karim, KarimType type)
             work_view_show(karim->work, NEMOEASE_CUBIC_OUT_TYPE, 1000, 500);
             karim->type = type;
         } else if (type == KARIM_TYPE_HONEY) {
+            menu_view_hide(karim->menu, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
+            button_view_show(karim->button, NEMOEASE_CUBIC_IN_TYPE, 1000, 0);
             honey_view_show(karim->honey, NEMOEASE_CUBIC_OUT_TYPE, 1000, 0);
             karim->type = type;
         } else {
@@ -1098,11 +1240,11 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     const char *uri;
-    uri = APP_IMG_DIR"/honey/background0.png";
+    uri = APP_IMG_DIR"/honey/background.png";
 
     Image *img;
     view->bg0 = img = image_create(nemowidget_get_canvas(widget));
-    image_load_full(img, view->tool, uri, view->w, view->h, NULL, NULL);
+    image_load(img, view->tool, uri, view->w, view->h, NULL, NULL);
 
     int w, h;
     uri = APP_IMG_DIR"/honey/foreground.png";
@@ -1772,6 +1914,7 @@ static void _year_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                     ERR("No group for %s", it->year);
                 } else {
                     karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                    karim->button = button_view_create(karim, karim->parent);
                     karim_change_view(karim, KARIM_TYPE_HONEY);
                 }
             }
@@ -2250,6 +2393,7 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
                 ERR("No group for %s", it->country);
             } else {
                 karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                karim->button = button_view_create(karim, karim->parent);
                 karim_change_view(karim, KARIM_TYPE_HONEY);
             }
         }
@@ -2871,6 +3015,7 @@ static void _work_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, stru
                 ERR("No group for %s", it->category);
             } else {
                 karim->honey = honey_view_create(karim, karim->parent, karim->w, karim->h, grp);
+                karim->button = button_view_create(karim, karim->parent);
                 karim_change_view(karim, KARIM_TYPE_HONEY);
             }
         }
