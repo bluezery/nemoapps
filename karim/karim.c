@@ -1534,14 +1534,13 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
 
     view->fg = img = image_create(canvas);
     image_load(img, view->tool, uri, w, h, NULL, NULL);
-    //image_translate(img, 0, 0, 0, -view->fg_ix, -view->fg_iy);a
 
     uri = APP_IMG_DIR"/honey/icon-selected.png";
     image_get_wh(buf, &w, &h);
     w = w * 2.0;
     h = h * 2.0;
     view->select = img = image_create(canvas);
-    image_load_full(img, view->tool, uri, w, h, NULL, NULL);
+    //image_load_full(img, view->tool, uri, w, h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
     image_set_alpha(img, 0, 0, 0, 0.0);
 
@@ -1758,11 +1757,13 @@ static void year_sub_item_down(YearSubItem *it)
 
 static void year_sub_item_up(YearSubItem *it)
 {
-    _nemoshow_item_motion_bounce(it->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 0.9, 1.0, "sy", 0.9, 1.0,
+    // XXX: do not use bounce when doing some overload jobs.
+    // It is not correctly recover to final state. It's nemoshow's bug
+    _nemoshow_item_motion(it->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
     _nemoshow_item_motion_bounce(it->txt, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 0.9, 1.0, "sy", 0.9, 1.0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
 }
 
@@ -1912,6 +1913,8 @@ static void year_main_item_down(YearMainItem *it)
 
 static void year_main_item_up(YearMainItem *it)
 {
+    // XXX: do not use bounce when doing some overload jobs.
+    // It is not correctly recover to final state. It's nemoshow's bug
     _nemoshow_item_motion_bounce(it->btn, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "alpha", 1.0, 1.0,
             "sx", 0.8, 1.0, "sy", 0.8, 1.0,
@@ -1924,17 +1927,19 @@ static void year_main_item_up(YearMainItem *it)
 
 static void year_main_item_click(YearMainItem *it)
 {
-    _nemoshow_item_motion_bounce(it->btn, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 0.0, 0.0,
-            "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+    // XXX: do not use bounce when doing some overload jobs.
+    // It is not correctly recover to final state. It's nemoshow's bug
+    _nemoshow_item_motion(it->btn, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 0.0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
-    _nemoshow_item_motion_bounce(it->btn_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0, 1.0,
-            "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+    _nemoshow_item_motion(it->btn_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 1.0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
 
-    _nemoshow_item_motion_bounce(it->arch, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 1.2, 1.0, "sy", 1.2, 1.0,
+    _nemoshow_item_motion(it->arch, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
     uint32_t easetype = NEMOEASE_CUBIC_INOUT_TYPE;
     int duration = 1000;
@@ -2554,11 +2559,13 @@ static void region_item_down(RegionItem *it)
 
 static void region_item_up(RegionItem *it)
 {
-    _nemoshow_item_motion_bounce(it->icon, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 0.5, 1.0, "sy", 0.5, 1.0,
+    // XXX: do not use bounce when doing some overload jobs.
+    // It is not correctly recover to final state. It's nemoshow's bug
+    _nemoshow_item_motion(it->icon, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
-    _nemoshow_item_motion_bounce(it->txt, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 0.5, 1.0, "sy", 0.5, 1.0,
+    _nemoshow_item_motion(it->txt, NEMOEASE_CUBIC_OUT_TYPE, 500, 0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
 }
 
@@ -2576,9 +2583,11 @@ static void _region_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, st
 
     if (nemoshow_event_is_down(show, event)) {
         region_item_down(it);
+        nemoshow_dispatch_frame(show);
     } else if (nemoshow_event_is_up(show, event)) {
-        region_item_up(it);
         view->grab = NULL;
+        region_item_up(it);
+        nemoshow_dispatch_frame(show);
         if (nemoshow_event_is_single_click(show, event)) {
             Karim *karim = view->karim;
 
