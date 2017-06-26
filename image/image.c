@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
     file = LIST_DATA(LIST_FIRST(files));
     RET_IF(!file, -1);
     if (!app->config->layer || strcmp(app->config->layer, "background")) {
-        if (file_is_image(file->path)) {
+        if (file_is_image(file->path) || file_is_image_ext(file->path)) {
             int w, h;
             if (!image_get_wh(file->path, &w, &h)) {
                 ERR("image get wh failed: %s", file->path);

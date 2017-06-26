@@ -45,7 +45,7 @@ ImageBitmap *image_bitmap_create(const char *path)
         ERR("file is NULL: %s", path);
         return NULL;
     }
-    if (!file_is_image(path)) {
+    if (!file_is_image(path) && !file_is_image_ext(path)) {
         ERR("file is not image ilfe: %s", path);
         return NULL;
     }

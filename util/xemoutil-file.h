@@ -13,6 +13,7 @@ bool file_is_null(const char *path);
 bool file_is_dir(const char *path);
 bool file_is_exec(const char *path);
 bool file_is_image(const char *path);
+bool file_is_image_ext(const char *path);
 bool file_is_svg(const char *path);
 bool file_is_video(const char *path);
 bool file_is_text(const char *path);

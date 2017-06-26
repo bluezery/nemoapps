@@ -154,16 +154,38 @@ bool file_is_image(const char *path)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     bool check = _path_check_magic(magic_str, MAGIC_IMAGES,
             sizeof(MAGIC_IMAGES)/sizeof(MAGIC_IMAGES[0]));
     free(magic_str);
     return check;
 }
 
+bool file_is_image_ext(const char *path)
+{
+    if (!path) return false;
+    int i;
+    char *ext = file_get_ext(path);
+    if (!ext) return false;
+
+    for (i = 0 ; i < sizeof(FILE_EXT_IMAGES)/sizeof(FILE_EXT_IMAGES[0]) ; i++) {
+        if (!strcmp(ext, FILE_EXT_IMAGES[i]))
+            return true;
+    }
+    return false;
+}
+
 bool file_is_svg(const char *path)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     bool check = _path_check_magic(magic_str, MAGIC_SVGS,
             sizeof(MAGIC_SVGS)/sizeof(MAGIC_SVGS[0]));
     free(magic_str);
@@ -174,6 +196,10 @@ bool file_is_video(const char *path)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     bool check = _path_check_magic(magic_str, MAGIC_VIDEOS,
             sizeof(MAGIC_VIDEOS)/sizeof(MAGIC_VIDEOS[0]));
     free(magic_str);
@@ -184,6 +210,10 @@ bool file_is_text(const char *path)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     bool check = _path_check_magic(magic_str, MAGIC_TEXTS,
             sizeof(MAGIC_TEXTS)/sizeof(MAGIC_TEXTS[0]));
     free(magic_str);
@@ -194,6 +224,10 @@ bool file_is_pdf(const char *path)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     bool check = _path_check_magic(magic_str, MAGIC_PDFS,
             sizeof(MAGIC_PDFS)/sizeof(MAGIC_PDFS[0]));
     free(magic_str);
@@ -204,6 +238,10 @@ bool file_get_image_wh(const char *path, int *w, int *h)
 {
     if (!path) return false;
     char *magic_str = file_get_magic(path, 0);
+    if (!magic_str) {
+        ERR("file_get_magic() failed: %s", path);
+        return false;
+    }
     RET_IF(!magic_str, false);
 
     if (!_path_check_magic(magic_str, MAGIC_IMAGES,

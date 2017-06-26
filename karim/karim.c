@@ -1469,8 +1469,8 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     svg_get_wh(buf, &ww, &hh);
     cx = w/2;
     cy = h/2;
-    ww = ww;
-    hh = hh;
+    ww = ww * 2;
+    hh = hh * 2;
     /*
     ww = 259.219 * sx;
     hh = 224.176 * sy;
