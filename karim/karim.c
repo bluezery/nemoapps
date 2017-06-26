@@ -3173,34 +3173,23 @@ static void menu_view_show(MenuView *view, uint32_t easetype, int duration, int 
     nemotimer_set_timeout(view->timer, duration + delay);
 }
 
-#if 0
-static void menu_view_right(MenuView *view, uint32_t easetype, int duration, int delay)
-{
-    _nemoshow_item_motion(view->group, easetype, duration, delay,
-            "tx", (double)view->w,
-            NULL);
-    nemoshow_dispatch_frame(view->show);
-}
-#endif
-
 static void menu_view_hide(MenuView *view, uint32_t easetype, int duration, int delay)
 {
-    /*
-    double sx, sy;
-    sx = view->w/1920.0;
-    sy = view->h/1080.0;
-    double gw = 440 * sx;
-    double gh = 140 * sy;
-    */
-
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
     _nemoshow_item_motion(view->group, easetype, duration, delay,
             "alpha", 0.0,
-            /*
-            "sx", 1.5, "sy", 1.5,
-            "tx", view->w/2.0 + gw/2*1.5, "ty", view->h/2.0 + gh/2*1.5,
-            */
+            NULL);
+
+    uint32_t color1 = 0xF7ACB87F;
+    _nemoshow_item_motion(view->btn_region, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "fill", color1,
+            NULL);
+    _nemoshow_item_motion(view->btn_wave, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "fill", color1,
+            NULL);
+    _nemoshow_item_motion(view->btn_year, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "fill", color1,
             NULL);
     nemoshow_dispatch_frame(view->show);
     nemotimer_set_timeout(view->timer, 0);
