@@ -118,11 +118,38 @@ static List *karim_data_load(const char *root, List **countries, List **categori
                     group->datas = list_append(group->datas, data);
                     done = true;
                     break;
+                } else if (!strcmp(group->name, "1993") &&
+                        (!strcmp(data->year, "1992") ||
+                         !strcmp(data->year, "1991") ||
+                         !strcmp(data->year, "1990") ||
+                         !strcmp(data->year, "1989") ||
+                         !strcmp(data->year, "1988") ||
+                         !strcmp(data->year, "1987") ||
+                         !strcmp(data->year, "1986") ||
+                         !strcmp(data->year, "1985") ||
+                         !strcmp(data->year, "1984")
+                         )) {
+                    group->datas = list_append(group->datas, data);
+                    done = true;
+                    break;
                 }
             }
             if (!done) {
                 group = calloc(sizeof(KarimGroup), 1);
-                group->name = strdup(data->year);
+                if (!strcmp(data->year, "1993") ||
+                        !strcmp(data->year, "1992") ||
+                        !strcmp(data->year, "1991") ||
+                        !strcmp(data->year, "1990") ||
+                        !strcmp(data->year, "1989") ||
+                        !strcmp(data->year, "1988") ||
+                        !strcmp(data->year, "1987") ||
+                        !strcmp(data->year, "1986") ||
+                        !strcmp(data->year, "1985") ||
+                        !strcmp(data->year, "1984")) {
+                    group->name = strdup("1993");
+                } else {
+                    group->name = strdup(data->year);
+                }
                 group->datas = list_append(group->datas, data);
                 *years = list_append(*years, group);
             }
@@ -1180,6 +1207,7 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     struct showone *canvas;
     canvas = nemowidget_get_canvas(view->widget);
 
+    ERR("%s", path);
     HoneyItem *it = calloc(sizeof(HoneyItem), 1);
     it->view = view;
     it->files = NULL;
@@ -1679,12 +1707,12 @@ struct _YearSub {
 };
 
 YearSub YEAR_SUB0[] = {
-    {"1994",
+    {"1993",
         399.08, 345.81, APP_ICON_DIR"/year/year-subcircle.svg",
-        335.57, 309.96, APP_ICON_DIR"/year/1994.svg"},
-    {"1995",
+        335.57, 309.96, APP_ICON_DIR"/year/1993.svg"},
+    {"1994",
         420.47, 280.59, APP_ICON_DIR"/year/year-subcircle.svg",
-        366.02, 230.02, APP_ICON_DIR"/year/1995.svg"},
+        366.02, 230.02, APP_ICON_DIR"/year/1994.svg"},
     {"1996",
         471.74, 234.57, APP_ICON_DIR"/year/year-subcircle.svg",
         443.66, 166.76, APP_ICON_DIR"/year/1996.svg"},
@@ -1879,8 +1907,8 @@ struct _YearMain {
 
 YearMain YEAR_MAIN[] = {
     {477.8, 296.4,
-        APP_ICON_DIR"/year/year-button-1994_1998.svg", APP_ICON_DIR"/year/year-button-1994_1998-selected.svg",
-        416., 241.14, APP_ICON_DIR"/year/year-subline-1994_1998.svg", YEAR_SUB0, 5},
+        APP_ICON_DIR"/year/year-button-1993_1998.svg", APP_ICON_DIR"/year/year-button-1993_1998-selected.svg",
+        416., 241.14, APP_ICON_DIR"/year/year-subline-1993_1998.svg", YEAR_SUB0, 5},
     {663.01, 507.33,
         APP_ICON_DIR"/year/year-button-1999_2003.svg", APP_ICON_DIR"/year/year-button-1999_2003-selected.svg",
         605.17, 617.26, APP_ICON_DIR"/year/year-subline-1999_2003.svg", YEAR_SUB1, 5},
