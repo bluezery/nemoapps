@@ -656,6 +656,7 @@ struct _ViewerView {
     Thread *gallery_thread;
     int intro_idx;
     Thread *intro_thread;
+    struct nemotimer *show_timer;
 
     List *items;
 
@@ -1071,6 +1072,27 @@ static void _viewer_view_title_timeout(struct nemotimer *timer, void *userdata)
     nemoshow_dispatch_frame(view->show);
 }
 
+static void _viewer_view_show_timeout(struct nemotimer *timer, void *userdata)
+{
+    ViewerView *view = userdata;
+
+    ViewerItemThreadData *data;
+    view->intro_idx = 0;
+    data = calloc(sizeof(ViewerItemThreadData), 1);
+    data->view = view;
+    if (view->intro_thread) thread_destroy(view->intro_thread);
+    view->intro_thread = thread_create(view->tool,
+            _viewer_intro_thread, _viewer_intro_thread_done, data);
+
+    view->gallery_idx = 0;
+    data = calloc(sizeof(ViewerItemThreadData), 1);
+    data->view = view;
+    if (view->gallery_thread) thread_destroy(view->gallery_thread);
+    view->gallery_thread = thread_create(view->tool,
+            _viewer_gallery_thread, _viewer_gallery_thread_done, data);
+
+}
+
 static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int width, int height, const char *title_uri, List *files)
 {
     ViewerView *view = calloc(sizeof(ViewerView), 1);
@@ -1112,6 +1134,8 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     LIST_FOR_EACH(view->items, l, it) {
         viewer_item_set_clip(it, (double)view->w/cnt);
     }
+
+    view->show_timer = TOOL_ADD_TIMER(view->tool, 0, _viewer_view_show_timeout, view);
 
     view->title_widget = widget = nemowidget_create_vector(parent, width, height);
     nemowidget_stack_above(karim->button->widget, widget);
@@ -1160,7 +1184,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
 static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, int delay)
 {
     nemowidget_show(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
+    nemowidget_set_alpha(view->widget, easetype, 500, delay, 1.0);
 
     nemowidget_show(view->event_widget, 0, 0, 0);
 
@@ -1177,26 +1201,14 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
 
     viewer_view_mode(view, VIEWER_MODE_INTRO, NULL);
 
-    ViewerItemThreadData *data;
-    view->intro_idx = 0;
-    data = calloc(sizeof(ViewerItemThreadData), 1);
-    data->view = view;
-    if (view->intro_thread) thread_destroy(view->intro_thread);
-    view->intro_thread = thread_create(view->tool,
-            _viewer_intro_thread, _viewer_intro_thread_done, data);
-
-    view->gallery_idx = 0;
-    data = calloc(sizeof(ViewerItemThreadData), 1);
-    data->view = view;
-    if (view->gallery_thread) thread_destroy(view->gallery_thread);
-    view->gallery_thread = thread_create(view->tool,
-            _viewer_gallery_thread, _viewer_gallery_thread_done, data);
+    nemotimer_set_timeout(view->show_timer, delay);
 
     nemoshow_dispatch_frame(view->show);
 }
 
 static void viewer_view_destroy(ViewerView *view)
 {
+    nemotimer_destroy(view->show_timer);
     nemotimer_destroy(view->title_timer);
     nemoshow_one_destroy(view->title);
     nemoshow_one_destroy(view->title_group);
@@ -1224,6 +1236,8 @@ static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, 
     view->intro_thread = NULL;
     if (view->gallery_thread) thread_destroy(view->gallery_thread);
     view->gallery_thread = NULL;
+
+    nemotimer_set_timeout(view->show_timer, 0);
 
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
@@ -1455,7 +1469,7 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
     RET_IF(!view);
     nemowidget_show(view->bg_widget, 0, 0, 0);
     nemowidget_show(view->widget, 0, 0, 0);
-    nemowidget_set_alpha(view->bg_widget, easetype, duration + 1000, delay + 1000, 1.0);
+    nemowidget_set_alpha(view->bg_widget, easetype, duration, delay, 1.0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
 
     view->item_idx = 0;
@@ -1591,9 +1605,9 @@ static void honey_view_zoom_it(HoneyView *view, HoneyItem *it)
     iw = it->w * scale;
     ih = it->h * scale;
 
-    nemowidget_translate(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
+    nemowidget_translate(view->widget, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
             -(ix - (view->w - iw)/2.0), -(iy - (view->h - ih)/2.0));
-    nemowidget_scale(view->widget, NEMOEASE_CUBIC_IN_TYPE, 1000, 0,
+    nemowidget_scale(view->widget, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
             scale, scale);
 }
 
