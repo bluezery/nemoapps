@@ -927,6 +927,15 @@ static void _viewer_event(NemoWidget *widget, const char *id, void *info, void *
                 nemoshow_event_get_x(event),
                 nemoshow_event_get_y(event), &ex, &ey);
         if (!view->grab) {
+            // Show title
+            nemotimer_set_timeout(view->title_timer, 5000);
+            _nemoshow_item_motion(view->title_group, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
+                    "tx", 50.0, "ty", 50.0,
+                    "alpha", 1.0, NULL);
+            _nemoshow_item_motion(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
+                    "sx", 1.0, "sy", 1.0,
+                    NULL);
+
             view->grab = nemowidget_create_grab(widget, event,
                         _viewer_gallery_grab_event, view);
         }
@@ -1191,6 +1200,7 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
     nemowidget_show(view->title_widget, 0, 0, 0);
     nemowidget_set_alpha(view->title_widget, easetype, duration, delay, 1.0);
 
+    // Show title
     nemotimer_set_timeout(view->title_timer, 5000);
     _nemoshow_item_motion(view->title_group, easetype, duration, delay + 500,
             "tx", 50.0, "ty", 50.0,
