@@ -1,3 +1,16 @@
+nemoapps (0.9.9) unstable; urgency=medium
+
+  * karim: Fix name
+  * karim: Fix country names
+  * karim: change years 1993, 1994
+  * karim: change icons
+  * karim: change images
+  * karim: Use thread for viewer view
+  * karim: Use timer to gentrify show animation
+  * karim: Tune GUI for honey view showing
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 16:22:53 +0900
+
 nemoapps (0.9.8) unstable; urgency=medium
 
   * karim: fix crash
