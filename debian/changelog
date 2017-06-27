@@ -1,3 +1,9 @@
+nemoapps (0.10.1) unstable; urgency=medium
+
+  * karim: Change bg color in viewer view
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 18:09:19 +0900
+
 nemoapps (0.10.0) unstable; urgency=medium
 
   * karim: Fix saudi title
