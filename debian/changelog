@@ -1,3 +1,10 @@
+nemoapps (0.9.8) unstable; urgency=medium
+
+  * karim: fix crash
+  * karim: Fix minor motion bugs
+
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 13:04:35 +0900
+
 nemoapps (0.9.7) unstable; urgency=medium
 
   * karim: Minor fix
