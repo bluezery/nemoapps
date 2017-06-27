@@ -459,6 +459,7 @@ struct _ButtonView {
     struct showone *bg;
     struct showone *home;
     struct showone *back;
+    struct nemotimer *hide_timer;
 };
 
 static void _button_view_grab_event(NemoWidgetGrab *grab, NemoWidget *widget, struct showevent *event, void *userdata)
@@ -532,6 +533,7 @@ static void _button_view_event(NemoWidget *widget, const char *id, void *info, v
 
 static void button_view_destroy(ButtonView *view)
 {
+    nemotimer_destroy(view->hide_timer);
     nemoshow_one_destroy(view->back);
     nemoshow_one_destroy(view->home);
     nemoshow_one_destroy(view->bg);
@@ -542,6 +544,7 @@ static void button_view_destroy(ButtonView *view)
 
 static void button_view_show(ButtonView *view, uint32_t easetype, int duration, int delay)
 {
+    nemotimer_set_timeout(view->hide_timer, 2000);
     nemowidget_show(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
 }
@@ -562,6 +565,12 @@ static void button_view_hide_destroy(ButtonView *view, uint32_t easetype, int du
 {
     button_view_hide(view, easetype, duration, delay);
     TOOL_ADD_TIMER(view->tool, duration + delay + 100, _button_view_destroy, view);
+}
+
+static void _button_hide_timeout(struct nemotimer *timer, void *userdata)
+{
+    ButtonView *view = userdata;
+    button_view_hide(view, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 }
 
 static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
@@ -615,6 +624,9 @@ static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
     nemoshow_one_set_state(one, NEMOSHOW_PICK_STATE);
     nemoshow_one_set_userdata(one, view);
     nemoshow_one_set_id(one, "back");
+
+    struct nemotimer *timer;
+    view->hide_timer = timer = TOOL_ADD_TIMER(view->tool, 0, _button_hide_timeout, view);
 
     return view;
 }
@@ -824,6 +836,15 @@ void viewer_view_mode(ViewerView *view, ViewerMode mode, ViewerItem *modeitem)
 
     view->mode = mode;
     if (mode == VIEWER_MODE_INTRO) {
+        // Show title
+        nemotimer_set_timeout(view->title_timer, 4000);
+        _nemoshow_item_motion(view->title_group, NEMOEASE_CUBIC_INOUT_TYPE, 2000, 500,
+                "tx", 50.0, "ty", 50.0,
+                "alpha", 1.0, NULL);
+        _nemoshow_item_motion(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 1000,
+                "sx", 1.0, "sy", 1.0,
+                NULL);
+
         nemowidget_hide(view->event_widget, 0, 0, 0);
         int cnt = list_count(view->items) > 4 ? 4 : list_count(view->items);
         double w = view->w/cnt;
@@ -922,20 +943,15 @@ static void _viewer_event(NemoWidget *widget, const char *id, void *info, void *
     if (view->mode != VIEWER_MODE_GALLERY) return;
 
     if (nemoshow_event_is_down(show, event)) {
+        if (view->karim->button->hide_timer) {
+            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        }
+
         double ex, ey;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_x(event),
                 nemoshow_event_get_y(event), &ex, &ey);
         if (!view->grab) {
-            // Show title
-            nemotimer_set_timeout(view->title_timer, 5000);
-            _nemoshow_item_motion(view->title_group, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
-                    "tx", 50.0, "ty", 50.0,
-                    "alpha", 1.0, NULL);
-            _nemoshow_item_motion(view->title, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0,
-                    "sx", 1.0, "sy", 1.0,
-                    NULL);
-
             view->grab = nemowidget_create_grab(widget, event,
                         _viewer_gallery_grab_event, view);
         }
@@ -972,6 +988,10 @@ static void _viewer_item_clip_event(NemoWidget *widget, const char *id, void *in
     if (view->mode != VIEWER_MODE_INTRO) return;
 
     if (nemoshow_event_is_down(show, event)) {
+        if (view->karim->button->hide_timer) {
+            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        }
+
         double ex, ey;
         nemowidget_transform_from_global(widget,
                 nemoshow_event_get_x(event),
@@ -1199,15 +1219,6 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
 
     nemowidget_show(view->title_widget, 0, 0, 0);
     nemowidget_set_alpha(view->title_widget, easetype, duration, delay, 1.0);
-
-    // Show title
-    nemotimer_set_timeout(view->title_timer, 5000);
-    _nemoshow_item_motion(view->title_group, easetype, duration, delay + 500,
-            "tx", 50.0, "ty", 50.0,
-            "alpha", 1.0, NULL);
-    _nemoshow_item_motion(view->title, easetype, duration, delay + 500,
-            "sx", 1.0, "sy", 1.0,
-            NULL);
 
     viewer_view_mode(view, VIEWER_MODE_INTRO, NULL);
 
@@ -1549,6 +1560,10 @@ static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *
     struct nemoshow *show = nemowidget_get_show(widget);
 
     if (nemoshow_event_is_down(show, event)) {
+        if (view->karim->button->hide_timer) {
+            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
+        }
+
         nemowidget_get_geometry(view->widget, &view->widget_x, &view->widget_y, NULL, NULL);
     } else if (nemoshow_event_is_motion(show, event)) {
         double ex, ey;
