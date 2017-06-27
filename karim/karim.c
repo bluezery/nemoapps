@@ -495,8 +495,10 @@ static void _button_view_event(NemoWidget *widget, const char *id, void *info, v
                     nemoshow_event_get_y(event), &ex, &ey);
             struct showone *one;
             one = nemowidget_pick_one(widget, ex, ey);
-            view->grab = nemowidget_create_grab(widget, event,
+            if (one) {
+                view->grab = nemowidget_create_grab(widget, event,
                         _button_view_grab_event, one);
+            }
         }
     }
 }
