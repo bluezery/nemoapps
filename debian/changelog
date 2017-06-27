@@ -1,8 +1,9 @@
-nemoapps (0.9.10) unstable; urgency=medium
+nemoapps (0.10.0) unstable; urgency=medium
 
   * karim: Fix saudi title
+  * Rebuild by nemocore
 
- -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 17:07:33 +0900
+ -- Taehwan Kim <taehwan@nemoux.net>  Tue, 27 Jun 2017 17:54:04 +0900
 
 nemoapps (0.9.9) unstable; urgency=medium
 
