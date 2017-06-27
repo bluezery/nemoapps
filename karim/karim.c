@@ -1568,8 +1568,8 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     w = h = 0;
     file_get_image_wh(uri, &w, &h);
 
-    view->widget_w = w = w * 2.0;
-    view->widget_h = h = h * 2.0;
+    view->widget_w = w = w;
+    view->widget_h = h = h;
     view->fg_ix = (w - view->w)/2;
     view->fg_iy = (h - view->h)/2;
 
@@ -1591,6 +1591,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     svg_get_wh(buf, &ww, &hh);
     cx = w/2;
     cy = h/2;
+    // FIXME: Title is too small
     ww = ww * 2;
     hh = hh * 2;
     /*
@@ -1662,9 +1663,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     image_load(img, view->tool, uri, w, h, NULL, NULL);
 
     uri = APP_IMG_DIR"/honey/icon-selected.png";
-    image_get_wh(buf, &w, &h);
-    w = w * 2.0;
-    h = h * 2.0;
+    image_get_wh(uri, &w, &h);
     view->select = img = image_create(canvas);
     image_load_full(img, view->tool, uri, w, h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
