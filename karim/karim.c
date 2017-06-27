@@ -1860,7 +1860,7 @@ static void year_sub_item_up(YearSubItem *it)
     _nemoshow_item_motion(it->bg, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "sx", 1.0, "sy", 1.0,
             NULL);
-    _nemoshow_item_motion_bounce(it->txt, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+    _nemoshow_item_motion(it->txt, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "sx", 1.0, "sy", 1.0,
             NULL);
 }
@@ -2013,13 +2013,13 @@ static void year_main_item_up(YearMainItem *it)
 {
     // XXX: do not use bounce when doing some overload jobs.
     // It is not correctly recover to final state. It's nemoshow's bug
-    _nemoshow_item_motion_bounce(it->btn, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "alpha", 1.0, 1.0,
-            "sx", 0.8, 1.0, "sy", 0.8, 1.0,
+    _nemoshow_item_motion(it->btn, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 1.0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
-    _nemoshow_item_motion_bounce(it->btn_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
-            "sx", 0.8, 1.0, "sy", 0.8, 1.0,
-            "alpha", 0.0, 0.0,
+    _nemoshow_item_motion(it->btn_sel, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
+            "alpha", 0.0,
+            "sx", 1.0, "sy", 1.0,
             NULL);
 }
 
@@ -2035,7 +2035,6 @@ static void year_main_item_click(YearMainItem *it)
             "alpha", 1.0,
             "sx", 1.0, "sy", 1.0,
             NULL);
-
     _nemoshow_item_motion(it->arch, NEMOEASE_CUBIC_INOUT_TYPE, 500, 0,
             "sx", 1.0, "sy", 1.0,
             NULL);
