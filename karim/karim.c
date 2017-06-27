@@ -1295,6 +1295,7 @@ struct _HoneyView {
     NemoWidgetGrab *it_grab;
     NemoWidgetGrab *scroll_grab;
     int fg_ix, fg_iy;
+    char *fg_path;
     Image *fg;
     struct showone *title;
 
@@ -1463,6 +1464,19 @@ static void _honey_item_thread_done(bool cancel, void *userdata)
     free(data);
 }
 
+void _honey_show_done(bool success, void *userdata)
+{
+    RET_IF(!success);
+    HoneyView *view = userdata;
+
+    view->item_idx = 0;
+    HoneyItemThreadData *data = calloc(sizeof(HoneyItemThreadData), 1);
+    data->view = view;
+    if (view->item_thread) thread_destroy(view->item_thread);
+    view->item_thread = thread_create(view->tool,
+            _honey_item_thread, _honey_item_thread_done, data);
+
+}
 
 static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, int delay)
 {
@@ -1472,18 +1486,15 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
     nemowidget_set_alpha(view->bg_widget, easetype, duration, delay, 1.0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
 
-    view->item_idx = 0;
-    HoneyItemThreadData *data = calloc(sizeof(HoneyItemThreadData), 1);
-    data->view = view;
-    if (view->item_thread) thread_destroy(view->item_thread);
-    view->item_thread = thread_create(view->tool,
-            _honey_item_thread, _honey_item_thread_done, data);
+    // XXX: This is heavy jobs, texture is too large.
+    image_load(view->fg, view->tool, view->fg_path, view->widget_w, view->widget_h, _honey_show_done, view);
 
     nemoshow_dispatch_frame(view->show);
 }
 
 static void honey_view_destroy(HoneyView *view)
 {
+    free(view->fg_path);
     image_destroy(view->select);
     image_destroy(view->fg);
     HoneyItem *it;
@@ -1714,6 +1725,7 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     uri = APP_IMG_DIR"/honey/foreground.png";
     w = h = 0;
     file_get_image_wh(uri, &w, &h);
+    view->fg_path = strdup(uri);
 
     view->widget_w = w;
     view->widget_h = h;
@@ -1806,8 +1818,6 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     }
 
     view->fg = img = image_create(canvas);
-    // XXX: This is heavy jobs, texture is too large.
-    image_load(img, view->tool, uri, w, h, NULL, NULL);
 
     uri = APP_IMG_DIR"/honey/icon-selected.png";
     image_get_wh(uri, &w, &h);
