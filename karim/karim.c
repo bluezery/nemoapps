@@ -652,8 +652,11 @@ struct _ViewerView {
     NemoWidgetGrab *grab;
     double gallery_x;
 
-    int item_idx;
-    Thread *item_thread;
+    int gallery_idx;
+    Thread *gallery_thread;
+    int intro_idx;
+    Thread *intro_thread;
+
     List *items;
 
     NemoWidget *title_widget;
@@ -687,6 +690,117 @@ static void viewer_item_hide(ViewerItem *it, uint32_t easetype, int duration, in
     nemowidget_set_alpha(it->gallery_widget, easetype, duration, delay, 0.0);
 }
 
+typedef struct _ViewerItemThreadData ViewerItemThreadData;
+struct _ViewerItemThreadData {
+    ViewerView *view;
+    int w, h;
+    ImageBitmap *bitmap;
+};
+
+static void *_viewer_intro_thread(void *userdata)
+{
+    ViewerItemThreadData *data = userdata;
+    ViewerView *view = data->view;
+
+    ViewerItem *it = LIST_DATA(list_get_nth(view->items, view->intro_idx));
+    int w, h;
+    if (image_get_wh(it->path, &w, &h)) {
+        _rect_ratio_fit(w, h, view->w, view->h, &w, &h);
+        data->w = w;
+        data->h = h;
+        data->bitmap = image_bitmap_create(it->path);
+    } else {
+        ERR("image get width/height failed: %s", it->path);
+    }
+
+    return NULL;
+}
+
+static void *_viewer_gallery_thread(void *userdata)
+{
+    ViewerItemThreadData *data = userdata;
+    ViewerView *view = data->view;
+
+    ViewerItem *it = LIST_DATA(list_get_nth(view->items, view->gallery_idx));
+    int w, h;
+    if (image_get_wh(it->path, &w, &h)) {
+        _rect_ratio_fit(w, h, view->w, view->h, &w, &h);
+        data->w = w;
+        data->h = h;
+        data->bitmap = image_bitmap_create(it->path);
+    } else {
+        ERR("image get width/height failed: %s", it->path);
+    }
+
+    return NULL;
+}
+
+static void _viewer_gallery_thread_done(bool cancel, void *userdata)
+{
+    ViewerItemThreadData *data = userdata;
+    ViewerView *view = data->view;
+
+    view->gallery_thread = NULL;
+    if (cancel) {
+        if (data->bitmap) image_bitmap_destroy(data->bitmap);
+        data->bitmap = NULL;
+    } else {
+        ViewerItem *it = LIST_DATA(list_get_nth(view->items, view->gallery_idx));
+
+        if (data->bitmap) {
+            image_set_bitmap(it->gallery_img, data->w, data->h, data->bitmap);
+            nemoshow_dispatch_frame(view->show);
+        } else {
+            ERR("No bitmap for %s", it->path);
+        }
+
+        view->gallery_idx++;
+        if (view->gallery_idx >= list_count(view->items)) {
+            ERR("Thread Done");
+        } else {
+            ViewerItemThreadData *data = calloc(sizeof(ViewerItemThreadData), 1);
+            data->view = view;
+            view->gallery_thread = thread_create(view->tool,
+                    _viewer_gallery_thread, _viewer_gallery_thread_done, data);
+            ERR("Go next: %d", view->gallery_idx);
+        }
+    }
+    free(data);
+}
+
+static void _viewer_intro_thread_done(bool cancel, void *userdata)
+{
+    ViewerItemThreadData *data = userdata;
+    ViewerView *view = data->view;
+
+    view->intro_thread = NULL;
+    if (cancel) {
+        if (data->bitmap) image_bitmap_destroy(data->bitmap);
+        data->bitmap = NULL;
+    } else {
+        ViewerItem *it = LIST_DATA(list_get_nth(view->items, view->intro_idx));
+
+        if (data->bitmap) {
+            image_set_bitmap(it->intro_img, data->w, data->h, data->bitmap);
+            nemoshow_dispatch_frame(view->show);
+        } else {
+            ERR("No bitmap for %s", it->path);
+        }
+
+        view->intro_idx++;
+        if (view->intro_idx >= list_count(view->items)) {
+            ERR("Thread Done");
+        } else {
+            ViewerItemThreadData *data = calloc(sizeof(ViewerItemThreadData), 1);
+            data->view = view;
+            view->intro_thread = thread_create(view->tool,
+                    _viewer_intro_thread, _viewer_intro_thread_done, data);
+            ERR("Go next: %d", view->intro_idx);
+        }
+    }
+    free(data);
+}
+
 void viewer_item_show_gallery(ViewerItem *it, uint32_t easetype, int duration, int delay, ViewerMode mode)
 {
     nemowidget_hide(it->intro_widget, 0, 0, 0);
@@ -702,7 +816,6 @@ void viewer_item_show_intro(ViewerItem *it, uint32_t easetype, int duration, int
     nemowidget_set_alpha(it->gallery_widget, easetype, duration, delay, 0.0);
     nemowidget_set_alpha(it->intro_widget, easetype, duration, delay, 1.0);
 }
-
 
 void viewer_view_mode(ViewerView *view, ViewerMode mode, ViewerItem *modeitem)
 {
@@ -727,7 +840,7 @@ void viewer_view_mode(ViewerView *view, ViewerMode mode, ViewerItem *modeitem)
     } else if (mode == VIEWER_MODE_GALLERY) {
         nemowidget_show(view->event_widget, 0, 0, 0);
         int id = list_get_idx(view->items, modeitem);
-        view->gallery_x = -view->w * ((int)id);
+        view->gallery_x = -view->w * id;
 
         int i = 0;
         List *l;
@@ -926,19 +1039,18 @@ ViewerItem *viewer_view_create_item(ViewerView *view, NemoWidget *parent,
 
     Image *img;
     it->intro_img = img = image_create(canvas);
-    image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
+    //image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
     image_translate(img, 0, 0, 0, view->w/2, view->h/2);
 
     it->gallery_widget = widget = nemowidget_create_vector(parent, view->w, view->h);
-    nemowidget_enable_event_repeat(widget, true);
     //nemowidget_append_callback(widget, "event", _viewer_item_gallery_event, item);
     nemowidget_enable_event_repeat(widget, true);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
     canvas = nemowidget_get_canvas(widget);
 
     it->gallery_img = img = image_create(canvas);
-    image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
+    //image_load_fit(img, view->tool, uri, view->w, view->h, NULL, NULL);
     image_set_anchor(img, 0.5, 0.5);
     image_translate(img, 0, 0, 0, view->w/2, view->h/2);
 
@@ -1064,6 +1176,22 @@ static void viewer_view_show(ViewerView *view, uint32_t easetype, int duration, 
             NULL);
 
     viewer_view_mode(view, VIEWER_MODE_INTRO, NULL);
+
+    ViewerItemThreadData *data;
+    view->intro_idx = 0;
+    data = calloc(sizeof(ViewerItemThreadData), 1);
+    data->view = view;
+    if (view->intro_thread) thread_destroy(view->intro_thread);
+    view->intro_thread = thread_create(view->tool,
+            _viewer_intro_thread, _viewer_intro_thread_done, data);
+
+    view->gallery_idx = 0;
+    data = calloc(sizeof(ViewerItemThreadData), 1);
+    data->view = view;
+    if (view->gallery_thread) thread_destroy(view->gallery_thread);
+    view->gallery_thread = thread_create(view->tool,
+            _viewer_gallery_thread, _viewer_gallery_thread_done, data);
+
     nemoshow_dispatch_frame(view->show);
 }
 
@@ -1092,6 +1220,11 @@ static void _viewer_view_destroy(struct nemotimer *timer, void *userdata)
 
 static void viewer_view_hide(ViewerView *view, uint32_t easetype, int duration, int delay)
 {
+    if (view->intro_thread) thread_destroy(view->intro_thread);
+    view->intro_thread = NULL;
+    if (view->gallery_thread) thread_destroy(view->gallery_thread);
+    view->gallery_thread = NULL;
+
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
 
@@ -1239,15 +1372,15 @@ static HoneyItem *honey_view_create_item(HoneyView *view, const char *path, doub
     return it;
 }
 
-typedef struct _ItemThreadData ItemThreadData;
-struct _ItemThreadData {
+typedef struct _HoneyItemThreadData HoneyItemThreadData;
+struct _HoneyItemThreadData {
     HoneyView *view;
     ImageBitmap *bitmap;
 };
 
 static void *_honey_item_thread(void *userdata)
 {
-    ItemThreadData *data = userdata;
+    HoneyItemThreadData *data = userdata;
     HoneyView *view = data->view;
 
     HoneyItem *it = LIST_DATA(list_get_nth(view->items, view->item_idx));
@@ -1284,7 +1417,7 @@ static void *_honey_item_thread(void *userdata)
 
 static void _honey_item_thread_done(bool cancel, void *userdata)
 {
-    ItemThreadData *data = userdata;
+    HoneyItemThreadData *data = userdata;
     HoneyView *view = data->view;
 
     view->item_thread = NULL;
@@ -1304,9 +1437,9 @@ static void _honey_item_thread_done(bool cancel, void *userdata)
 
         view->item_idx++;
         if (view->item_idx >= list_count(view->items)) {
-            ERR("honey thread Done");
+            ERR("Thread Done");
         } else {
-            ItemThreadData *data = calloc(sizeof(ItemThreadData), 1);
+            HoneyItemThreadData *data = calloc(sizeof(HoneyItemThreadData), 1);
             data->view = view;
             view->item_thread = thread_create(view->tool,
                     _honey_item_thread, _honey_item_thread_done, data);
@@ -1326,7 +1459,7 @@ static void honey_view_show(HoneyView *view, uint32_t easetype, int duration, in
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 1.0);
 
     view->item_idx = 0;
-    ItemThreadData *data = calloc(sizeof(ItemThreadData), 1);
+    HoneyItemThreadData *data = calloc(sizeof(HoneyItemThreadData), 1);
     data->view = view;
     if (view->item_thread) thread_destroy(view->item_thread);
     view->item_thread = thread_create(view->tool,
@@ -1568,8 +1701,8 @@ static HoneyView *honey_view_create(Karim *karim, NemoWidget *parent, int width,
     w = h = 0;
     file_get_image_wh(uri, &w, &h);
 
-    view->widget_w = w = w;
-    view->widget_h = h = h;
+    view->widget_w = w;
+    view->widget_h = h;
     view->fg_ix = (w - view->w)/2;
     view->fg_iy = (h - view->h)/2;
 
