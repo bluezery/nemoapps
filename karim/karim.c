@@ -511,6 +511,10 @@ static void _button_view_event(NemoWidget *widget, const char *id, void *info, v
     struct nemoshow *show = nemowidget_get_show(widget);
     ButtonView *view = userdata;
 
+    if (view->karim->button->hide_timer) {
+        nemotimer_set_timeout(view->karim->button->hide_timer, 2000);
+    }
+
     if (nemoshow_event_is_down(show, event)) {
         double ex, ey;
         nemowidget_transform_from_global(widget,
@@ -592,6 +596,7 @@ static ButtonView *button_view_create(Karim *karim, NemoWidget *parent)
     NemoWidget *widget;
     view->widget = widget = nemowidget_create_vector(parent, w, h);
     nemowidget_append_callback(widget, "event", _button_view_event, view);
+    nemowidget_enable_event_grab(widget, false);
     nemowidget_set_alpha(widget, 0, 0, 0, 0.0);
 
     nemowidget_translate(widget, 0, 0, 0, x, y);
