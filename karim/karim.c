@@ -551,6 +551,7 @@ static void button_view_show(ButtonView *view, uint32_t easetype, int duration, 
 
 static void button_view_hide(ButtonView *view, uint32_t easetype, int duration, int delay)
 {
+    nemotimer_set_timeout(view->hide_timer, 0);
     nemowidget_hide(view->widget, 0, 0, 0);
     nemowidget_set_alpha(view->widget, easetype, duration, delay, 0.0);
 }
@@ -942,10 +943,12 @@ static void _viewer_event(NemoWidget *widget, const char *id, void *info, void *
 
     if (view->mode != VIEWER_MODE_GALLERY) return;
 
+    if (view->karim->button->hide_timer) {
+        nemotimer_set_timeout(view->karim->button->hide_timer, 2000);
+    }
+
     if (nemoshow_event_is_down(show, event)) {
-        if (view->karim->button->hide_timer) {
-            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-        }
+        button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
         double ex, ey;
         nemowidget_transform_from_global(widget,
@@ -987,10 +990,12 @@ static void _viewer_item_clip_event(NemoWidget *widget, const char *id, void *in
 
     if (view->mode != VIEWER_MODE_INTRO) return;
 
+    if (view->karim->button->hide_timer) {
+        nemotimer_set_timeout(view->karim->button->hide_timer, 2000);
+    }
+
     if (nemoshow_event_is_down(show, event)) {
-        if (view->karim->button->hide_timer) {
-            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-        }
+        button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
         double ex, ey;
         nemowidget_transform_from_global(widget,
@@ -1559,10 +1564,11 @@ static void honey_scroll(HoneyView *view, NemoWidget *widget, struct showevent *
 {
     struct nemoshow *show = nemowidget_get_show(widget);
 
+    if (view->karim->button->hide_timer) {
+        nemotimer_set_timeout(view->karim->button->hide_timer, 2000);
+    }
     if (nemoshow_event_is_down(show, event)) {
-        if (view->karim->button->hide_timer) {
-            button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
-        }
+        button_view_show(view->karim->button, NEMOEASE_CUBIC_INOUT_TYPE, 1000, 0);
 
         nemowidget_get_geometry(view->widget, &view->widget_x, &view->widget_y, NULL, NULL);
     } else if (nemoshow_event_is_motion(show, event)) {
