@@ -1110,7 +1110,7 @@ static ViewerView *viewer_view_create(Karim *karim, NemoWidget *parent, int widt
     struct showone *one;
     view->group = group = GROUP_CREATE(nemowidget_get_canvas(widget));
     view->bg = one = RECT_CREATE(group, view->w, view->h);
-    nemoshow_item_set_fill_color(one, RGBA(BLACK));
+    nemoshow_item_set_fill_color(one, RGBA(WHITE));
 
     view->event_widget = widget = nemowidget_create_vector(parent, width, height);
     nemowidget_append_callback(widget, "event", _viewer_event, view);
